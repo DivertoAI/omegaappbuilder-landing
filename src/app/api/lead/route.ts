@@ -4,6 +4,9 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { createClient } from "@supabase/supabase-js";
 
+// Ensure Node runtime (needed for nodemailer on Vercel)
+export const runtime = "nodejs";
+
 const LeadSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
@@ -24,20 +27,28 @@ type RawLeadInput = {
   hp?: string;
 };
 
+// ---- Supabase (uses your env keys exactly) ----
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseSvcKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseSvcKey, { auth: { persistSession: false } });
+const supabase = createClient(supabaseUrl, supabaseSvcKey, {
+  auth: { persistSession: false },
+});
+
+// ---- Mailer (Brevo SMTP via your env keys) ----
+const MAIL_HOST = process.env.BREVO_SMTP_HOST;
+const MAIL_PORT = Number(process.env.BREVO_SMTP_PORT ?? 587);
+const MAIL_USER = process.env.BREVO_SMTP_USER;
+const MAIL_PASS = process.env.BREVO_SMTP_PASS;
+const NOTIFY_FROM = process.env.NOTIFY_FROM || MAIL_USER || "";
+const NOTIFY_TO = process.env.NOTIFY_TO || "";
 
 const transporter =
-  process.env.EMAIL_HOST
+  MAIL_HOST && MAIL_USER && MAIL_PASS
     ? nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: Number(process.env.EMAIL_PORT ?? 465),
-        secure: Number(process.env.EMAIL_PORT ?? 465) === 465,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
+        host: MAIL_HOST,
+        port: MAIL_PORT,
+        secure: MAIL_PORT === 465, // 465 = SSL, 587 = STARTTLS
+        auth: { user: MAIL_USER, pass: MAIL_PASS },
       })
     : null;
 
@@ -71,7 +82,6 @@ async function parseRequestBody(req: Request): Promise<RawLeadInput> {
     const fd = await req.formData();
     const obj: RawLeadInput = {};
     fd.forEach((v, k) => {
-      // only keep string-like values for our schema
       obj[k as keyof RawLeadInput] = String(v);
     });
     return obj;
@@ -83,17 +93,20 @@ export async function POST(req: Request) {
     const data = await parseRequestBody(req);
 
     const url = new URL(req.url);
-    const redirect = url.searchParams.get("redirect");
+    const redirect = url.searchParams.get("redirect") || undefined;
 
     const parsed = LeadSchema.safeParse(data);
     if (!parsed.success) {
-      return NextResponse.json({ ok: false, error: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
     const lead = parsed.data;
 
-    // Honeypot
+    // Honeypot trap
     if (lead.hp) {
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true }); // silently accept bots
     }
 
     const { ip, ua } = getClientInfo(req);
@@ -114,12 +127,13 @@ export async function POST(req: Request) {
       console.error("Supabase insert error:", dbErr);
     }
 
-    // Notify via SMTP
-    if (transporter && process.env.NOTIFY_TO) {
+    // Notify via email (Brevo SMTP)
+    if (transporter && NOTIFY_TO && NOTIFY_FROM) {
       try {
         await transporter.sendMail({
-          from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-          to: process.env.NOTIFY_TO,
+          from: NOTIFY_FROM, // e.g. "Omega App Builder <hello@omegaappbuilder.com>"
+          to: NOTIFY_TO,     // where you want notifications
+          replyTo: lead.email, // clicking reply goes to the lead
           subject: `New Lead: ${lead.name} (${lead.email})`,
           html: `
             <h2>New Website Lead</h2>
@@ -128,10 +142,13 @@ export async function POST(req: Request) {
             <p><b>Company:</b> ${lead.company}</p>
             <p><b>URL:</b> ${lead.url}</p>
             <p><b>Service:</b> ${lead.service}</p>
-            <p><b>Message:</b><br/>${(lead.message || "").replace(/\n/g, "<br/>")}</p>
+            <p><b>Message:</b><br/>${(lead.message || "")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/\n/g, "<br/>")}</p>
             <hr/>
             <p><b>IP:</b> ${ip}</p>
-            <p><b>UA:</b> ${ua}</p>
+            <p><b>User-Agent:</b> ${ua}</p>
           `,
         });
       } catch (e) {
@@ -139,7 +156,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Zapier webhook
+    // Optional: Zapier webhook (if provided)
     if (process.env.ZAPIER_HOOK_URL) {
       try {
         await fetch(process.env.ZAPIER_HOOK_URL, {
