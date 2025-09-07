@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function Home() {
   // ----- Projects gallery settings -----
-  const PROJECT_COUNT = 6; // set this to how many p#.png files you saved in /public
+  const PROJECT_COUNT = 6; // how many p#.png files you saved in /public
   const PROJECT_PREFIX = "p";
   const PROJECT_EXT = "png"; // change to "webp" / "jpg" if needed
   const projects = Array.from({ length: PROJECT_COUNT }, (_, i) => ({
@@ -21,7 +21,6 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <a href="#home" className="flex items-center gap-2">
-              {/* If you placed public/logo.png this will show it; else keep the fallback square */}
               <Image
                 src="/logo.png"
                 alt="Omega App Builder logo"
@@ -48,14 +47,9 @@ export default function Home() {
 
       {/* Hero */}
       <section id="home" className="relative overflow-hidden">
-        {/* Redesigned decorative blobs (subtle, gradient) */}
+        {/* Decorative blobs */}
         <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-          {/* Top-left blob */}
-          <svg
-            className="absolute -top-40 -left-28 h-[40rem] w-[40rem]"
-            viewBox="0 0 200 200"
-            xmlns="http://www.w3.org/2000/svg"
-          >
+          <svg className="absolute -top-40 -left-28 h-[40rem] w-[40rem]" viewBox="0 0 200 200">
             <defs>
               <linearGradient id="blobGrad1" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stopColor="#FDF2FF" />
@@ -69,12 +63,7 @@ export default function Home() {
               transform="translate(100 100)"
             />
           </svg>
-          {/* Bottom-right blob */}
-          <svg
-            className="absolute -bottom-40 -right-28 h-[36rem] w-[36rem] rotate-12"
-            viewBox="0 0 200 200"
-            xmlns="http://www.w3.org/2000/svg"
-          >
+          <svg className="absolute -bottom-40 -right-28 h-[36rem] w-[36rem] rotate-12" viewBox="0 0 200 200">
             <defs>
               <linearGradient id="blobGrad2" x1="1" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#DBEAFE" />
@@ -131,7 +120,16 @@ export default function Home() {
                     <span className="text-sm font-medium text-slate-700">Quick Quote</span>
                     <span className="text-xs text-slate-500">~2 min</span>
                   </div>
-                  <form className="mt-4 grid gap-3" method="POST" action="#">
+
+                  {/* WIRED: action to API with redirect + honeypot */}
+                  <form
+                    className="mt-4 grid gap-3"
+                    method="POST"
+                    action="/api/lead?redirect=/thank-you"
+                  >
+                    {/* honeypot */}
+                    <input type="text" name="hp" tabIndex={-1} autoComplete="off" className="hidden" />
+
                     <input
                       className="w-full rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
                       placeholder="Your name"
@@ -192,16 +190,8 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 id="trust-heading" className="sr-only">Trusted by</h2>
           <p className="mb-6 text-center text-sm text-slate-500">Trusted by founders and marketers worldwide</p>
-          {/* Logo pills */}
           <div className="flex flex-wrap items-center justify-center gap-3">
-            {[
-              "NovaBank",
-              "QuickCart",
-              "OrbitOps",
-              "Healthly",
-              "Adscribe",
-              "Nimbus Labs",
-            ].map((name) => (
+            {["NovaBank", "QuickCart", "OrbitOps", "Healthly", "Adscribe", "Nimbus Labs"].map((name) => (
               <div
                 key={name}
                 className="px-3 py-2 rounded-full border border-slate-300 bg-white text-slate-600 text-xs sm:text-sm"
@@ -212,7 +202,6 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Micro outcomes */}
           <div className="mt-6 grid gap-3 sm:grid-cols-3 text-center text-slate-600 text-sm">
             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
               <span className="font-semibold text-slate-900">+28%</span> trial starts after hero revamp
@@ -225,32 +214,13 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Testimonials */}
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {[
-              {
-                quote:
-                  "Clear messaging, clean build, and fast turnaround. We shipped the launch page in two days.",
-                name: "Aarav M.",
-                role: "Founder, OrbitOps",
-              },
-              {
-                quote:
-                  "They spotted three quick wins in the audit and conversions jumped the same week.",
-                name: "Sarah L.",
-                role: "Head of Growth, QuickCart",
-              },
-              {
-                quote:
-                  "The handoff was excellent—components, docs, everything ready for our team.",
-                name: "Daniel P.",
-                role: "PM, NovaBank",
-              },
+              { quote: "Clear messaging, clean build, and fast turnaround. We shipped the launch page in two days.", name: "Aarav M.", role: "Founder, OrbitOps" },
+              { quote: "They spotted three quick wins in the audit and conversions jumped the same week.", name: "Sarah L.", role: "Head of Growth, QuickCart" },
+              { quote: "The handoff was excellent—components, docs, everything ready for our team.", name: "Daniel P.", role: "PM, NovaBank" },
             ].map((t) => (
-              <figure
-                key={t.name}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-              >
+              <figure key={t.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <blockquote className="text-slate-700">“{t.quote}”</blockquote>
                 <figcaption className="mt-4 text-sm text-slate-500">
                   <span className="font-medium text-slate-900">{t.name}</span> • {t.role}
@@ -284,103 +254,106 @@ export default function Home() {
         </div>
       </section>
 
-{/* Work */}
-<section id="work" className="py-20 border-t border-slate-200">
-  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div className="max-w-2xl">
-      <h2 className="text-3xl font-bold">Recent work</h2>
-      <p className="mt-2 text-slate-600">A few snapshots. Ask for a full walkthrough on the call.</p>
-    </div>
-
-    <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {projects.map((it, idx) => {
-        const isProjectSix = idx === 5; // Only affect Project 6
-
-        return (
-          <figure
-            key={it.src}
-            className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-          >
-            <div className="relative aspect-[16/10]">
-              {/* Default cards: cover with subtle hover zoom */}
-              {!isProjectSix ? (
-                <Image
-                  src={it.src}
-                  alt={it.title}
-                  fill
-                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                  priority={it.priority}
-                />
-              ) : (
-                // Project 6 only: fit entire phone and make it a bit smaller
-                <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-8 lg:p-10 bg-white">
-                  <Image
-                    src={it.src}
-                    alt={it.title}
-                    fill
-                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                    className="object-contain"
-                    priority={it.priority}
-                  />
-                </div>
-              )}
-            </div>
-
-            <figcaption className="p-4">
-              <p className="font-medium">{it.title}</p>
-              <p className="text-sm text-slate-600">{it.caption}</p>
-            </figcaption>
-          </figure>
-        );
-      })}
-    </div>
-  </div>
-</section>
-
-      {/* Pricing */}
-      <section id="pricing" className="py-20">
+      {/* Work (images from /public/p#.png) */}
+      <section id="work" className="py-20 border-t border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
-            <h2 className="text-3xl font-bold">Simple, transparent pricing</h2>
-            <p className="mt-2 text-slate-600">Standard starting points. Fixed quotes after a quick call or free audit.</p>
+            <h2 className="text-3xl font-bold">Recent work</h2>
+            <p className="mt-2 text-slate-600">A few snapshots. Ask for a full walkthrough on the call.</p>
           </div>
-          <div className="mt-10 grid gap-6 lg:grid-cols-4 md:grid-cols-2">
-            {[
-              { name: "Landing Page", priceINR: "₹20k+", priceUSD: "$350+", features: ["Hero + sections", "SEO + analytics", "48–72h turnaround"] },
-              { name: "5-Page Website", priceINR: "₹35k+", priceUSD: "$600+", features: ["Home + 4 pages", "CMS optional", "1–2 weeks"] },
-              { name: "App UI (5–10)", priceINR: "₹25k+", priceUSD: "$500+", features: ["Design system", "Clickable prototype", "Handoff"] },
-              { name: "Full-stack MVP", priceINR: "₹2L+", priceUSD: "$3k+", features: ["Auth + DB", "Payments optional", "1–2 weeks"] },
-            ].map((p, idx) => (
-              <div
-                key={p.name}
-                className={
-                  "rounded-2xl border " +
-                  (idx === 0 ? "border-fuchsia-300" : "border-slate-200") +
-                  " bg-white p-6 shadow-sm"
-                }
-              >
-                <h3 className="text-xl font-semibold">{p.name}</h3>
-                <div className="mt-2 text-3xl font-bold">
-                  {p.priceINR}{" "}
-                  <span className="text-base font-normal text-slate-500">({p.priceUSD})</span>
-                </div>
-                <ul className="mt-4 space-y-2 text-sm text-slate-600 list-disc list-inside">
-                  {p.features.map((f) => (
-                    <li key={f}>{f}</li>
-                  ))}
-                </ul>
-                <a
-                  href="#contact"
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
-                >
-                  Request a Quote
-                </a>
-              </div>
-            ))}
+
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {projects.map((it, idx) => {
+              const isProjectSix = idx === 5; // only affect Project 6
+              return (
+                <figure key={it.src} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                  <div className="relative aspect-[16/10]">
+                    {!isProjectSix ? (
+                      <Image
+                        src={it.src}
+                        alt={it.title}
+                        fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                        priority={it.priority}
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-8 lg:p-10 bg-white">
+                        <Image
+                          src={it.src}
+                          alt={it.title}
+                          fill
+                          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                          className="object-contain"
+                          priority={it.priority}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <figcaption className="p-4">
+                    <p className="font-medium">{it.title}</p>
+                    <p className="text-sm text-slate-600">{it.caption}</p>
+                  </figcaption>
+                </figure>
+              );
+            })}
           </div>
         </div>
       </section>
+
+    {/* Pricing */}
+<section id="pricing" className="py-20">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="max-w-2xl">
+      <h2 className="text-3xl font-bold">Simple, transparent pricing</h2>
+      <p className="mt-2 text-slate-600">
+        Standard starting points. Fixed quotes after a quick call or free audit.
+      </p>
+    </div>
+
+    <div className="mt-10 grid gap-6 lg:grid-cols-4 md:grid-cols-2">
+      {[
+        {
+          name: "Landing Page",
+          price: "$350+",
+          features: ["Hero + sections", "SEO + analytics", "48–72h turnaround"],
+        },
+        {
+          name: "5-Page Website",
+          price: "$600+",
+          features: ["Home + 4 pages", "CMS optional", "1–2 weeks"],
+        },
+        {
+          name: "App UI (5–10)",
+          price: "$500+",
+          features: ["Design system", "Clickable prototype", "Handoff"],
+        },
+        {
+          name: "Full-stack MVP",
+          price: "$3k+",
+          features: ["Auth + DB", "Payments optional", "1–2 weeks"],
+        },
+      ].map((p, idx) => (
+        <div
+          key={p.name}
+          className={`rounded-2xl border ${idx === 0 ? "border-fuchsia-300" : "border-slate-200"} bg-white p-6 shadow-sm`}
+        >
+          <h3 className="text-xl font-semibold">{p.name}</h3>
+          <div className="mt-2 text-3xl font-bold">{p.price}</div>
+          <ul className="mt-4 space-y-2 text-sm text-slate-600 list-disc list-inside">
+            {p.features.map((f) => <li key={f}>{f}</li>)}
+          </ul>
+          <a
+            href="#contact"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
+          >
+            Request a Quote
+          </a>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
 
       {/* Process */}
       <section className="py-20 border-t border-slate-200">
@@ -448,7 +421,18 @@ export default function Home() {
                 <li>• Based remotely • Worldwide</li>
               </ul>
             </div>
-            <form className="rounded-2xl border border-slate-200 bg-white p-6 grid gap-3 shadow-sm" method="POST" action="#">
+
+            {/* WIRED: action to API with redirect + honeypot + hidden service + message field */}
+            <form
+              className="rounded-2xl border border-slate-200 bg-white p-6 grid gap-3 shadow-sm"
+              method="POST"
+              action="/api/lead?redirect=/thank-you"
+            >
+              {/* honeypot */}
+              <input type="text" name="hp" tabIndex={-1} autoComplete="off" className="hidden" />
+              {/* default service for this form */}
+              <input type="hidden" name="service" value="Free Audit Request" />
+
               <div className="grid sm:grid-cols-2 gap-3">
                 <input
                   className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
@@ -477,7 +461,7 @@ export default function Home() {
               <textarea
                 className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 min-h-[120px]"
                 placeholder="What do you want to achieve in the next 30 days?"
-                name="goal"
+                name="message" // renamed from "goal"
               />
               <button className="mt-1 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition">
                 Send Audit Request
