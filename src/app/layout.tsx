@@ -16,9 +16,8 @@ export const metadata: Metadata = {
   title: "Omega App Builder",
   description: "High-converting landing pages, websites & app UI. Clear messaging, fast load times, fixed pricing. Turnarounds 48–72h. Get a free 3-point audit.",
    icons: {
-    icon: "/logo.png",          // from src/app/icon.png
+    icon: "/logo.png",         
     shortcut: "/logo.png",
-    // apple: "/apple-touch-icon.png", // optional if you add this file later
   },
 };
 

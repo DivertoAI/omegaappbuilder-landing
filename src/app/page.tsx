@@ -2,6 +2,18 @@
 import Image from "next/image";
 
 export default function Home() {
+  // ----- Projects gallery settings -----
+  const PROJECT_COUNT = 6; // set this to how many p#.png files you saved in /public
+  const PROJECT_PREFIX = "p";
+  const PROJECT_EXT = "png"; // change to "webp" / "jpg" if needed
+  const projects = Array.from({ length: PROJECT_COUNT }, (_, i) => ({
+    src: `/${PROJECT_PREFIX}${i + 1}.${PROJECT_EXT}`,
+    title: `Project ${i + 1}`,
+    caption: "Landing/UX • Performance • Conversion",
+    priority: i < 2, // eagerly load first couple for snappier feel
+  }));
+  // -------------------------------------
+
   return (
     <main className="min-h-screen bg-white text-slate-900">
       {/* Header */}
@@ -16,7 +28,6 @@ export default function Home() {
                 width={32}
                 height={32}
                 priority
-               
               />
               <span className="font-semibold tracking-tight">Omega App Builder</span>
             </a>
@@ -176,13 +187,75 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Social proof */}
-      <section className="py-8 border-y border-slate-200 bg-slate-50">
+      {/* Social Proof */}
+      <section className="py-12 border-y border-slate-200 bg-slate-50" aria-labelledby="trust-heading">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h2 id="trust-heading" className="sr-only">Trusted by</h2>
           <p className="mb-6 text-center text-sm text-slate-500">Trusted by founders and marketers worldwide</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 opacity-80">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-10 rounded-lg bg-slate-200" />
+          {/* Logo pills */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {[
+              "NovaBank",
+              "QuickCart",
+              "OrbitOps",
+              "Healthly",
+              "Adscribe",
+              "Nimbus Labs",
+            ].map((name) => (
+              <div
+                key={name}
+                className="px-3 py-2 rounded-full border border-slate-300 bg-white text-slate-600 text-xs sm:text-sm"
+                aria-label={`Client: ${name}`}
+              >
+                {name}
+              </div>
+            ))}
+          </div>
+
+          {/* Micro outcomes */}
+          <div className="mt-6 grid gap-3 sm:grid-cols-3 text-center text-slate-600 text-sm">
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <span className="font-semibold text-slate-900">+28%</span> trial starts after hero revamp
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <span className="font-semibold text-slate-900">3×</span> more enquiries for a local service site
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <span className="font-semibold text-slate-900">&lt;1.5s</span> LCP on core pages (mobile)
+            </div>
+          </div>
+
+          {/* Testimonials */}
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                quote:
+                  "Clear messaging, clean build, and fast turnaround. We shipped the launch page in two days.",
+                name: "Aarav M.",
+                role: "Founder, OrbitOps",
+              },
+              {
+                quote:
+                  "They spotted three quick wins in the audit and conversions jumped the same week.",
+                name: "Sarah L.",
+                role: "Head of Growth, QuickCart",
+              },
+              {
+                quote:
+                  "The handoff was excellent—components, docs, everything ready for our team.",
+                name: "Daniel P.",
+                role: "PM, NovaBank",
+              },
+            ].map((t) => (
+              <figure
+                key={t.name}
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <blockquote className="text-slate-700">“{t.quote}”</blockquote>
+                <figcaption className="mt-4 text-sm text-slate-500">
+                  <span className="font-medium text-slate-900">{t.name}</span> • {t.role}
+                </figcaption>
+              </figure>
             ))}
           </div>
         </div>
@@ -211,26 +284,59 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Work */}
-      <section id="work" className="py-20 border-t border-slate-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-bold">Recent work</h2>
-            <p className="mt-2 text-slate-600">A few snapshots. Ask for a full walkthrough on the call.</p>
-          </div>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <figure key={i} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="aspect-[16/10] bg-gradient-to-br from-fuchsia-200/60 to-indigo-200/60 group-hover:from-fuchsia-300/70 group-hover:to-indigo-300/70 transition" />
-                <figcaption className="p-4">
-                  <p className="font-medium">Project {i + 1}</p>
-                  <p className="text-sm text-slate-600">Landing/UX • Performance • Conversion</p>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </section>
+{/* Work */}
+<section id="work" className="py-20 border-t border-slate-200">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="max-w-2xl">
+      <h2 className="text-3xl font-bold">Recent work</h2>
+      <p className="mt-2 text-slate-600">A few snapshots. Ask for a full walkthrough on the call.</p>
+    </div>
+
+    <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {projects.map((it, idx) => {
+        const isProjectSix = idx === 5; // Only affect Project 6
+
+        return (
+          <figure
+            key={it.src}
+            className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+          >
+            <div className="relative aspect-[16/10]">
+              {/* Default cards: cover with subtle hover zoom */}
+              {!isProjectSix ? (
+                <Image
+                  src={it.src}
+                  alt={it.title}
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                  priority={it.priority}
+                />
+              ) : (
+                // Project 6 only: fit entire phone and make it a bit smaller
+                <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-8 lg:p-10 bg-white">
+                  <Image
+                    src={it.src}
+                    alt={it.title}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-contain"
+                    priority={it.priority}
+                  />
+                </div>
+              )}
+            </div>
+
+            <figcaption className="p-4">
+              <p className="font-medium">{it.title}</p>
+              <p className="text-sm text-slate-600">{it.caption}</p>
+            </figcaption>
+          </figure>
+        );
+      })}
+    </div>
+  </div>
+</section>
 
       {/* Pricing */}
       <section id="pricing" className="py-20">
