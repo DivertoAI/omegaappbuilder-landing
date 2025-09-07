@@ -2,6 +2,8 @@
 import Image from "next/image";
 
 export default function Home() {
+  // Calendly: open in a new tab (no popup widget)
+  const calendlyUrl = "https://calendly.com/hello-omegaappbuilder/30min";
   // ----- Projects gallery settings -----
   const PROJECT_COUNT = 6; // how many p#.png files you saved in /public
   const PROJECT_PREFIX = "p";
@@ -38,8 +40,21 @@ export default function Home() {
               <a href="#contact" className="hover:text-fuchsia-600">Contact</a>
             </nav>
             <div className="flex items-center gap-3">
-              <a href="#contact" className="hidden sm:inline-flex px-4 py-2 rounded-xl bg-slate-900/5 hover:bg-slate-900/10 transition">Get Free Audit</a>
-              <a href="https://calendly.com/your-handle/15min" className="inline-flex px-4 py-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition">Book a Call</a>
+              <a
+                href="#contact"
+                className="hidden sm:inline-flex px-4 py-2 rounded-xl bg-slate-900/5 hover:bg-slate-900/10 transition"
+              >
+                Get Free Audit
+              </a>
+              {/* Open Calendly in a new tab */}
+              <a
+                href={calendlyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex px-4 py-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
+              >
+                Book a Call
+              </a>
             </div>
           </div>
         </div>
@@ -178,6 +193,16 @@ export default function Home() {
                       </a>
                     </p>
                   </form>
+
+                  {/* Extra CTA inside the card: open Calendly in new tab */}
+                  <a
+                    href={calendlyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 w-full inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-slate-900 hover:bg-slate-50 transition"
+                  >
+                    Book a 15-min Call
+                  </a>
                 </div>
               </div>
             </div>
@@ -301,59 +326,59 @@ export default function Home() {
         </div>
       </section>
 
-    {/* Pricing */}
-<section id="pricing" className="py-20">
-  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div className="max-w-2xl">
-      <h2 className="text-3xl font-bold">Simple, transparent pricing</h2>
-      <p className="mt-2 text-slate-600">
-        Standard starting points. Fixed quotes after a quick call or free audit.
-      </p>
-    </div>
+      {/* Pricing */}
+      <section id="pricing" className="py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-bold">Simple, transparent pricing</h2>
+            <p className="mt-2 text-slate-600">
+              Standard starting points. Fixed quotes after a quick call or free audit.
+            </p>
+          </div>
 
-    <div className="mt-10 grid gap-6 lg:grid-cols-4 md:grid-cols-2">
-      {[
-        {
-          name: "Landing Page",
-          price: "$350+",
-          features: ["Hero + sections", "SEO + analytics", "48–72h turnaround"],
-        },
-        {
-          name: "5-Page Website",
-          price: "$600+",
-          features: ["Home + 4 pages", "CMS optional", "1–2 weeks"],
-        },
-        {
-          name: "App UI (5–10)",
-          price: "$500+",
-          features: ["Design system", "Clickable prototype", "Handoff"],
-        },
-        {
-          name: "Full-stack MVP",
-          price: "$3k+",
-          features: ["Auth + DB", "Payments optional", "1–2 weeks"],
-        },
-      ].map((p, idx) => (
-        <div
-          key={p.name}
-          className={`rounded-2xl border ${idx === 0 ? "border-fuchsia-300" : "border-slate-200"} bg-white p-6 shadow-sm`}
-        >
-          <h3 className="text-xl font-semibold">{p.name}</h3>
-          <div className="mt-2 text-3xl font-bold">{p.price}</div>
-          <ul className="mt-4 space-y-2 text-sm text-slate-600 list-disc list-inside">
-            {p.features.map((f) => <li key={f}>{f}</li>)}
-          </ul>
-          <a
-            href="#contact"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
-          >
-            Request a Quote
-          </a>
+          <div className="mt-10 grid gap-6 lg:grid-cols-4 md:grid-cols-2">
+            {[
+              {
+                name: "Landing Page",
+                price: "$350+",
+                features: ["Hero + sections", "SEO + analytics", "48–72h turnaround"],
+              },
+              {
+                name: "5-Page Website",
+                price: "$600+",
+                features: ["Home + 4 pages", "CMS optional", "1–2 weeks"],
+              },
+              {
+                name: "App UI (5–10)",
+                price: "$500+",
+                features: ["Design system", "Clickable prototype", "Handoff"],
+              },
+              {
+                name: "Full-stack MVP",
+                price: "$3k+",
+                features: ["Auth + DB", "Payments optional", "1–2 weeks"],
+              },
+            ].map((p, idx) => (
+              <div
+                key={p.name}
+                className={`rounded-2xl border ${idx === 0 ? "border-fuchsia-300" : "border-slate-200"} bg-white p-6 shadow-sm`}
+              >
+                <h3 className="text-xl font-semibold">{p.name}</h3>
+                <div className="mt-2 text-3xl font-bold">{p.price}</div>
+                <ul className="mt-4 space-y-2 text-sm text-slate-600 list-disc list-inside">
+                  {p.features.map((f) => <li key={f}>{f}</li>)}
+                </ul>
+                <a
+                  href="#contact"
+                  className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
+                >
+                  Request a Quote
+                </a>
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-</section>
+      </section>
 
       {/* Process */}
       <section className="py-20 border-t border-slate-200">
@@ -383,7 +408,7 @@ export default function Home() {
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             {[
               { q: "How fast can you deliver?", a: "Landing pages typically in 48–72 hours. App UI sets in 3–5 days. Full MVPs in ~1–2 weeks depending on scope." },
-              { q: "Do you work globally?", a: "Yes — worldwide. We price in USD (or local currency) and accept cards or bank transfer." },
+              { q: "Do you work globally?", a: "Yes — worldwide. We price in USD and accept cards or bank transfer." },
               { q: "What do you need from us to start?", a: "Your URL (if any), a short description of your audience and offer, and any brand assets (logo, colors, fonts)." },
               { q: "Do we own the work?", a: "Yes. You receive editable source files and full rights on final payment." },
             ].map((f) => (
@@ -414,7 +439,12 @@ export default function Home() {
                 </li>
                 <li>
                   • Call/Meet:{" "}
-                  <a className="underline hover:text-slate-900" href="https://calendly.com/your-handle/15min">
+                  <a
+                    href={calendlyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-slate-900"
+                  >
                     Book a 15-min slot
                   </a>
                 </li>
@@ -461,7 +491,7 @@ export default function Home() {
               <textarea
                 className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 min-h-[120px]"
                 placeholder="What do you want to achieve in the next 30 days?"
-                name="message" // renamed from "goal"
+                name="message"
               />
               <button className="mt-1 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition">
                 Send Audit Request
