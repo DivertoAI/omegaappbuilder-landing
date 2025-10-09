@@ -1,57 +1,86 @@
 // src/app/page.tsx
-import Image from "next/image";
+'use client';
+
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
+import { useCallback } from 'react';
+
+// Lazy-load the 3D canvas (no SSR) to keep LCP snappy
+const Planet3D = dynamic(() => import('../components/Planet3D'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[360px] flex items-center justify-center bg-gradient-to-b from-white to-slate-50">
+      <div className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 text-xs text-slate-600 shadow-sm">
+        Loading 3D…
+      </div>
+    </div>
+  ),
+});
 
 export default function Home() {
-  // Calendly: open in a new tab (no popup widget)
-  const calendlyUrl = "https://calendly.com/hello-omegaappbuilder/30min";
-  // ----- Projects gallery settings -----
-  const PROJECT_COUNT = 6; // how many p#.png files you saved in /public
-  const PROJECT_PREFIX = "p";
-  const PROJECT_EXT = "png"; // change to "webp" / "jpg" if needed
+  // External scheduling
+  const calendlyUrl = 'https://calendly.com/hello-omegaappbuilder/30min';
+
+  // Utility: smooth scroll with graceful fallback
+  const goTo = useCallback((id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  // ----- Projects gallery settings (drop images in /public as p1.png etc.) -----
+  const PROJECT_COUNT = 6;
+  const PROJECT_PREFIX = 'p';
+  const PROJECT_EXT = 'png';
   const projects = Array.from({ length: PROJECT_COUNT }, (_, i) => ({
     src: `/${PROJECT_PREFIX}${i + 1}.${PROJECT_EXT}`,
     title: `Project ${i + 1}`,
-    caption: "Landing/UX • Performance • Conversion",
-    priority: i < 2, // eagerly load first couple for snappier feel
+    caption: 'Design/Build • Performance • Conversion',
+    priority: i < 2,
   }));
-  // -------------------------------------
+  // ---------------------------------------------------------------------------
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-slate-200 bg-white/70">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/80">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <a href="#home" className="flex items-center gap-2">
               <Image
                 src="/logo.png"
-                alt="Omega App Builder logo"
+                alt="Omega logo"
                 width={32}
                 height={32}
                 priority
               />
-              <span className="font-semibold tracking-tight">Omega App Builder</span>
+              <span className="font-semibold tracking-tight">
+                Omega — AI Agents • 3D Web • Apps
+              </span>
             </a>
+
             <nav className="hidden md:flex items-center gap-6 text-sm">
-              <a href="#services" className="hover:text-fuchsia-600">Services</a>
-              <a href="#work" className="hover:text-fuchsia-600">Work</a>
-              <a href="#pricing" className="hover:text-fuchsia-600">Pricing</a>
-              <a href="#faq" className="hover:text-fuchsia-600">FAQ</a>
-              <a href="#contact" className="hover:text-fuchsia-600">Contact</a>
+              <a href="#agents" onClick={(e) => { e.preventDefault(); goTo('agents'); }} className="hover:text-fuchsia-600">AI Agents</a>
+              <a href="#web3d" onClick={(e) => { e.preventDefault(); goTo('web3d'); }} className="hover:text-fuchsia-600">3D Websites</a>
+              <a href="#work" onClick={(e) => { e.preventDefault(); goTo('work'); }} className="hover:text-fuchsia-600">Work</a>
+              <a href="#pricing" onClick={(e) => { e.preventDefault(); goTo('pricing'); }} className="hover:text-fuchsia-600">Pricing</a>
+              <a href="#faq" onClick={(e) => { e.preventDefault(); goTo('faq'); }} className="hover:text-fuchsia-600">FAQ</a>
+              <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); }} className="hover:text-fuchsia-600">Contact</a>
             </nav>
+
             <div className="flex items-center gap-3">
               <a
                 href="#contact"
-                className="hidden sm:inline-flex px-4 py-2 rounded-xl bg-slate-900/5 hover:bg-slate-900/10 transition"
+                onClick={(e) => { e.preventDefault(); goTo('contact'); }}
+                className="hidden sm:inline-flex rounded-xl px-4 py-2 bg-slate-900/5 hover:bg-slate-900/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
               >
                 Get Free Audit
               </a>
-              {/* Open Calendly in a new tab */}
               <a
                 href={calendlyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex px-4 py-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
+                className="inline-flex rounded-xl px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                aria-label="Book a call on Calendly (opens in a new tab)"
               >
                 Book a Call
               </a>
@@ -61,151 +90,99 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section id="home" className="relative overflow-hidden">
-        {/* Decorative blobs */}
+      <section id="home" className="relative overflow-hidden scroll-mt-28">
+        {/* Decorative, gentle light gradients */}
         <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-          <svg className="absolute -top-40 -left-28 h-[40rem] w-[40rem]" viewBox="0 0 200 200">
-            <defs>
-              <linearGradient id="blobGrad1" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#FDF2FF" />
-                <stop offset="100%" stopColor="#E9D5FF" />
-              </linearGradient>
-            </defs>
-            <path
-              fill="url(#blobGrad1)"
-              fillOpacity="0.7"
-              d="M44.9,-65.1C57.9,-58.4,68.6,-48.3,74.1,-35.9C79.7,-23.6,80,-8.9,77.6,5.6C75.2,20.2,70.3,34.5,60.8,45.2C51.3,55.9,37.2,62.9,22.9,67.3C8.5,71.7,-6.1,73.6,-20.5,70.5C-34.8,67.3,-49,59,-59.2,47.2C-69.5,35.4,-75.8,20.1,-77.6,4.1C-79.4,-11.9,-76.7,-28.7,-68.7,-42.3C-60.8,-55.9,-47.7,-66.3,-33.1,-72.7C-18.5,-79.1,-9.3,-81.5,2.3,-85.2C13.9,-88.9,27.8,-93.8,44.9,-65.1Z"
-              transform="translate(100 100)"
-            />
-          </svg>
-          <svg className="absolute -bottom-40 -right-28 h-[36rem] w-[36rem] rotate-12" viewBox="0 0 200 200">
-            <defs>
-              <linearGradient id="blobGrad2" x1="1" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#DBEAFE" />
-                <stop offset="100%" stopColor="#E0E7FF" />
-              </linearGradient>
-            </defs>
-            <path
-              fill="url(#blobGrad2)"
-              fillOpacity="0.6"
-              d="M44.9,-65.1C57.9,-58.4,68.6,-48.3,74.1,-35.9C79.7,-23.6,80,-8.9,77.6,5.6C75.2,20.2,70.3,34.5,60.8,45.2C51.3,55.9,37.2,62.9,22.9,67.3C8.5,71.7,-6.1,73.6,-20.5,70.5C-34.8,67.3,-49,59,-59.2,47.2C-69.5,35.4,-75.8,20.1,-77.6,4.1C-79.4,-11.9,-76.7,-28.7,-68.7,-42.3C-60.8,-55.9,-47.7,-66.3,-33.1,-72.7C-18.5,-79.1,-9.3,-81.5,2.3,-85.2C13.9,-88.9,27.8,-93.8,44.9,-65.1Z"
-              transform="translate(100 100) rotate(18)"
-            />
-          </svg>
+          <div className="absolute -top-32 -left-24 h-[36rem] w-[36rem] rounded-full bg-gradient-to-br from-fuchsia-100 to-indigo-100 blur-3xl" />
+          <div className="absolute -bottom-40 -right-24 h-[32rem] w-[32rem] rounded-full bg-gradient-to-tr from-indigo-100 to-sky-100 blur-3xl" />
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-18 md:py-24">
           <div className="grid lg:grid-cols-12 gap-10 items-center">
             <div className="lg:col-span-7">
               <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
-                Landing pages & product sites that <span className="text-fuchsia-600">convert</span>.
+                <span className="text-slate-900">AI agents that book meetings & resolve tickets.</span>{' '}
+                <span className="text-fuchsia-600">3D websites</span> that make people stop and engage.
               </h1>
               <p className="mt-5 text-slate-600 max-w-2xl">
-                We design and build high-performing landing pages, websites, and app UI with clear messaging, fast load
-                times, and strong calls-to-action—so more visitors become customers.
+                Senior studio crafting measurable outcomes: SDR & Support agents wired to your CRM and inbox,
+                plus immersive WebGL sites (Three.js/Model-Viewer/Spline) that convert.
+                Clear scopes, strong governance, enterprise polish.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
                   href="#contact"
-                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition font-medium"
+                  onClick={(e) => { e.preventDefault(); goTo('contact'); }}
+                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
                 >
                   Get a 3-Point Free Audit
                 </a>
                 <a
-                  href="#work"
-                  className="px-5 py-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 transition"
+                  href="#agents"
+                  onClick={(e) => { e.preventDefault(); goTo('agents'); }}
+                  className="px-5 py-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
                 >
-                  See Work
+                  See Agent Use-Cases
                 </a>
               </div>
-              <div className="mt-6 flex items-center gap-4 text-sm text-slate-500">
-                <span>✓ Typical turnaround: landing page 48–72h</span>
-                <span>✓ App screen set: 3–5 days</span>
-              </div>
+              <dl className="mt-6 flex flex-wrap gap-4 text-sm text-slate-600">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs">✓</span>
+                  <dt className="font-medium">Clear signifiers</dt><dd> • intuitive CTAs, labels, states</dd>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs">✓</span>
+                  <dt className="font-medium">Immediate feedback</dt><dd> • focus, hover, success</dd>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs">✓</span>
+                  <dt className="font-medium">Constraints</dt><dd> • guardrails & approvals</dd>
+                </div>
+              </dl>
             </div>
 
+            {/* 3D preview card */}
             <div className="lg:col-span-5">
               <div className="relative">
-                <div
-                  className="absolute -inset-4 bg-gradient-to-r from-fuchsia-200/50 to-indigo-200/50 blur-2xl rounded-3xl"
-                  aria-hidden="true"
-                />
-                <div className="relative rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-700">Quick Quote</span>
-                    <span className="text-xs text-slate-500">~2 min</span>
+                <div className="absolute -inset-4 bg-gradient-to-r from-fuchsia-200/50 to-indigo-200/50 blur-2xl rounded-3xl" aria-hidden="true" />
+                <div className="relative rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl overflow-hidden">
+                  <div className="flex items-center justify-between px-6 pt-5">
+                    <span className="text-sm font-medium text-slate-700">Live 3D Preview</span>
+                    <span className="text-xs text-slate-500">interactive</span>
+                  </div>
+                  <div className="mt-3" aria-describedby="globe-controls-hint">
+                    {/* Uses /public/planet/scene.gltf */}
+                    <Planet3D height={360} autoRotateSpeed={0.55} />
                   </div>
 
-                  {/* WIRED: action to API with redirect + honeypot */}
-                  <form
-                    className="mt-4 grid gap-3"
-                    method="POST"
-                    action="/api/lead?redirect=/thank-you"
+                  {/* 👇 Interaction hint */}
+                  <p
+                    id="globe-controls-hint"
+                    className="px-6 pt-3 text-[11px] leading-5 text-slate-500 sm:text-xs"
                   >
-                    {/* honeypot */}
-                    <input type="text" name="hp" tabIndex={-1} autoComplete="off" className="hidden" />
+                    Tip: <span className="font-medium text-slate-700">click & drag</span> to rotate •{' '}
+                    <span className="font-medium text-slate-700">scroll or pinch</span> to zoom
+                  </p>
 
-                    <input
-                      className="w-full rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                      placeholder="Your name"
-                      name="name"
-                      required
-                    />
-                    <input
-                      className="w-full rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                      type="email"
-                      placeholder="Email"
-                      name="email"
-                      required
-                    />
-                    <input
-                      className="w-full rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                      placeholder="Company or project"
-                      name="company"
-                    />
-                    <input
-                      className="w-full rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                      placeholder="URL (optional)"
-                      name="url"
-                    />
-                    <select
-                      name="service"
-                      className="w-full rounded-xl bg-white border border-slate-300 px-4 py-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
+                  <div className="px-6 py-5 border-t border-slate-200 bg-white">
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {['WebGL', 'Three.js', 'Spline-ready', 'GLTF', 'R3F/Drei', 'Performance-budgeted'].map((t) => (
+                        <span key={t} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-600">{t}</span>
+                      ))}
+                    </div>
+                    <a
+                      href={calendlyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-slate-900 hover:bg-slate-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
                     >
-                      <option>Landing page</option>
-                      <option>5-page website</option>
-                      <option>App UI (5–10 screens)</option>
-                      <option>Full-stack MVP</option>
-                      <option>Marketing & CRO</option>
-                    </select>
-                    <textarea
-                      className="w-full rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 min-h-[100px]"
-                      placeholder="What do you need? (goals, deadline)"
-                      name="message"
-                    />
-                    <button className="mt-1 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition">
-                      Request Quote
-                    </button>
-                    <p className="text-xs text-slate-500">
-                      Or email us:{" "}
-                      <a className="underline hover:text-slate-800" href="mailto:hello@omegaappbuilder.com">
-                        hello@omegaappbuilder.com
-                      </a>
-                    </p>
-                  </form>
-
-                  {/* Extra CTA inside the card: open Calendly in new tab */}
-                  <a
-                    href={calendlyUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 w-full inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-slate-900 hover:bg-slate-50 transition"
-                  >
-                    Book a 15-min Call
-                  </a>
+                      Book a 15-min Call
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
+            {/* /3D preview card */}
           </div>
         </div>
       </section>
@@ -214,14 +191,10 @@ export default function Home() {
       <section className="py-12 border-y border-slate-200 bg-slate-50" aria-labelledby="trust-heading">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 id="trust-heading" className="sr-only">Trusted by</h2>
-          <p className="mb-6 text-center text-sm text-slate-500">Trusted by founders and marketers worldwide</p>
+          <p className="mb-6 text-center text-sm text-slate-500">Trusted by founders and operators worldwide</p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            {["NovaBank", "QuickCart", "OrbitOps", "Healthly", "Adscribe", "Nimbus Labs"].map((name) => (
-              <div
-                key={name}
-                className="px-3 py-2 rounded-full border border-slate-300 bg-white text-slate-600 text-xs sm:text-sm"
-                aria-label={`Client: ${name}`}
-              >
+            {['NovaBank', 'QuickCart', 'OrbitOps', 'Healthly', 'Adscribe', 'Nimbus Labs'].map((name) => (
+              <div key={name} className="px-3 py-2 rounded-full border border-slate-300 bg-white text-slate-600 text-xs sm:text-sm" aria-label={`Client: ${name}`}>
                 {name}
               </div>
             ))}
@@ -229,71 +202,117 @@ export default function Home() {
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3 text-center text-slate-600 text-sm">
             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-              <span className="font-semibold text-slate-900">+28%</span> trial starts after hero revamp
+              <span className="font-semibold text-slate-900">+22%</span> more qualified demos (SDR agent)
             </div>
             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-              <span className="font-semibold text-slate-900">3×</span> more enquiries for a local service site
+              <span className="font-semibold text-slate-900">41%</span> ticket deflection (support agent)
             </div>
             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
               <span className="font-semibold text-slate-900">&lt;1.5s</span> LCP on core pages (mobile)
             </div>
           </div>
-
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {[
-              { quote: "Clear messaging, clean build, and fast turnaround. We shipped the launch page in two days.", name: "Aarav M.", role: "Founder, OrbitOps" },
-              { quote: "They spotted three quick wins in the audit and conversions jumped the same week.", name: "Sarah L.", role: "Head of Growth, QuickCart" },
-              { quote: "The handoff was excellent—components, docs, everything ready for our team.", name: "Daniel P.", role: "PM, NovaBank" },
-            ].map((t) => (
-              <figure key={t.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <blockquote className="text-slate-700">“{t.quote}”</blockquote>
-                <figcaption className="mt-4 text-sm text-slate-500">
-                  <span className="font-medium text-slate-900">{t.name}</span> • {t.role}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
         </div>
       </section>
 
-      {/* Services */}
-      <section id="services" className="py-20">
+      {/* AI Agents (Productized) */}
+      <section id="agents" className="py-20 scroll-mt-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
-            <h2 className="text-3xl font-bold">What we ship</h2>
-            <p className="mt-2 text-slate-600">Clear messaging. Fast builds. Measurable results.</p>
+            <h2 className="text-3xl font-bold">AI agents, productized</h2>
+            <p className="mt-2 text-slate-600">
+              Outcome-first automations with real guardrails. Connect CRM, calendar, email, ticketing, docs, and data.
+              Human-in-the-loop when it matters.
+            </p>
           </div>
-          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+
+          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[
-              { title: "Landing Pages", desc: "High-converting hero + proof + CTA, SEO-ready. Typical 48–72h." },
-              { title: "5-Page Websites", desc: "Home, About, Features, Pricing, Contact. Clean, fast, responsive." },
-              { title: "App UI (5–10 screens)", desc: "Flows in Figma with components, prototyping, and handoff." },
-              { title: "Full-stack MVP", desc: "React/Next + Flutter/Firebase, auth, DB, basic admin. 1–2 weeks." },
+              {
+                title: 'SDR Agent (Lead Gen)',
+                desc: 'Qualifies and books meetings from site chat + email follow-ups. Logs to your CRM with UTM/context.',
+                bullets: ['Calendars/HubSpot/Salesforce', 'Multi-channel (web, email, WhatsApp)', 'Playbooks + approvals'],
+              },
+              {
+                title: 'Support & Success Agent',
+                desc: 'Doc-aware answers, ticket triage, and secure escalation with full conversation context.',
+                bullets: ['RAG over KB & product docs', 'Zendesk/Intercom/Email integration', 'CSAT & deflection metrics'],
+              },
+              {
+                title: 'Ops & Backoffice Automations',
+                desc: 'Reads spreadsheets/docs, updates systems, triggers workflows. Teams focus on edge cases.',
+                bullets: ['Sheets/Notion/Drive', 'Zapier/Make/Direct APIs', 'Audits & transcripts'],
+              },
             ].map((c) => (
               <div key={c.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="text-lg font-semibold">{c.title}</h3>
                 <p className="mt-2 text-sm text-slate-600">{c.desc}</p>
+                <ul className="mt-4 space-y-2 text-sm text-slate-600 list-disc list-inside">
+                  {c.bullets.map((b) => <li key={b}>{b}</li>)}
+                </ul>
+                <a
+                  href="#contact"
+                  onClick={(e) => { e.preventDefault(); goTo('contact'); }}
+                  className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                >
+                  Get an Agent Demo
+                </a>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Work (images from /public/p#.png) */}
-      <section id="work" className="py-20 border-t border-slate-200">
+      {/* 3D Websites & Experiences */}
+      <section id="web3d" className="py-20 border-t border-slate-200 bg-slate-50 scroll-mt-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-bold">3D websites & interactive brand moments</h2>
+            <p className="mt-2 text-slate-600">
+              Tasteful, performant 3D: product tours, hero scenes, configurators, and scrollytelling.
+              Built with Three.js, Spline, Model-Viewer—budgeted for speed.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                title: '3D Hero Scene',
+                desc: 'Animated, interactive hero that showcases your product. Mobile-friendly & SEO-aware.',
+              },
+              {
+                title: 'Product Configurator',
+                desc: 'Real-time variants, materials, and pricing. Add to cart or lead capture built-in.',
+              },
+              {
+                title: 'Scrollytelling Page',
+                desc: 'Narrative 3D sections with pinned steps & micro-interactions that tell a story.',
+              },
+            ].map((c) => (
+              <div key={c.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-lg font-semibold">{c.title}</h3>
+                <p className="mt-2 text-sm text-slate-600">{c.desc}</p>
+                <div className="mt-4 text-xs text-slate-500">Perf budget: LCP &lt; 2.0s • AA contrast • A11y cues</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Work */}
+      <section id="work" className="py-20 border-t border-slate-200 scroll-mt-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-bold">Recent work</h2>
-            <p className="mt-2 text-slate-600">A few snapshots. Ask for a full walkthrough on the call.</p>
+            <p className="mt-2 text-slate-600">Snapshots—ask for a full walkthrough on the call.</p>
           </div>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((it, idx) => {
-              const isProjectSix = idx === 5; // only affect Project 6
+              const isContain = idx === 5;
               return (
                 <figure key={it.src} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                   <div className="relative aspect-[16/10]">
-                    {!isProjectSix ? (
+                    {!isContain ? (
                       <Image
                         src={it.src}
                         alt={it.title}
@@ -303,7 +322,7 @@ export default function Home() {
                         priority={it.priority}
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-8 lg:p-10 bg-white">
+                      <div className="absolute inset-0 flex items-center justify-center bg-white">
                         <Image
                           src={it.src}
                           alt={it.title}
@@ -327,90 +346,108 @@ export default function Home() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20">
+      <section id="pricing" className="py-20 scroll-mt-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl">
+          <div className="max-w-3xl">
             <h2 className="text-3xl font-bold">Simple, transparent pricing</h2>
             <p className="mt-2 text-slate-600">
-              Standard starting points. Fixed quotes after a quick call or free audit.
+              Value-based quotes by scope and complexity. Below are typical bands clients choose.
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-4 md:grid-cols-2">
-            {[
-              {
-                name: "Landing Page",
-                price: "$350+",
-                features: ["Hero + sections", "SEO + analytics", "48–72h turnaround"],
-              },
-              {
-                name: "5-Page Website",
-                price: "$600+",
-                features: ["Home + 4 pages", "CMS optional", "1–2 weeks"],
-              },
-              {
-                name: "App UI (5–10)",
-                price: "$500+",
-                features: ["Design system", "Clickable prototype", "Handoff"],
-              },
-              {
-                name: "Full-stack MVP",
-                price: "$3k+",
-                features: ["Auth + DB", "Payments optional", "1–2 weeks"],
-              },
-            ].map((p, idx) => (
-              <div
-                key={p.name}
-                className={`rounded-2xl border ${idx === 0 ? "border-fuchsia-300" : "border-slate-200"} bg-white p-6 shadow-sm`}
-              >
-                <h3 className="text-xl font-semibold">{p.name}</h3>
-                <div className="mt-2 text-3xl font-bold">{p.price}</div>
-                <ul className="mt-4 space-y-2 text-sm text-slate-600 list-disc list-inside">
-                  {p.features.map((f) => <li key={f}>{f}</li>)}
-                </ul>
-                <a
-                  href="#contact"
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
-                >
-                  Request a Quote
-                </a>
-              </div>
-            ))}
+          {/* AI Ops Retainer */}
+          <div className="mt-10">
+            <h3 className="text-xl font-semibold">AI Ops Retainer (agents & automations)</h3>
+            <div className="mt-4 grid gap-6 lg:grid-cols-3">
+              {[
+                { name: 'Starter', price: '$1,999 / mo', features: ['1 agent / month', 'Dashboards & alerts', 'SLA: next-business-day'] },
+                { name: 'Growth', price: '$3,999 / mo', features: ['2–3 agents / month', 'A/B prompts & playbooks', 'SLA: 24h (prio)'], highlight: true },
+                { name: 'Scale', price: '$7,999 / mo', features: ['4+ agents / month', 'Advanced analytics', 'SLA: same-day (prio)'] },
+              ].map((p) => (
+                <div key={p.name} className={`rounded-2xl border ${p.highlight ? 'border-fuchsia-300' : 'border-slate-200'} bg-white p-6 shadow-sm`}>
+                  <h4 className="text-lg font-semibold">{p.name}</h4>
+                  <div className="mt-1 text-2xl font-bold">{p.price}</div>
+                  <ul className="mt-4 space-y-2 text-sm text-slate-600 list-disc list-inside">
+                    {p.features.map((f) => <li key={f}>{f}</li>)}
+                  </ul>
+                  <a
+                    href="#contact"
+                    onClick={(e) => { e.preventDefault(); goTo('contact'); }}
+                    className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
+                  >
+                    Request Proposal
+                  </a>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* Process */}
-      <section className="py-20 border-t border-slate-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold">How it works</h2>
-          <div className="mt-10 grid gap-6 md:grid-cols-4">
-            {[
-              { step: "01", title: "Audit & Plan", text: "Free 3-point audit + scope call. Fixed quote." },
-              { step: "02", title: "Design", text: "Figma mockups with quick iteration (short looms for feedback)." },
-              { step: "03", title: "Build", text: "Clean, responsive implementation with SEO and analytics." },
-              { step: "04", title: "Launch & Optimize", text: "Ship fast, measure, and suggest improvements." },
-            ].map((s) => (
-              <div key={s.step} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="text-sm text-slate-500">{s.step}</div>
-                <div className="mt-1 text-lg font-semibold">{s.title}</div>
-                <p className="mt-2 text-sm text-slate-600">{s.text}</p>
-              </div>
-            ))}
+          {/* 3D Websites & Interactive */}
+          <div className="mt-12">
+            <h3 className="text-xl font-semibold">3D Websites & Interactive</h3>
+            <div className="mt-4 grid gap-6 lg:grid-cols-3">
+              {[
+                { name: '3D Hero', price: '$8,000 – $20,000', features: ['Guided discovery', 'Optimized assets', '2–4 weeks'] },
+                { name: 'Configurator', price: '$25,000 – $80,000', features: ['Variants & materials', 'Cart/lead capture', '4–8+ weeks'], highlight: true },
+                { name: 'Scrollytelling Site', price: '$15,000 – $60,000', features: ['Narrative sections', 'Perf budget & QA', '3–6 weeks'] },
+              ].map((p) => (
+                <div key={p.name} className={`rounded-2xl border ${p.highlight ? 'border-fuchsia-300' : 'border-slate-200'} bg-white p-6 shadow-sm`}>
+                  <h4 className="text-lg font-semibold">{p.name}</h4>
+                  <div className="mt-1 text-2xl font-bold">{p.price}</div>
+                  <ul className="mt-4 space-y-2 text-sm text-slate-600 list-disc list-inside">
+                    {p.features.map((f) => <li key={f}>{f}</li>)}
+                  </ul>
+                  <a
+                    href="#contact"
+                    onClick={(e) => { e.preventDefault(); goTo('contact'); }}
+                    className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
+                  >
+                    Request a Quote
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Classic Services (brief) */}
+          <div className="mt-12">
+            <h3 className="text-xl font-semibold">Classic Services</h3>
+            <div className="mt-4 grid gap-6 lg:grid-cols-3">
+              {[
+                { name: 'Web Design & Dev', price: '$3,000 – $150,000+', features: ['5–20+ pages', 'Custom UX/CMS', '2–16+ weeks'] },
+                { name: 'App Dev (Flutter/MVP)', price: '$30,000 – $250,000+', features: ['Auth/payments', 'Admin & analytics', '8–52 weeks'] },
+                { name: 'Branding & Identity', price: '$1,500 – $100,000+', features: ['Logo & system', 'Guidelines & launch', '2–12+ weeks'] },
+              ].map((p) => (
+                <div key={p.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <h4 className="text-lg font-semibold">{p.name}</h4>
+                  <div className="mt-1 text-2xl font-bold">{p.price}</div>
+                  <ul className="mt-4 space-y-2 text-sm text-slate-600 list-disc list-inside">
+                    {p.features.map((f) => <li key={f}>{f}</li>)}
+                  </ul>
+                  <a
+                    href="#contact"
+                    onClick={(e) => { e.preventDefault(); goTo('contact'); }}
+                    className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
+                  >
+                    Request a Quote
+                  </a>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-20">
+      <section id="faq" className="py-20 border-t border-slate-200 scroll-mt-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold">FAQ</h2>
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             {[
-              { q: "How fast can you deliver?", a: "Landing pages typically in 48–72 hours. App UI sets in 3–5 days. Full MVPs in ~1–2 weeks depending on scope." },
-              { q: "Do you work globally?", a: "Yes — worldwide. We price in USD and accept cards or bank transfer." },
-              { q: "What do you need from us to start?", a: "Your URL (if any), a short description of your audience and offer, and any brand assets (logo, colors, fonts)." },
-              { q: "Do we own the work?", a: "Yes. You receive editable source files and full rights on final payment." },
+              { q: 'Which models do you use?', a: 'We pick per use-case (OpenAI/Anthropic/etc.) and can swap for quality/cost. Data is isolated per client.' },
+              { q: 'How do you keep agents safe?', a: 'Guardrails, role & rate limits, approval steps, audit trails, and transcripts. Sensitive actions require human sign-off.' },
+              { q: 'What about performance on 3D pages?', a: 'We budget assets, lazy-load, and measure Core Web Vitals. We ship fast fallbacks for low-end devices.' },
+              { q: 'Do you work globally?', a: 'Yes—worldwide. USD pricing. Cards and bank transfer supported.' },
             ].map((f) => (
               <div key={f.q} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="font-semibold">{f.q}</h3>
@@ -422,7 +459,7 @@ export default function Home() {
       </section>
 
       {/* Contact */}
-      <section id="contact" className="py-20 border-t border-slate-200">
+      <section id="contact" className="py-20 border-t border-slate-200 scroll-mt-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-2 items-start">
             <div>
@@ -432,13 +469,13 @@ export default function Home() {
               </p>
               <ul className="mt-6 space-y-3 text-slate-600 text-sm">
                 <li>
-                  • Email:{" "}
+                  • Email:{' '}
                   <a className="underline hover:text-slate-900" href="mailto:hello@omegaappbuilder.com">
                     hello@omegaappbuilder.com
                   </a>
                 </li>
                 <li>
-                  • Call/Meet:{" "}
+                  • Call/Meet:{' '}
                   <a
                     href={calendlyUrl}
                     target="_blank"
@@ -452,7 +489,7 @@ export default function Home() {
               </ul>
             </div>
 
-            {/* WIRED: action to API with redirect + honeypot + hidden service + message field */}
+            {/* Form with proper labels for a11y; posts to /api/lead */}
             <form
               className="rounded-2xl border border-slate-200 bg-white p-6 grid gap-3 shadow-sm"
               method="POST"
@@ -460,43 +497,67 @@ export default function Home() {
             >
               {/* honeypot */}
               <input type="text" name="hp" tabIndex={-1} autoComplete="off" className="hidden" />
-              {/* default service for this form */}
-              <input type="hidden" name="service" value="Free Audit Request" />
+              <input type="hidden" name="service" value="free_audit_request" />
 
               <div className="grid sm:grid-cols-2 gap-3">
-                <input
-                  className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                  placeholder="Name"
-                  name="name"
-                  required
-                />
-                <input
-                  className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                  type="email"
-                  placeholder="Email"
-                  name="email"
-                  required
-                />
+                <label className="grid gap-1 text-sm">
+                  <span className="text-slate-700">Name</span>
+                  <input
+                    className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
+                    placeholder="Your name"
+                    name="name"
+                    required
+                  />
+                </label>
+                <label className="grid gap-1 text-sm">
+                  <span className="text-slate-700">Email</span>
+                  <input
+                    className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
+                    type="email"
+                    placeholder="you@company.com"
+                    name="email"
+                    required
+                  />
+                </label>
               </div>
-              <input
-                className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                placeholder="Company"
-                name="company"
-              />
-              <input
-                className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                placeholder="Website/App URL"
-                name="url"
-              />
-              <textarea
-                className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 min-h-[120px]"
-                placeholder="What do you want to achieve in the next 30 days?"
-                name="message"
-              />
-              <button className="mt-1 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition">
+
+              <label className="grid gap-1 text-sm">
+                <span className="text-slate-700">Company</span>
+                <input
+                  className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
+                  placeholder="Company"
+                  name="company"
+                />
+              </label>
+
+              <label className="grid gap-1 text-sm">
+                <span className="text-slate-700">Website/App URL</span>
+                <input
+                  className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
+                  placeholder="https://example.com"
+                  name="url"
+                />
+              </label>
+
+              <label className="grid gap-1 text-sm">
+                <span className="text-slate-700">Goal (30 days)</span>
+                <textarea
+                  className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 min-h-[120px]"
+                  placeholder="What do you want to achieve in the next 30 days?"
+                  name="message"
+                />
+              </label>
+
+              <button
+                className="mt-1 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                aria-label="Send audit request"
+              >
                 Send Audit Request
               </button>
-              <p className="text-xs text-slate-500">Submitting this form adds you to our updates. You can opt out anytime.</p>
+
+              <p className="text-xs text-slate-500">
+                Submitting this form adds you to our updates. You can opt out anytime.
+              </p>
             </form>
           </div>
         </div>
@@ -505,7 +566,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="py-10 border-t border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-600">
-          <p>© {new Date().getFullYear()} Omega App Builder. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Omega. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-slate-900">Privacy</a>
             <a href="#" className="hover:text-slate-900">Terms</a>
