@@ -299,7 +299,7 @@ export default function Home() {
       </section>
 
       {/* Work */}
-      <section id="work" className="py-20 border-t border-slate-200 scroll-mt-28">
+      {/* <section id="work" className="py-20 border-t border-slate-200 scroll-mt-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-bold">Recent work</h2>
@@ -343,7 +343,7 @@ export default function Home() {
             })}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Pricing */}
       <section id="pricing" className="py-20 scroll-mt-28">
