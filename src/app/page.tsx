@@ -61,7 +61,7 @@ export default function Home() {
             <nav className="hidden md:flex items-center gap-6 text-sm">
               <a href="#agents" onClick={(e) => { e.preventDefault(); goTo('agents'); }} className="hover:text-fuchsia-600">AI Agents</a>
               <a href="#web3d" onClick={(e) => { e.preventDefault(); goTo('web3d'); }} className="hover:text-fuchsia-600">3D Websites</a>
-              <a href="#work" onClick={(e) => { e.preventDefault(); goTo('work'); }} className="hover:text-fuchsia-600">Work</a>
+              {/* <a href="#work" onClick={(e) => { e.preventDefault(); goTo('work'); }} className="hover:text-fuchsia-600">Work</a> */}
               <a href="#pricing" onClick={(e) => { e.preventDefault(); goTo('pricing'); }} className="hover:text-fuchsia-600">Pricing</a>
               <a href="#faq" onClick={(e) => { e.preventDefault(); goTo('faq'); }} className="hover:text-fuchsia-600">FAQ</a>
               <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); }} className="hover:text-fuchsia-600">Contact</a>
