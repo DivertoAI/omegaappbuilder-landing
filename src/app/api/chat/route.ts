@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-
+// this
   try {
     const body = (await req.json().catch(() => ({}))) as { messages?: ChatMessage[] };
     const history = trimHistory(body.messages ?? [], 8);
