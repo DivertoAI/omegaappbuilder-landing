@@ -17,6 +17,11 @@ const Planet3D = dynamic(() => import('../components/Planet3D'), {
   ),
 });
 
+// Lazy-load the chat widget (no SSR)
+const ChatWidget = dynamic(() => import('../components/ChatWidget'), {
+  ssr: false,
+});
+
 export default function Home() {
   // External scheduling
   const calendlyUrl = 'https://calendly.com/hello-omegaappbuilder/30min';
@@ -574,6 +579,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      {/* Floating chat widget */}
+      <ChatWidget />
     </main>
   );
 }
