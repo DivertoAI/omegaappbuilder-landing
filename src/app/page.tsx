@@ -580,7 +580,7 @@ export default function Home() {
         </div>
       </footer>
       {/* Floating chat widget */}
-      <ChatWidget />
+      {/* <ChatWidget /> */}
     </main>
   );
 }
