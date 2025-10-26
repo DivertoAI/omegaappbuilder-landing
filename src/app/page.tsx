@@ -556,7 +556,7 @@ export default function Home() {
             <div>
               <h2 className="text-3xl font-bold">Get your free 3-point audit</h2>
               <p className="mt-2 text-slate-600 max-w-xl">
-                Send your URL and goals. We'll reply within 24 hours with quick wins and a fixed quote.
+                Send your URL and goals. We&apos;ll reply within 24 hours with quick wins and a fixed quote.
               </p>
               
               {/* Launch urgency reminder */}
