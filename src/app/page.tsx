@@ -693,7 +693,7 @@ export default function Home() {
       </section>
 
       {/* Floating chat widget */}
-      {/* <ChatWidget /> */}
+      {/* <ChatWidget />*/}
     </main>
   );
 }

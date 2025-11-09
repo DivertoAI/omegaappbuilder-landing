@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = {
@@ -69,12 +70,12 @@ export default function AboutPage() {
         </p>
 
         <div className="mt-8">
-          <a
+          <Link
             href="/#contact"
             className="inline-flex rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
           >
             Get a 3-point free audit
-          </a>
+          </Link>
         </div>
       </section>
     </main>
