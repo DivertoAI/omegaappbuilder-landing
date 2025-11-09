@@ -667,7 +667,7 @@ export default function Home() {
                 Send Audit Request
               </button>
 
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500" >
                 Submitting this form adds you to our updates. You can opt out anytime.
               </p>
             </form>
