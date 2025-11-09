@@ -6,7 +6,9 @@ export default function SiteFooter() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-600">
         <p>© {new Date().getFullYear()} Omega. All rights reserved.</p>
         <div className="flex items-center gap-4">
-          <Link href="/" className="hover:text-slate-900">Home</Link>
+          <a href="https://omegaappbuilder.com/#home" className="hover:text-slate-900">
+            Home
+          </a>
           <Link href="/about" className="hover:text-slate-900">About</Link>
           <Link href="/legal/privacy" className="hover:text-slate-900">Privacy</Link>
           <Link href="/legal/terms" className="hover:text-slate-900">Terms</Link>
