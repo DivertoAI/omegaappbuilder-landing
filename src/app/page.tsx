@@ -49,19 +49,19 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      {/* Launch Pricing Banner */}
+      {/* Founding Plan Banner */}
       {showBanner && (
         <div className="relative bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 text-sm sm:text-base">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
-                  🚀 LAUNCH OFFER
+                  🚀 FOUNDING PLAN
                 </span>
                 <p className="font-medium">
-                  <span className="hidden sm:inline">50% off for first 10 clients • </span>
-                  <span className="font-bold">6 spots remaining</span>
-                  <span className="hidden sm:inline"> • Lock in this rate for 6 months</span>
+                  <span className="hidden sm:inline">Setup fee waived + preferred rates (first 3 months) • </span>
+                  <span className="font-bold">6 onboarding slots this quarter</span>
+                  <span className="hidden sm:inline"> • Book a 20‑min scoping call</span>
                 </p>
               </div>
               <button
@@ -338,43 +338,61 @@ export default function Home() {
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-3xl font-bold">Simple, transparent pricing</h2>
             <p className="mt-4 text-slate-600">
-              Value-based quotes by scope and complexity. Below are typical bands clients choose.
+              Scoped to outcomes. Below are the packages most clients choose.
             </p>
-            
-            {/* Launch pricing callout */}
+            {/* Founding plan callout */}
             <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-100 to-indigo-100 px-5 py-2 text-sm font-medium text-fuchsia-700">
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-fuchsia-600 text-white text-xs">🚀</span>
-              Launch pricing active • 50% off • Lock in for 6 months • 6 spots left
+              Founding plan active • Setup fee waived + preferred rates (first 3 months) • 6 slots this quarter
             </div>
           </div>
 
           {/* AI Ops Retainer */}
           <div className="mt-12">
             <h3 className="text-2xl font-bold text-center">AI Ops Retainer (agents & automations)</h3>
+            <p className="mt-2 text-center text-sm text-slate-600">Usage (LLM/API) billed at cost. Fair‑use caps listed below.</p>
             <div className="mt-8 grid gap-6 md:grid-cols-3">
               {[
                 {
                   name: 'Starter',
-                  originalPrice: '$1,999',
-                  launchPrice: '$999',
+                  regularPrice: '$1,999',
+                  foundingPrice: '$1,499',
+                  setup: 'Setup $2,500 (waived for founding clients)',
                   period: '/ mo',
-                  features: ['1 agent / month', 'Dashboards & alerts', 'SLA: next-business-day'],
+                  features: [
+                    '1 agent/mo • ≤2 workflows',
+                    '≤20k actions/mo',
+                    'Dashboards & alerts',
+                    'SLA: next-business-day',
+                  ],
                   popular: false,
                 },
                 {
                   name: 'Growth',
-                  originalPrice: '$3,999',
-                  launchPrice: '$1,999',
+                  regularPrice: '$3,999',
+                  foundingPrice: '$3,499',
+                  setup: 'Setup $4,500 (–50% for founding)',
                   period: '/ mo',
-                  features: ['2–3 agents / month', 'A/B prompts & playbooks', 'SLA: 24h (prio)'],
+                  features: [
+                    '2–3 agents/mo • ≤3 integrations',
+                    '≤60k actions/mo',
+                    'A/B prompts & weekly report',
+                    'SLA: 24h priority',
+                  ],
                   popular: true,
                 },
                 {
                   name: 'Scale',
-                  originalPrice: '$7,999',
-                  launchPrice: '$3,999',
+                  regularPrice: '$7,999',
+                  foundingPrice: '$6,999',
+                  setup: 'Setup $7,500 (–30% for founding)',
                   period: '/ mo',
-                  features: ['4+ agents / month', 'Advanced analytics', 'SLA: same-day (prio)'],
+                  features: [
+                    '4+ agents/mo • ≤6 integrations',
+                    '≤200k actions/mo',
+                    'Analytics & cost controls',
+                    'SLA: same‑day (priority)',
+                  ],
                   popular: false,
                 },
               ].map((p) => (
@@ -391,27 +409,28 @@ export default function Home() {
                       </span>
                     </div>
                   )}
-                  
-                  {/* Launch badge */}
+
+                  {/* Founding badge */}
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-xl font-semibold">{p.name}</h4>
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
-                      50% OFF
+                      FOUNDING RATE
                     </span>
                   </div>
-                  
+
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-slate-900">{p.launchPrice}</span>
+                    <span className="text-3xl font-bold text-slate-900">{p.foundingPrice}</span>
                     <span className="text-slate-500">{p.period}</span>
                   </div>
                   <p className="mt-1 text-sm text-slate-500">
-                    <span className="line-through">{p.originalPrice}</span> regular price
+                    <span className="line-through">{p.regularPrice}</span> regular price
                   </p>
-                  
+                  <p className="mt-1 text-xs text-slate-600">{p.setup}</p>
+
                   <ul className="mt-6 space-y-3 text-sm text-slate-600">
                     {p.features.map((f) => <li key={f}>• {f}</li>)}
                   </ul>
-                  
+
                   <a
                     href="#contact"
                     onClick={(e) => { e.preventDefault(); goTo('contact'); }}
@@ -421,12 +440,10 @@ export default function Home() {
                         : 'border border-slate-300 bg-white hover:bg-slate-50'
                     }`}
                   >
-                    Request Proposal
+                    Book 20‑min Scoping Call
                   </a>
-                  
-                  <p className="mt-3 text-xs text-center text-slate-500">
-                    Lock in launch rate for 6 months
-                  </p>
+
+                  <p className="mt-3 text-xs text-center text-slate-500">48‑hour fixed quote after call</p>
                 </div>
               ))}
             </div>
@@ -439,40 +456,47 @@ export default function Home() {
               {[
                 {
                   name: '3D Hero',
-                  originalPrice: '$8,000 – $20,000',
-                  launchPrice: '$4,000 – $10,000',
+                  packages: [
+                    { label: 'Essential', price: '$6,000 – $8,000' },
+                    { label: 'Pro', price: '$10,000 – $14,000' },
+                  ],
                   features: ['Guided discovery', 'Optimized assets', '2–4 weeks'],
                 },
                 {
                   name: 'Configurator',
-                  originalPrice: '$25,000 – $80,000',
-                  launchPrice: '$12,000 – $40,000',
+                  packages: [
+                    { label: 'Lite', price: '$15,000 – $25,000' },
+                    { label: 'Pro', price: '$30,000 – $50,000' },
+                  ],
                   features: ['Variants & materials', 'Cart/lead capture', '4–8+ weeks'],
                 },
                 {
                   name: 'Scrollytelling Site',
-                  originalPrice: '$15,000 – $60,000',
-                  launchPrice: '$7,500 – $30,000',
+                  packages: [
+                    { label: 'Story Lite', price: '$9,000 – $15,000' },
+                    { label: 'Story Pro', price: '$18,000 – $30,000' },
+                  ],
                   features: ['Narrative sections', 'Perf budget & QA', '3–6 weeks'],
                 },
               ].map((p) => (
                 <div key={p.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="mb-4">
                     <h4 className="text-xl font-semibold">{p.name}</h4>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
-                      50% OFF
-                    </span>
                   </div>
-                  
-                  <div className="text-2xl font-bold text-slate-900">{p.launchPrice}</div>
-                  <p className="mt-1 text-sm text-slate-500">
-                    <span className="line-through">{p.originalPrice}</span> regular price
-                  </p>
-                  
+
+                  <div className="space-y-2">
+                    {p.packages.map((pkg) => (
+                      <div key={pkg.label} className="flex items-baseline justify-between">
+                        <div className="text-sm font-medium text-slate-700">{pkg.label}</div>
+                        <div className="text-lg font-bold text-slate-900">{pkg.price}</div>
+                      </div>
+                    ))}
+                  </div>
+
                   <ul className="mt-6 space-y-3 text-sm text-slate-600">
                     {p.features.map((f) => <li key={f}>• {f}</li>)}
                   </ul>
-                  
+
                   <a
                     href="#contact"
                     onClick={(e) => { e.preventDefault(); goTo('contact'); }}
@@ -488,23 +512,23 @@ export default function Home() {
           {/* Classic Services */}
           <div className="mt-16">
             <h3 className="text-2xl font-bold text-center">Classic Services</h3>
-            <p className="mt-2 text-center text-sm text-slate-600">Standard pricing (no launch discount)</p>
+            <p className="mt-2 text-center text-sm text-slate-600">Standard pricing (no founding discount)</p>
             <div className="mt-8 grid gap-6 md:grid-cols-3">
               {[
                 {
                   name: 'Web Design & Dev',
-                  price: '$3,000 – $150,000+',
-                  features: ['5–20+ pages', 'Custom UX/CMS', '2–16+ weeks'],
+                  price: 'From $15,000',
+                  features: ['~10 pages', 'Custom UX/CMS', '2–8 weeks'],
                 },
                 {
                   name: 'App Dev (Flutter/MVP)',
-                  price: '$30,000 – $250,000+',
-                  features: ['Auth/payments', 'Admin & analytics', '8–52 weeks'],
+                  price: 'From $40,000',
+                  features: ['Auth & payments', 'Admin & analytics', '8–24 weeks'],
                 },
                 {
                   name: 'Branding & Identity',
-                  price: '$1,500 – $100,000+',
-                  features: ['Logo & system', 'Guidelines & launch', '2–12+ weeks'],
+                  price: 'From $5,000',
+                  features: ['Logo + mini system', 'Guidelines & launch', '2–6 weeks'],
                 },
               ].map((p) => (
                 <div key={p.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -537,8 +561,8 @@ export default function Home() {
               { q: 'How do you keep agents safe?', a: 'Guardrails, role & rate limits, approval steps, audit trails, and transcripts. Sensitive actions require human sign-off.' },
               { q: 'What about performance on 3D pages?', a: 'We budget assets, lazy-load, and measure Core Web Vitals. We ship fast fallbacks for low-end devices.' },
               { q: 'Do you work globally?', a: 'Yes—worldwide. USD pricing. Cards and bank transfer supported.' },
-              { q: 'What happens after 10 clients?', a: 'Launch pricing ends and we return to regular rates. Lock in your spot now to secure 50% off for 6 months.' },
-              { q: 'Can I upgrade my plan later?', a: 'Yes! You can upgrade anytime and keep your launch pricing discount on the new tier.' },
+              { q: 'How many founding slots are available?', a: 'We onboard 2 clients per month; 6 founding slots per quarter. Founding plan: setup fee waived + preferred rates for the first 3 months.' },
+              { q: 'Can I upgrade my plan later?', a: 'Yes! You can upgrade anytime and keep your founding rate for the remainder of your 3‑month promo window.' },
             ].map((f) => (
               <div key={f.q} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="font-semibold">{f.q}</h3>
@@ -559,13 +583,13 @@ export default function Home() {
                 Send your URL and goals. We&apos;ll reply within 24 hours with quick wins and a fixed quote.
               </p>
               
-              {/* Launch urgency reminder */}
+              {/* Founding reminder */}
               <div className="mt-6 rounded-xl bg-gradient-to-r from-fuchsia-50 to-indigo-50 border border-fuchsia-200 p-4">
                 <p className="text-sm font-medium text-fuchsia-900">
-                  🚀 <strong>6 launch spots remaining</strong> at 50% off
+                  🚀 <strong>6 founding slots this quarter</strong>
                 </p>
                 <p className="mt-1 text-xs text-fuchsia-700">
-                  Book a call today to secure your discounted rate before we return to regular pricing.
+                  Setup fee waived + preferred rates for your first 3 months. Book a call to secure a slot.
                 </p>
               </div>
               
