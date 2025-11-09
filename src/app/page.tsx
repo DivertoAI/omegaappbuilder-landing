@@ -146,6 +146,9 @@ export default function Home() {
                 plus immersive WebGL sites (Three.js/Model-Viewer/Spline) that convert.
                 Clear scopes, strong governance, enterprise polish.
               </p>
+              <p className="mt-2 text-slate-600">
+                Led by a senior software engineer (10+ years) — enterprise polish, measurable outcomes.
+              </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
                   href="#contact"
@@ -689,17 +692,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-10 border-t border-slate-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-600">
-          <p>© {new Date().getFullYear()} Omega. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <a href="#" className="hover:text-slate-900">Privacy</a>
-            <a href="#" className="hover:text-slate-900">Terms</a>
-            <a href="mailto:hello@omegaappbuilder.com" className="hover:text-slate-900">Contact</a>
-          </div>
-        </div>
-      </footer>
       {/* Floating chat widget */}
       {/* <ChatWidget /> */}
     </main>
