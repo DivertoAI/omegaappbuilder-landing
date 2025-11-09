@@ -55,7 +55,8 @@ export default function ChatWidget() {
           "Sorry — I couldn't answer right now. Please try again, or book a quick call: https://calendly.com/hello-omegaappbuilder/30min",
       };
       setMessages((m) => [...m, bot]);
-    } catch (_) {
+    } catch (error) {
+      console.error('Chat widget error', error);
       setMessages((m) => [
         ...m,
         {

@@ -17,11 +17,6 @@ const Planet3D = dynamic(() => import('../components/Planet3D'), {
   ),
 });
 
-// Lazy-load the chat widget (no SSR)
-const ChatWidget = dynamic(() => import('../components/ChatWidget'), {
-  ssr: false,
-});
-
 export default function Home() {
   // External scheduling
   const calendlyUrl = 'https://calendly.com/hello-omegaappbuilder/30min';
@@ -34,18 +29,6 @@ export default function Home() {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
-
-  // ----- Projects gallery settings (drop images in /public as p1.png etc.) -----
-  const PROJECT_COUNT = 6;
-  const PROJECT_PREFIX = 'p';
-  const PROJECT_EXT = 'png';
-  const projects = Array.from({ length: PROJECT_COUNT }, (_, i) => ({
-    src: `/${PROJECT_PREFIX}${i + 1}.${PROJECT_EXT}`,
-    title: `Project ${i + 1}`,
-    caption: 'Design/Build • Performance • Conversion',
-    priority: i < 2,
-  }));
-  // ---------------------------------------------------------------------------
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -691,9 +674,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Floating chat widget */}
-      {/* <ChatWidget />*/}
     </main>
   );
 }
