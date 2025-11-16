@@ -93,7 +93,7 @@ export default function Home() {
                 onClick={(e) => { e.preventDefault(); goTo('contact'); }}
                 className="hidden sm:inline-flex rounded-xl px-4 py-2 bg-slate-900/5 hover:bg-slate-900/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
               >
-                Get Free Audit
+                Free Demo Funnel Audit
               </a>
               <a
                 href={calendlyUrl}
@@ -121,16 +121,16 @@ export default function Home() {
           <div className="grid lg:grid-cols-12 gap-10 items-center">
             <div className="lg:col-span-7">
               <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
-                <span className="text-slate-900">AI agents that book meetings & resolve tickets.</span>{' '}
-                <span className="text-fuchsia-600">3D websites</span> that make people stop and engage.
+                <span className="text-slate-900">We build AI SDRs and 3D funnels that increase demo bookings and conversion rates</span>{' '}
+                <span className="text-fuchsia-600">— or we don’t charge.</span>
               </h1>
               <p className="mt-5 text-slate-600 max-w-2xl">
-                Senior studio crafting measurable outcomes: SDR & Support agents wired to your CRM and inbox,
-                plus immersive WebGL sites (Three.js/Model-Viewer/Spline) that convert.
-                Clear scopes, strong governance, enterprise polish.
+                Founder-focused studio crafting measurable outcomes for funded SaaS, DevTools, AI, and fintech.
+                SDR & Support agents wired to your CRM and inbox, plus immersive WebGL heroes (Three.js/Model-Viewer/Spline) that convert.
+                Clear scopes, guardrails, enterprise polish.
               </p>
               <p className="mt-2 text-slate-600">
-                Led by a senior software engineer (10+ years) — enterprise polish, measurable outcomes.
+                Led by a senior software engineer (10+ years). If we don’t measurably improve demo bookings or on-site conversion, you keep the assets and owe $0 on the service fee.*
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
@@ -138,7 +138,7 @@ export default function Home() {
                   onClick={(e) => { e.preventDefault(); goTo('contact'); }}
                   className="px-5 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
                 >
-                  Get a 3-Point Free Audit
+                  Get the Omega Demo Funnel Audit
                 </a>
                 <a
                   href="#agents"
@@ -148,6 +148,9 @@ export default function Home() {
                   See Agent Use-Cases
                 </a>
               </div>
+              <p className="mt-3 text-xs text-slate-500">
+                *Risk-reversal applies to service fee only; software/usage costs (if any) are pass-through.
+              </p>
               <dl className="mt-6 flex flex-wrap gap-4 text-sm text-slate-600">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs">✓</span>
@@ -223,6 +226,74 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Proof / Case Studies */}
+      <section id="proof" className="py-20 border-t border-slate-200 bg-slate-50/50 scroll-mt-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold">Proof founders can feel</h2>
+            <p className="mt-4 text-slate-600">
+              Quick, founder-friendly case studies (self-initiated + client) focused on demo bookings and conversion lifts.
+              Want to see your version? We&apos;ll remake your hero for free and record a 90-sec audit.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-8 md:grid-cols-3">
+            {[
+              {
+                title: 'DevTools SaaS',
+                metric: '+32% demo conversions in 21 days',
+                bullets: [
+                  'AI SDR follow-ups synced to HubSpot + Calendly',
+                  'Hero rewrite with specific CTA + 3D pipeline visual',
+                  'A/B test measured in GA + HubSpot deals created',
+                ],
+              },
+              {
+                title: 'AI Productivity Platform',
+                metric: '40 hrs/week saved for the founder',
+                bullets: [
+                  'Agent triages inbound + sequences follow-ups',
+                  'Slack alerts with transcript + approval gates',
+                  'Bookings auto-logged to CRM; no manual data entry',
+                ],
+              },
+              {
+                title: 'Fintech platform',
+                metric: '18% trial-start uplift in 30 days',
+                bullets: [
+                  '3D hero variant + clarified pricing CTA',
+                  'Lead capture tied to product-qualified triggers',
+                  'Playbook for SDR agent to chase trials → demos',
+                ],
+              },
+            ].map((c) => (
+              <div key={c.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Case Study</p>
+                    <h3 className="mt-1 text-xl font-semibold">{c.title}</h3>
+                  </div>
+                  <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    {c.metric}
+                  </span>
+                </div>
+                <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                  {c.bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-2">
+                      <span className="mt-1 h-2 w-2 rounded-full bg-fuchsia-500 flex-shrink-0" aria-hidden="true" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-xs text-center text-slate-500">
+            *Some are self-initiated tear-downs to demonstrate the exact outcomes we deliver for funded SaaS/devtools/AI.
+          </p>
         </div>
       </section>
 
@@ -314,6 +385,85 @@ export default function Home() {
                 <p className="mt-4 text-xs text-slate-500 rounded-lg bg-slate-50 px-3 py-2">{w.tag}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Free conversion teardown */}
+      <section id="makeover" className="py-20 border-t border-slate-200 bg-white scroll-mt-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-2 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-100 to-indigo-100 px-4 py-2 text-xs font-semibold text-fuchsia-700">
+                Omega Demo Funnel Audit (free)
+              </div>
+              <h2 className="mt-4 text-3xl font-bold">See your homepage rewritten & redesigned for conversions — free</h2>
+              <p className="mt-3 text-slate-600 max-w-2xl">
+                We&apos;ll remake your hero + fold 1 using 3D/AI, record a 90-second Loom-style audit, and show the agent playbook to capture the lift.
+                Founder-friendly, zero obligations.
+              </p>
+              <ul className="mt-6 space-y-3 text-sm text-slate-700">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-fuchsia-500 flex-shrink-0" aria-hidden="true" />
+                  <span>Identify the 3 biggest conversion leaks on your homepage.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-fuchsia-500 flex-shrink-0" aria-hidden="true" />
+                  <span>Ship a 3D/interactive hero mockup + CTA rewrite matched to your ICP.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-fuchsia-500 flex-shrink-0" aria-hidden="true" />
+                  <span>Outline the AI SDR playbook to convert the new demand into booked demos.</span>
+                </li>
+              </ul>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <a
+                  href="#contact"
+                  onClick={(e) => { e.preventDefault(); goTo('contact'); }}
+                  className="inline-flex rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 text-white font-medium hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                >
+                  Claim the free audit
+                </a>
+                <a
+                  href={calendlyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex rounded-xl border border-slate-300 bg-white px-5 py-3 text-slate-800 font-medium hover:bg-slate-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                >
+                  Book a 15-min call
+                </a>
+              </div>
+              <p className="mt-3 text-xs text-slate-500">2 audit slots per week • we respond in &lt;24h</p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-6 shadow-sm">
+              <h3 className="text-xl font-semibold text-slate-900">What you&apos;ll receive</h3>
+              <div className="mt-4 grid gap-3">
+                {[
+                  {
+                    title: '60–90 sec Loom-style teardown',
+                    desc: 'Screen walkthrough with callouts, not a generic talking head.',
+                  },
+                  {
+                    title: '3D hero concept',
+                    desc: 'A quick visual showing how your product should appear above the fold.',
+                  },
+                  {
+                    title: 'AI SDR playbook',
+                    desc: 'Suggested prompts, integrations, and guardrails for your ICP.',
+                  },
+                  {
+                    title: 'Fixed quote (48h)',
+                    desc: 'Lock in founding rate; setup fee waived while slots last.',
+                  },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-xl border border-white/70 bg-white px-4 py-3">
+                    <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                    <p className="text-xs text-slate-600 mt-1">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -564,9 +714,9 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-2 items-start">
             <div>
-              <h2 className="text-3xl font-bold">Get your free 3-point audit</h2>
+              <h2 className="text-3xl font-bold">Get your Omega Demo Funnel Audit (free)</h2>
               <p className="mt-2 text-slate-600 max-w-xl">
-                Send your URL and goals. We&apos;ll reply within 24 hours with quick wins and a fixed quote.
+                Send your URL and goals. We&apos;ll find the 3 biggest conversion leaks, show the 3D/AI fixes, and send a 60–90 sec Loom-style teardown within 24 hours.
               </p>
               
               {/* Founding reminder */}

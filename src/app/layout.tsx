@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -12,6 +13,9 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+const cfBeaconToken =
+  process.env.NEXT_PUBLIC_CF_BEACON_TOKEN || "0465113f0c0c4b04b3232553a0c6ba9b";
 
 export const metadata: Metadata = {
   title: "Omega App Builder",
@@ -36,6 +40,13 @@ export default function RootLayout({
           </div>
           <SiteFooter />
         </div>
+        {cfBeaconToken && (
+          <Script
+            strategy="afterInteractive"
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon={`{"token": "${cfBeaconToken}"}`}
+          />
+        )}
       </body>
     </html>
   );
