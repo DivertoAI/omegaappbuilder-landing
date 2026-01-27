@@ -97,3 +97,9 @@ There is no `test` script in `package.json` today.
 - Files: src/components/ai/PricingPanel.tsx, src/components/ai/TopUpPanel.tsx, src/components/ai/FileTree.tsx, src/components/ai/BuildOutputPanel.tsx, src/components/ai/ChatWizardPanel.tsx
 - Notes: UI copy now ASCII except required arrow in heading.
 - Next: Verify /ai flow and Razorpay webhooks in staging.
+
+## 2026-01-27 21:45
+- Change: Added prompt safety guardrails to block secret-like content before build.
+- Files: src/lib/ai/guardrails.ts, src/app/api/ai/build/route.ts
+- Notes: Simple regex checks for obvious secrets.
+- Next: Add more nuanced content checks if needed.
