@@ -127,3 +127,9 @@ There is no `test` script in `package.json` today.
 - Files: src/components/ai/AiBuilder.tsx, src/components/ai/BuildOutputPanel.tsx, src/app/api/ai/build/[id]/preview/[[...path]]/route.ts, src/lib/auth/requireUser.ts
 - Notes: Preview iframe uses token query param; API auth checks support header or token.
 - Next: Deploy Supabase auth config and verify iframe preview with live session.
+
+## 2026-01-27 22:12
+- Change: Added AI Builder link to homepage nav and header CTA.
+- Files: src/app/page.tsx
+- Notes: Link appears in desktop nav and header actions.
+- Next: Consider adding mobile nav link if needed.
