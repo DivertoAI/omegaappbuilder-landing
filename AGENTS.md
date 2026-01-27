@@ -73,3 +73,15 @@ There is no `test` script in `package.json` today.
 - Files: src/lib/ai/preview.ts, src/lib/ai/rateLimit.ts, src/app/api/ai/build/[id]/preview/[...path]/route.ts, src/app/api/ai/build/[id]/preview/restart/route.ts, src/lib/ai/buildEngine.ts
 - Notes: Preview auto-starts after build and updates build status.
 - Next: Wire UI wizard, output panels, and polish with tests + rate limits.
+
+## 2026-01-27 21:35
+- Change: Wired full AI builder UI (wizard + output panels), file tree/code viewer, preview iframe, rate limits, and utility tests.
+- Files: src/components/ai/AiBuilder.tsx, src/components/ai/ChatWizardPanel.tsx, src/components/ai/BuildOutputPanel.tsx, src/components/ai/FileTree.tsx, src/components/ai/CodeViewer.tsx, src/components/ai/TopUpPanel.tsx, src/app/api/ai/build/[id]/preview/[[...path]]/route.ts, src/lib/ai/preview.ts, src/lib/ai/rateLimit.ts, src/app/api/ai/build/route.ts, src/app/billing/page.tsx, src/lib/ai/__tests__/workspace.test.ts, vitest.config.ts
+- Notes: npm install failed due to disk space; package-lock not updated.
+- Next: Run npm install after freeing space, then run tests and prisma generate.
+
+## 2026-01-27 21:41
+- Change: Fixed build manifest hashing, updated vitest config aliases, and ran tests successfully.
+- Files: src/lib/ai/workspace.ts, vitest.config.ts
+- Notes: npm install completed using /tmp cache; tests pass.
+- Next: Run prisma generate/migrate when ready and verify /ai flow end-to-end.
