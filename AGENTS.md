@@ -67,3 +67,9 @@ There is no `test` script in `package.json` today.
 - Files: src/lib/ai/buildEngine.ts, src/lib/ai/codex.ts, src/lib/ai/parse.ts, src/lib/ai/prompt.ts, src/lib/ai/paths.ts, src/lib/ai/logs.ts, src/lib/ai/workspace.ts, src/lib/ai/telemetry.ts, src/app/api/ai/build/route.ts, src/app/api/ai/build/[id]/status/route.ts, src/app/api/ai/build/[id]/file/route.ts, src/app/api/ai/build/[id]/download/route.ts
 - Notes: Build pipeline writes files, ensures envs, and records manifest + logs.
 - Next: Add preview runner + proxy iframe route.
+
+## 2026-01-27 21:26
+- Change: Added preview runner, proxy iframe route, and restart endpoint with rate limiting.
+- Files: src/lib/ai/preview.ts, src/lib/ai/rateLimit.ts, src/app/api/ai/build/[id]/preview/[...path]/route.ts, src/app/api/ai/build/[id]/preview/restart/route.ts, src/lib/ai/buildEngine.ts
+- Notes: Preview auto-starts after build and updates build status.
+- Next: Wire UI wizard, output panels, and polish with tests + rate limits.
