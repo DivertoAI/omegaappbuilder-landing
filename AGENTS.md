@@ -55,3 +55,9 @@ There is no `test` script in `package.json` today.
 - Files: prisma/schema.prisma, src/lib/db.ts, src/lib/auth/session.ts, src/lib/auth/requireUser.ts, src/app/api/auth/session/route.ts, src/lib/billing/plans.ts, src/lib/billing/razorpay.ts, src/app/api/billing/razorpay/create-subscription/route.ts, src/app/api/billing/razorpay/webhook/route.ts, src/app/api/billing/subscription-status/route.ts, src/components/ai/ChatWizardPanel.tsx, package.json, .env
 - Notes: Subscription status now reads from DB; Razorpay checkout is wired client-side.
 - Next: Implement credits system (ledger + enforcement + UI display).
+
+## 2026-01-27 21:17
+- Change: Implemented credit system API (status + topups) and UI display with credit history.
+- Files: src/lib/ai/types.ts, src/lib/billing/credits.ts, src/app/api/ai/credits/route.ts, src/app/api/billing/topup/create-order/route.ts, src/app/api/billing/topup/webhook/route.ts, src/components/ai/TopUpPanel.tsx, src/components/ai/ChatWizardPanel.tsx
+- Notes: Credits are now queryable; top-ups flow through Razorpay order + webhook.
+- Next: Implement Codex build engine with file tree + ZIP download.
