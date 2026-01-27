@@ -61,3 +61,9 @@ There is no `test` script in `package.json` today.
 - Files: src/lib/ai/types.ts, src/lib/billing/credits.ts, src/app/api/ai/credits/route.ts, src/app/api/billing/topup/create-order/route.ts, src/app/api/billing/topup/webhook/route.ts, src/components/ai/TopUpPanel.tsx, src/components/ai/ChatWizardPanel.tsx
 - Notes: Credits are now queryable; top-ups flow through Razorpay order + webhook.
 - Next: Implement Codex build engine with file tree + ZIP download.
+
+## 2026-01-27 21:23
+- Change: Implemented Codex build engine, workspace writer, and build/status/file/download endpoints.
+- Files: src/lib/ai/buildEngine.ts, src/lib/ai/codex.ts, src/lib/ai/parse.ts, src/lib/ai/prompt.ts, src/lib/ai/paths.ts, src/lib/ai/logs.ts, src/lib/ai/workspace.ts, src/lib/ai/telemetry.ts, src/app/api/ai/build/route.ts, src/app/api/ai/build/[id]/status/route.ts, src/app/api/ai/build/[id]/file/route.ts, src/app/api/ai/build/[id]/download/route.ts
+- Notes: Build pipeline writes files, ensures envs, and records manifest + logs.
+- Next: Add preview runner + proxy iframe route.
