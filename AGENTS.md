@@ -43,3 +43,9 @@ There is no `test` script in `package.json` today.
 - Files: src/app/ai/page.tsx, src/components/ai/AiBuilder.tsx, src/components/ai/ChatWizardPanel.tsx, src/components/ai/BuildOutputPanel.tsx
 - Notes: Initial scaffolding only; no wiring yet.
 - Next: Add subscription gating UI and status endpoint stubs.
+
+## 2026-01-27 21:10
+- Change: Added subscription status stub API and pricing gate UI for /ai.
+- Files: src/app/api/billing/subscription-status/route.ts, src/components/ai/ChatWizardPanel.tsx, src/components/ai/PricingPanel.tsx
+- Notes: Subscription logic is stubbed; Razorpay wiring comes next.
+- Next: Implement Razorpay create-subscription + webhook + DB persistence.
