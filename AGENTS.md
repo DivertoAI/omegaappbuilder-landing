@@ -91,3 +91,9 @@ There is no `test` script in `package.json` today.
 - Files: src/lib/ai/codex.ts, src/app/api/billing/subscription-status/route.ts
 - Notes: Allows swapping Codex model without code changes.
 - Next: Wire Prisma migrations and validate Razorpay + build flow in staging.
+
+## 2026-01-27 21:44
+- Change: Replaced non-ASCII UI glyphs with ASCII and re-ran tests.
+- Files: src/components/ai/PricingPanel.tsx, src/components/ai/TopUpPanel.tsx, src/components/ai/FileTree.tsx, src/components/ai/BuildOutputPanel.tsx, src/components/ai/ChatWizardPanel.tsx
+- Notes: UI copy now ASCII except required arrow in heading.
+- Next: Verify /ai flow and Razorpay webhooks in staging.
