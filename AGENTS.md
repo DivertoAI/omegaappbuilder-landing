@@ -85,3 +85,9 @@ There is no `test` script in `package.json` today.
 - Files: src/lib/ai/workspace.ts, vitest.config.ts
 - Notes: npm install completed using /tmp cache; tests pass.
 - Next: Run prisma generate/migrate when ready and verify /ai flow end-to-end.
+
+## 2026-01-27 21:42
+- Change: Added CODEX_MODEL override and hardened subscription-status handler.
+- Files: src/lib/ai/codex.ts, src/app/api/billing/subscription-status/route.ts
+- Notes: Allows swapping Codex model without code changes.
+- Next: Wire Prisma migrations and validate Razorpay + build flow in staging.
