@@ -115,3 +115,9 @@ There is no `test` script in `package.json` today.
 - Files: src/lib/ai/buildEngine.ts
 - Notes: Errors now rethrow after refund to trigger caller catch.
 - Next: Validate telemetry events in logs.
+
+## 2026-01-27 21:55
+- Change: Replaced stub auth with Supabase magic link auth and token-based API authorization.
+- Files: src/lib/supabaseClient.ts, src/lib/auth/requireUser.ts, src/app/api/ai/build/[id]/preview/[[...path]]/route.ts, src/components/ai/ChatWizardPanel.tsx, src/components/ai/AiBuilder.tsx, src/components/ai/BuildOutputPanel.tsx, .env
+- Notes: Preview iframe now accepts token query param; API uses Bearer token.
+- Next: Configure Supabase URL + anon key and test login flow.
