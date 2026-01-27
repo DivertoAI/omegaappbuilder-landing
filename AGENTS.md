@@ -103,3 +103,9 @@ There is no `test` script in `package.json` today.
 - Files: src/lib/ai/guardrails.ts, src/app/api/ai/build/route.ts
 - Notes: Simple regex checks for obvious secrets.
 - Next: Add more nuanced content checks if needed.
+
+## 2026-01-27 21:46
+- Change: Hardened build status endpoint when repo files are not ready.
+- Files: src/app/api/ai/build/[id]/status/route.ts
+- Notes: Returns empty file list until manifest exists.
+- Next: End-to-end validation of preview startup.
