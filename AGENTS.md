@@ -175,3 +175,9 @@ There is no `test` script in `package.json` today.
 - Files: src/app/page.tsx
 - Notes: Added accessible sr-only label.
 - Next: None.
+
+## 2026-01-27 22:22
+- Change: Restyled desktop nav bar to pill layout with softer fuchsia accents.
+- Files: src/app/page.tsx
+- Notes: AI Builder link highlighted within nav.
+- Next: Evaluate CTA spacing on smaller breakpoints.
