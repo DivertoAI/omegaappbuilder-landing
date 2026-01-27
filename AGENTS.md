@@ -169,3 +169,9 @@ There is no `test` script in `package.json` today.
 - Files: src/app/page.tsx
 - Notes: Mobile menu uses existing anchors and closes on selection.
 - Next: Consider adding icon for menu button.
+
+## 2026-01-27 22:21
+- Change: Replaced mobile Menu label with hamburger icon.
+- Files: src/app/page.tsx
+- Notes: Added accessible sr-only label.
+- Next: None.
