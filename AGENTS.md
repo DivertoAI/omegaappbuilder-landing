@@ -133,3 +133,9 @@ There is no `test` script in `package.json` today.
 - Files: src/app/page.tsx
 - Notes: Link appears in desktop nav and header actions.
 - Next: Consider adding mobile nav link if needed.
+
+## 2026-01-27 22:18
+- Change: Aligned AI Builder UI theme with homepage styling and improved AI Builder CTA styling.
+- Files: src/components/ai/AiBuilder.tsx, src/components/ai/ChatWizardPanel.tsx, src/components/ai/BuildOutputPanel.tsx, src/components/ai/FileTree.tsx, src/components/ai/CodeViewer.tsx, src/components/ai/PricingPanel.tsx, src/components/ai/TopUpPanel.tsx, src/app/page.tsx, src/app/ai/page.tsx
+- Notes: Switched to light theme with fuchsia/indigo accents for consistency.
+- Next: Add mobile nav link if desired.
