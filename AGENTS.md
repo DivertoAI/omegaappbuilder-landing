@@ -109,3 +109,9 @@ There is no `test` script in `package.json` today.
 - Files: src/app/api/ai/build/[id]/status/route.ts
 - Notes: Returns empty file list until manifest exists.
 - Next: End-to-end validation of preview startup.
+
+## 2026-01-27 21:46
+- Change: Ensure build pipeline propagates failures so telemetry can record build_failed.
+- Files: src/lib/ai/buildEngine.ts
+- Notes: Errors now rethrow after refund to trigger caller catch.
+- Next: Validate telemetry events in logs.
