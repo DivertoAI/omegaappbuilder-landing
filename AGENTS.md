@@ -49,3 +49,9 @@ There is no `test` script in `package.json` today.
 - Files: src/app/api/billing/subscription-status/route.ts, src/components/ai/ChatWizardPanel.tsx, src/components/ai/PricingPanel.tsx
 - Notes: Subscription logic is stubbed; Razorpay wiring comes next.
 - Next: Implement Razorpay create-subscription + webhook + DB persistence.
+
+## 2026-01-27 21:15
+- Change: Added Prisma schema, session auth stub, and Razorpay subscription creation + webhook persistence.
+- Files: prisma/schema.prisma, src/lib/db.ts, src/lib/auth/session.ts, src/lib/auth/requireUser.ts, src/app/api/auth/session/route.ts, src/lib/billing/plans.ts, src/lib/billing/razorpay.ts, src/app/api/billing/razorpay/create-subscription/route.ts, src/app/api/billing/razorpay/webhook/route.ts, src/app/api/billing/subscription-status/route.ts, src/components/ai/ChatWizardPanel.tsx, package.json, .env
+- Notes: Subscription status now reads from DB; Razorpay checkout is wired client-side.
+- Next: Implement credits system (ledger + enforcement + UI display).
