@@ -121,3 +121,9 @@ There is no `test` script in `package.json` today.
 - Files: src/lib/supabaseClient.ts, src/lib/auth/requireUser.ts, src/app/api/ai/build/[id]/preview/[[...path]]/route.ts, src/components/ai/ChatWizardPanel.tsx, src/components/ai/AiBuilder.tsx, src/components/ai/BuildOutputPanel.tsx, .env
 - Notes: Preview iframe now accepts token query param; API uses Bearer token.
 - Next: Configure Supabase URL + anon key and test login flow.
+
+## 2026-01-27 21:56
+- Change: Added token-aware preview/download handling and ensured polling uses auth headers.
+- Files: src/components/ai/AiBuilder.tsx, src/components/ai/BuildOutputPanel.tsx, src/app/api/ai/build/[id]/preview/[[...path]]/route.ts, src/lib/auth/requireUser.ts
+- Notes: Preview iframe uses token query param; API auth checks support header or token.
+- Next: Deploy Supabase auth config and verify iframe preview with live session.
