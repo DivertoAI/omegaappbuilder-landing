@@ -181,3 +181,9 @@ There is no `test` script in `package.json` today.
 - Files: src/app/page.tsx
 - Notes: AI Builder link highlighted within nav.
 - Next: Evaluate CTA spacing on smaller breakpoints.
+
+## 2026-01-27 22:26
+- Change: Compressed header/nav typography and spacing to keep items on a single line.
+- Files: src/app/page.tsx
+- Notes: Shortened AI Builder CTA label and hid tagline on smaller widths.
+- Next: Review at 1280px and 1024px breakpoints.
