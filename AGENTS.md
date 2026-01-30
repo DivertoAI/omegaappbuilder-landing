@@ -222,3 +222,10 @@ There is no `test` script in `package.json` today.
 - Files: src/lib/supabaseClient.ts, src/components/ai/AiBuilder.tsx, src/components/ai/ChatWizardPanel.tsx
 - Notes: `npm run build` now succeeds without Supabase env vars.
 - Next: Deploy and verify /ai shows fallback when Supabase keys are absent.
+
+## 2026-01-30 12:25
+
+- Change: Bumped Next.js + React to patched versions to satisfy Vercel security check.
+- Files: package.json, package-lock.json
+- Notes: Updated Next.js to 15.5.7 and React/ReactDOM to 19.1.2.
+- Next: Trigger Vercel build to confirm vulnerability warning is cleared.
