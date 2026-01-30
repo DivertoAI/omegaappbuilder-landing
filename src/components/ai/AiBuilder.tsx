@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import Script from "next/script";
 import ChatWizardPanel from "@/components/ai/ChatWizardPanel";
 import BuildOutputPanel from "@/components/ai/BuildOutputPanel";
 import { supabase } from "@/lib/supabaseClient";
+import type { BuildConfig } from "@/lib/ai/types";
+import type { FileNode } from "@/lib/ai/workspace";
 
 export type AiTab = "preview" | "files" | "logs" | "notes";
 
@@ -14,7 +16,7 @@ type BuildData = {
   status: string;
   logs: string;
   files: string[];
-  tree: any[];
+  tree: FileNode[];
   readme: string;
   envVars: string[];
   previewPort?: number | null;
@@ -38,9 +40,12 @@ export default function AiBuilder() {
   }, []);
 
   const accessToken = session?.access_token || null;
-  const authHeaders = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined;
+  const authHeaders = useMemo(
+    () => (accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined),
+    [accessToken]
+  );
 
-  const handleBuild = async (config: any, prompt: string) => {
+  const handleBuild = async (config: BuildConfig, prompt: string) => {
     const res = await fetch("/api/ai/build", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(authHeaders || {}) },
@@ -80,7 +85,7 @@ export default function AiBuilder() {
       active = false;
       clearInterval(interval);
     };
-  }, [buildId, accessToken]);
+  }, [buildId, authHeaders]);
 
   const handleRestartPreview = async () => {
     if (!buildId) return;

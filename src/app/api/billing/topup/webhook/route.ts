@@ -23,22 +23,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  let payload: any = null;
+  type RazorpayTopupPayload = {
+    event?: string;
+    payload?: {
+      payment?: {
+        entity?: {
+          notes?: Record<string, string>;
+        };
+      };
+    };
+  };
+
+  let payload: RazorpayTopupPayload | null = null;
   try {
-    payload = JSON.parse(bodyText);
+    payload = JSON.parse(bodyText) as RazorpayTopupPayload;
   } catch (error) {
     console.error("Topup webhook JSON parse failed", error);
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const event = payload?.event as string | undefined;
+  const event = payload?.event;
   if (event !== "payment.captured") {
     return NextResponse.json({ ok: true });
   }
 
   const payment = payload?.payload?.payment?.entity;
   const notes = payment?.notes || {};
-  const userId = notes.userId as string | undefined;
+  const userId = notes.userId;
   const credits = Number(notes.credits || 0);
 
   if (!userId || !credits) {

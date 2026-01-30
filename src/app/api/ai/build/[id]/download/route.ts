@@ -1,5 +1,5 @@
 import archiver from "archiver";
-import { PassThrough } from "stream";
+import { PassThrough, Readable } from "stream";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getUserFromRequest } from "@/lib/auth/requireUser";
@@ -25,7 +25,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   archive.finalize();
   archive.pipe(stream);
 
-  return new Response(stream as any, {
+  const body = Readable.toWeb(stream) as ReadableStream<Uint8Array>;
+  return new Response(body, {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename=omega-build-${build.id}.zip`,

@@ -33,8 +33,10 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const logs = await readLogTail(paths.log);
   const manifest = await readJson(paths.manifest);
   let fileList: string[] = [];
-  if (manifest?.files) {
-    fileList = manifest.files.map((f: any) => f.path);
+  if (Array.isArray(manifest?.files)) {
+    fileList = manifest.files
+      .map((file: { path?: string }) => file.path)
+      .filter((filePath): filePath is string => Boolean(filePath));
   } else {
     try {
       fileList = await listFiles(paths.repo);

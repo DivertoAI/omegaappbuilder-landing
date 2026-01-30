@@ -57,7 +57,7 @@ export default function BuildOutputPanel({
       setFileContent(data.content || "");
     };
     loadFile();
-  }, [buildId, selectedFile]);
+  }, [buildId, selectedFile, accessToken]);
 
   const filteredFiles = useMemo(() => {
     if (!buildData?.files) return [];
@@ -222,7 +222,7 @@ export default function BuildOutputPanel({
                 </div>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
-                <p className="text-xs font-semibold text-slate-900">What's next</p>
+                <p className="text-xs font-semibold text-slate-900">What is next</p>
                 <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-slate-900 p-3 text-xs text-slate-100">
 {`npm install
 npm run dev`}

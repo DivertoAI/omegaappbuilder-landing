@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import PricingPanel from "@/components/ai/PricingPanel";
 import TopUpPanel from "@/components/ai/TopUpPanel";
@@ -108,9 +108,26 @@ const STEPS: Step[] = [
   },
 ];
 
+type RazorpayHandler = () => void;
+
+type RazorpayOptions = {
+  key: string;
+  subscription_id?: string;
+  order_id?: string;
+  name: string;
+  description: string;
+  handler: RazorpayHandler;
+};
+
+type RazorpayInstance = {
+  open: () => void;
+};
+
+type RazorpayConstructor = new (options: RazorpayOptions) => RazorpayInstance;
+
 declare global {
   interface Window {
-    Razorpay?: any;
+    Razorpay?: RazorpayConstructor;
   }
 }
 
@@ -131,7 +148,7 @@ export default function ChatWizardPanel({ onBuild, buildStatus }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [topupLoading, setTopupLoading] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Welcome to Omega AI Builder. Let's generate your website repo." },
+    { role: "assistant", content: "Welcome to Omega AI Builder. We will generate your website repo." },
     { role: "assistant", content: STEPS[0].prompt },
   ]);
   const [stepIndex, setStepIndex] = useState(0);
@@ -161,10 +178,10 @@ export default function ChatWizardPanel({ onBuild, buildStatus }: Props) {
     return fetch(url, { ...init, headers });
   };
 
-  const loadStatus = async (accessToken?: string | null) => {
+  const loadStatus = useCallback(async (accessToken?: string | null) => {
     try {
       const headers = new Headers();
-      const token = accessToken || session?.access_token;
+      const token = accessToken ?? session?.access_token;
       if (token) headers.set("Authorization", `Bearer ${token}`);
       const res = await fetch("/api/billing/subscription-status", { cache: "no-store", headers });
       const data = (await res.json()) as SubscriptionStatus;
@@ -181,7 +198,7 @@ export default function ChatWizardPanel({ onBuild, buildStatus }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session?.access_token]);
 
   useEffect(() => {
     let mounted = true;
@@ -198,7 +215,7 @@ export default function ChatWizardPanel({ onBuild, buildStatus }: Props) {
       mounted = false;
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [loadStatus]);
 
   const handleLogin = async () => {
     setError(null);

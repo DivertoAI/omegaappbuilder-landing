@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs/promises');
 const http = require('http');
 const path = require('path');
@@ -196,7 +197,7 @@ wss.on('connection', (twilioSocket) => {
     let event;
     try {
       event = JSON.parse(data.toString());
-    } catch (error) {
+    } catch {
       return;
     }
 
@@ -258,7 +259,7 @@ wss.on('connection', (twilioSocket) => {
     let payload;
     try {
       payload = JSON.parse(message.toString());
-    } catch (error) {
+    } catch {
       return;
     }
 
@@ -338,7 +339,7 @@ function extractBookingSummary(text) {
   const jsonText = text.slice(index + marker.length).trim();
   try {
     return JSON.parse(jsonText);
-  } catch (error) {
+  } catch {
     return null;
   }
 }
