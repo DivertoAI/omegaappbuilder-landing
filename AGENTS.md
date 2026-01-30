@@ -201,3 +201,10 @@ There is no `test` script in `package.json` today.
 - Files: src/components/ai/AiBuilder.tsx, src/components/ai/BuildOutputPanel.tsx, src/components/ai/ChatWizardPanel.tsx, src/components/dental-ai/ContactForm.tsx, src/app/api/ai/build/[id]/download/route.ts, src/app/api/ai/build/[id]/status/route.ts, src/app/api/billing/razorpay/webhook/route.ts, src/app/api/billing/topup/webhook/route.ts, src/lib/ai/buildEngine.ts, src/lib/ai/parse.ts, src/lib/ai/preview.ts, server/index.js
 - Notes: ESLint passes (`npm run lint`).
 - Next: Commit + push lint fixes if desired.
+
+## 2026-01-30 11:45
+
+- Change: Updated Next.js route handler signatures for dynamic params and added PrismJS type shim; fixed type issues for Vercel build.
+- Files: src/app/api/ai/build/[id]/download/route.ts, src/app/api/ai/build/[id]/status/route.ts, src/app/api/ai/build/[id]/file/route.ts, src/app/api/ai/build/[id]/preview/[[...path]]/route.ts, src/app/api/ai/build/[id]/preview/restart/route.ts, src/components/ai/ChatWizardPanel.tsx, src/types/prismjs.d.ts
+- Notes: `npm run build` now passes locally.
+- Next: Commit + push build-fix changes.
