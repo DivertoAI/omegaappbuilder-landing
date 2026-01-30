@@ -169,6 +169,7 @@ export default function ChatWizardPanel({ onBuild, buildStatus }: Props) {
   const [buildLoading, setBuildLoading] = useState(false);
 
   const currentStep = STEPS[stepIndex];
+  const supabaseConfigured = Boolean(supabase);
 
   const authFetch = async (url: string, init: RequestInit = {}) => {
     const headers = new Headers(init.headers);
@@ -201,6 +202,10 @@ export default function ChatWizardPanel({ onBuild, buildStatus }: Props) {
   }, [session?.access_token]);
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
     let mounted = true;
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
@@ -221,6 +226,9 @@ export default function ChatWizardPanel({ onBuild, buildStatus }: Props) {
     setError(null);
     setAuthLoading(true);
     try {
+      if (!supabase) {
+        throw new Error("Supabase is not configured");
+      }
       const { error } = await supabase.auth.signInWithOtp({
         email: authEmail,
         options: {
@@ -389,13 +397,30 @@ export default function ChatWizardPanel({ onBuild, buildStatus }: Props) {
 
   const signedIn = Boolean(session);
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setStatus(null);
     setCredits(null);
   };
 
   const canBuild = status?.active && userPrompt.length >= 10 && !insufficientCredits;
   const readyToBuild = stepIndex === STEPS.length - 1 && userPrompt.length >= 10;
+
+  if (!supabaseConfigured) {
+    return (
+      <section className="flex min-h-[560px] flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+          <p className="text-base font-semibold text-slate-900">AI Builder is coming soon</p>
+          <p className="mt-2">
+            Supabase auth is not configured. Set{" "}
+            <span className="font-semibold">NEXT_PUBLIC_SUPABASE_URL</span> and{" "}
+            <span className="font-semibold">NEXT_PUBLIC_SUPABASE_ANON_KEY</span> to enable the builder.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="flex min-h-[560px] flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
