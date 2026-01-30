@@ -187,3 +187,10 @@ There is no `test` script in `package.json` today.
 - Files: src/app/page.tsx
 - Notes: Shortened AI Builder CTA label and hid tagline on smaller widths.
 - Next: Review at 1280px and 1024px breakpoints.
+
+## 2026-01-30 10:45
+
+- Change: Added Dental AI landing page with lead form + demo video, Express backend (contact + Twilio/OpenAI bridge), and theme guide; refreshed homepage Solutions menu and marked AI Builder as coming soon.
+- Files: src/app/dental-ai/page.tsx, src/components/dental-ai/ContactForm.tsx, server/index.js, server/data/contacts.json, server/data/appointments.json, public/videos/iris-demo-call.mp4, .env.example, README.md, theme.md, package.json, package-lock.json, src/app/page.tsx
+- Notes: Dental page now uses the shared lead form and embeds the Iris demo call video.
+- Next: Verify Twilio webhook in staging and finalize demo video copy if needed.

@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  createdAt    DateTime        @default(now())
+  subscriptions Subscription[]
+  builds       Build[]
+  creditLedger CreditLedger[]
+}
+
+model Subscription {
+  id                     String        @id @default(cuid())
+  userId                 String
+  user                   User          @relation(fields: [userId], references: [id])
+  planKey                String
+  razorpaySubscriptionId String        @unique
+  status                 String
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  creditsMonthly         Int
+  creditsRemaining       Int
+  creditsResetAt         DateTime?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  creditLedger           CreditLedger[]
+}
+
+model CreditLedger {
+  id             String        @id @default(cuid())
+  userId         String
+  subscriptionId String?
+  user           User          @relation(fields: [userId], references: [id])
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  type           String
+  amount         Int
+  reason         String
+  buildId        String?
+  createdAt      DateTime      @default(now())
+}
+
+model Build {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  status        String
+  configJson    String
+  workspacePath String
+  previewPort   Int?
+  creditsHeld   Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

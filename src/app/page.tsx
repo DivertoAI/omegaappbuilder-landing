@@ -23,6 +23,7 @@ export default function Home() {
   
   // Banner dismissal state
   const [showBanner, setShowBanner] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   // Utility: smooth scroll with graceful fallback
   const goTo = useCallback((id: string) => {
@@ -62,10 +63,10 @@ export default function Home() {
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <a href="#home" className="flex items-center gap-2">
+            <a href="#home" className="flex items-center gap-2 whitespace-nowrap">
               <Image
                 src="/logo.png"
                 alt="Omega logo"
@@ -73,25 +74,148 @@ export default function Home() {
                 height={32}
                 priority
               />
-              <span className="font-semibold tracking-tight">
-                Omega — AI Agents • 3D Web • Apps
+              <span className="font-semibold tracking-tight text-slate-900">Omega</span>
+              <span className="hidden lg:inline text-xs text-slate-500">
+                AI Agents • 3D Web • Apps
               </span>
             </a>
 
-            <nav className="hidden md:flex items-center gap-6 text-sm">
-              <a href="#agents" onClick={(e) => { e.preventDefault(); goTo('agents'); }} className="hover:text-fuchsia-600">AI Agents</a>
-              <a href="#web3d" onClick={(e) => { e.preventDefault(); goTo('web3d'); }} className="hover:text-fuchsia-600">3D Websites</a>
+            <nav className="hidden md:flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200/70 bg-white/70 px-1.5 py-1 text-xs shadow-sm">
+              <a href="#agents" onClick={(e) => { e.preventDefault(); goTo('agents'); }} className="rounded-full px-2.5 py-1.5 text-slate-700 transition hover:bg-fuchsia-50 hover:text-fuchsia-700">AI Agents</a>
+              <a href="#web3d" onClick={(e) => { e.preventDefault(); goTo('web3d'); }} className="rounded-full px-2.5 py-1.5 text-slate-700 transition hover:bg-fuchsia-50 hover:text-fuchsia-700">3D Websites</a>
               {/* <a href="#work" onClick={(e) => { e.preventDefault(); goTo('work'); }} className="hover:text-fuchsia-600">Work</a> */}
-              <a href="#pricing" onClick={(e) => { e.preventDefault(); goTo('pricing'); }} className="hover:text-fuchsia-600">Pricing</a>
-              <a href="#faq" onClick={(e) => { e.preventDefault(); goTo('faq'); }} className="hover:text-fuchsia-600">FAQ</a>
-              <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); }} className="hover:text-fuchsia-600">Contact</a>
+              <div className="relative group">
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-slate-700 transition hover:bg-fuchsia-50 hover:text-fuchsia-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                  aria-haspopup="true"
+                >
+                  Solutions
+                  <svg
+                    aria-hidden="true"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+                <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 w-80 translate-y-2 rounded-2xl border border-slate-200/80 bg-white p-2 text-left opacity-0 shadow-xl transition duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                  <div
+                    className="flex items-start gap-3 rounded-xl px-3 py-3 text-sm text-slate-700 opacity-70 cursor-not-allowed"
+                    aria-disabled="true"
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-100 text-fuchsia-700">
+                      <svg
+                        aria-hidden="true"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 3v5" />
+                        <path d="M5 10h5" />
+                        <path d="M14 10h5" />
+                        <path d="M8.5 14.5 6 20l5.5-2.5" />
+                        <path d="M15.5 14.5 18 20l-5.5-2.5" />
+                      </svg>
+                    </span>
+                    <div>
+                      <p className="font-semibold text-slate-900">
+                        AI Builder
+                        <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                          Coming soon
+                        </span>
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Generate production-ready apps with a guided AI workflow.
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href="/dental-ai"
+                    className="group/item flex items-start gap-3 rounded-xl px-3 py-3 text-sm text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+                      <svg
+                        aria-hidden="true"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M9 4h6" />
+                        <path d="M10 4v6" />
+                        <path d="M14 4v6" />
+                        <path d="M6 10c0 5.5 2.5 9 6 9s6-3.5 6-9" />
+                        <path d="M9 13h6" />
+                      </svg>
+                    </span>
+                    <div>
+                      <p className="font-semibold text-slate-900">Dental AI Receptionist</p>
+                      <p className="text-xs text-slate-500">
+                        24/7 call handling and appointment booking for clinics.
+                      </p>
+                    </div>
+                  </a>
+                </div>
+              </div>
+              <a href="#pricing" onClick={(e) => { e.preventDefault(); goTo('pricing'); }} className="rounded-full px-2.5 py-1.5 text-slate-700 transition hover:bg-fuchsia-50 hover:text-fuchsia-700">Pricing</a>
+              <a href="#faq" onClick={(e) => { e.preventDefault(); goTo('faq'); }} className="rounded-full px-2.5 py-1.5 text-slate-700 transition hover:bg-fuchsia-50 hover:text-fuchsia-700">FAQ</a>
+              <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); }} className="rounded-full px-2.5 py-1.5 text-slate-700 transition hover:bg-fuchsia-50 hover:text-fuchsia-700">Contact</a>
             </nav>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <button
+                type="button"
+                onClick={() => setMobileOpen((prev) => !prev)}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 px-3 py-2 text-slate-600 hover:border-slate-300 md:hidden"
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-nav"
+              >
+                <span className="sr-only">Toggle menu</span>
+                <svg
+                  aria-hidden="true"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+              <span
+                className="hidden sm:inline-flex items-center gap-2 rounded-full px-3 py-2 border border-slate-200 bg-slate-50 text-xs text-slate-500 shadow-sm cursor-not-allowed"
+                aria-disabled="true"
+              >
+                AI Builder
+                <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  Coming soon
+                </span>
+              </span>
               <a
                 href="#contact"
                 onClick={(e) => { e.preventDefault(); goTo('contact'); }}
-                className="hidden sm:inline-flex rounded-xl px-4 py-2 bg-slate-900/5 hover:bg-slate-900/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                className="hidden sm:inline-flex rounded-xl px-3 py-2 text-xs bg-slate-900/5 hover:bg-slate-900/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
               >
                 Free Demo Funnel Audit
               </a>
@@ -99,8 +223,164 @@ export default function Home() {
                 href={calendlyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex rounded-xl px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                className="inline-flex rounded-xl px-3 py-2 text-xs bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
                 aria-label="Book a call on Calendly (opens in a new tab)"
+              >
+                Book a Call
+              </a>
+            </div>
+          </div>
+          <div
+            id="mobile-nav"
+            className={`md:hidden border-t border-slate-200 ${mobileOpen ? "block" : "hidden"}`}
+          >
+            <nav className="flex flex-col gap-3 py-4 text-sm">
+              <a
+                href="#agents"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo("agents");
+                  setMobileOpen(false);
+                }}
+                className="text-slate-700 hover:text-fuchsia-600"
+              >
+                AI Agents
+              </a>
+              <a
+                href="#web3d"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo("web3d");
+                  setMobileOpen(false);
+                }}
+                className="text-slate-700 hover:text-fuchsia-600"
+              >
+                3D Websites
+              </a>
+              <div className="rounded-xl border border-slate-200 bg-white px-3 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Solutions
+                </p>
+                <div className="mt-3 flex flex-col gap-3">
+                  <div
+                    className="flex items-start gap-3 text-slate-700 opacity-70 cursor-not-allowed"
+                    aria-disabled="true"
+                  >
+                    <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-fuchsia-100 text-fuchsia-700">
+                      <svg
+                        aria-hidden="true"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 3v5" />
+                        <path d="M5 10h5" />
+                        <path d="M14 10h5" />
+                        <path d="M8.5 14.5 6 20l5.5-2.5" />
+                        <path d="M15.5 14.5 18 20l-5.5-2.5" />
+                      </svg>
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold">
+                        AI Builder
+                        <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                          Coming soon
+                        </span>
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Guided app generation with code output.
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href="/dental-ai"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-start gap-3 text-slate-700 hover:text-fuchsia-600"
+                  >
+                    <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
+                      <svg
+                        aria-hidden="true"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M9 4h6" />
+                        <path d="M10 4v6" />
+                        <path d="M14 4v6" />
+                        <path d="M6 10c0 5.5 2.5 9 6 9s6-3.5 6-9" />
+                        <path d="M9 13h6" />
+                      </svg>
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold">Dental AI Receptionist</p>
+                      <p className="text-xs text-slate-500">
+                        24/7 call handling and booking.
+                      </p>
+                    </div>
+                  </a>
+                </div>
+              </div>
+              <a
+                href="#pricing"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo("pricing");
+                  setMobileOpen(false);
+                }}
+                className="text-slate-700 hover:text-fuchsia-600"
+              >
+                Pricing
+              </a>
+              <a
+                href="#faq"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo("faq");
+                  setMobileOpen(false);
+                }}
+                className="text-slate-700 hover:text-fuchsia-600"
+              >
+                FAQ
+              </a>
+              <a
+                href="#contact"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo("contact");
+                  setMobileOpen(false);
+                }}
+                className="text-slate-700 hover:text-fuchsia-600"
+              >
+                Contact
+              </a>
+            </nav>
+            <div className="flex flex-col gap-2 pb-4">
+              <a
+                href="#contact"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo("contact");
+                  setMobileOpen(false);
+                }}
+                className="inline-flex rounded-xl px-4 py-2 bg-slate-900/5 hover:bg-slate-900/10 transition"
+              >
+                Free Demo Funnel Audit
+              </a>
+              <a
+                href={calendlyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex rounded-xl px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
               >
                 Book a Call
               </a>
