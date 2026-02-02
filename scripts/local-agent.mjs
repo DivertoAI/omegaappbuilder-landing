@@ -19,6 +19,8 @@ const CODEX_MODEL =
 const CODEX_BIN = process.env.LOCAL_AGENT_CODEX_BIN || 'codex';
 let currentWorkspace = null;
 let latestSpec = '';
+let activeProcess = null;
+let activeProcessLabel = '';
 
 const ALLOWED_COMMANDS = {
   new: ['node', '-e', 'process.exit(0)'],
@@ -230,6 +232,30 @@ wss.on('connection', (ws, req) => {
 
     if (payload.type === 'run') {
       const commandKey = String(payload.command || '');
+      if (commandKey === 'stop') {
+        if (activeProcess) {
+          ws.send(
+            JSON.stringify({
+              type: 'log',
+              line: `Stopping ${activeProcessLabel || 'active process'}...`,
+            })
+          );
+          activeProcess.kill('SIGTERM');
+          setTimeout(() => {
+            if (activeProcess) {
+              activeProcess.kill('SIGKILL');
+            }
+          }, 2000);
+          return;
+        }
+        ws.send(
+          JSON.stringify({
+            type: 'error',
+            message: 'No active build to stop.',
+          })
+        );
+        return;
+      }
       if (commandKey === 'new') {
         const workspace = createWorkspace();
         currentWorkspace = workspace.path;
@@ -320,6 +346,8 @@ const runCommand = (command, ws, cwd) => {
     env: process.env,
     shell: false,
   });
+  activeProcess = child;
+  activeProcessLabel = [bin, ...args].join(' ');
 
   child.stdout.on('data', (chunk) => emitLines(ws, chunk));
   child.stderr.on('data', (chunk) => emitLines(ws, chunk));
@@ -327,6 +355,8 @@ const runCommand = (command, ws, cwd) => {
     ws.send(JSON.stringify({ type: 'error', message: error.message }));
   });
   child.on('close', (code) => {
+    activeProcess = null;
+    activeProcessLabel = '';
     ws.send(JSON.stringify({ type: 'exit', code }));
   });
 };
@@ -359,6 +389,8 @@ const runCodexBuild = (ws, cwd, specText) => {
     shell: false,
     stdio: ['pipe', 'pipe', 'pipe'],
   });
+  activeProcess = child;
+  activeProcessLabel = `${CODEX_BIN} ${args.join(' ')}`;
 
   child.stdin.write(prompt);
   child.stdin.end();
@@ -369,6 +401,8 @@ const runCodexBuild = (ws, cwd, specText) => {
     ws.send(JSON.stringify({ type: 'error', message: error.message }));
   });
   child.on('close', (code) => {
+    activeProcess = null;
+    activeProcessLabel = '';
     ws.send(JSON.stringify({ type: 'exit', code }));
     syncWorkspaceFiles(cwd);
   });

@@ -28,7 +28,6 @@ const getAgentToken = () => process.env.NEXT_PUBLIC_LOCAL_AGENT_TOKEN || '';
 
 export default function AiBuilderClient() {
   const calendlyUrl = 'https://calendly.com/hello-omegaappbuilder/30min';
-  const activeModel = process.env.NEXT_PUBLIC_CODEX_MODEL || 'gpt-5.2-codex';
   const agentToken = useMemo(getAgentToken, []);
   const agentUrl = useMemo(() => {
     const fromEnv = process.env.NEXT_PUBLIC_LOCAL_AGENT_WS;
@@ -51,6 +50,7 @@ export default function AiBuilderClient() {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const selectedFileRef = useRef<string | null>(null);
   const openFilesRef = useRef<string[]>([]);
+  const stopRequestedRef = useRef(false);
 
   const [agentStatus, setAgentStatus] = useState<AgentStatus>('offline');
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
@@ -76,6 +76,7 @@ export default function AiBuilderClient() {
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
   const [openFiles, setOpenFiles] = useState<string[]>([]);
   const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(false);
+  const [stopRequested, setStopRequested] = useState(false);
 
   const runCommand = useCallback((command: string) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -394,8 +395,9 @@ export default function AiBuilderClient() {
           if (msg.type === 'exit') {
             setLogs((prev) => [...prev, `Process exited with code ${msg.code ?? '0'}`].slice(-200));
             setIsBuilding(false);
-            setBuildStatus('Complete');
+            setBuildStatus(stopRequestedRef.current ? 'Stopped' : 'Complete');
             setActiveCommand('');
+            setStopRequested(false);
             refreshFiles(undefined, true);
             return;
           }
@@ -405,6 +407,7 @@ export default function AiBuilderClient() {
             setIsBuilding(false);
             setBuildStatus('Error');
             setActiveCommand('');
+            setStopRequested(false);
             return;
           }
 
@@ -474,6 +477,10 @@ export default function AiBuilderClient() {
   useEffect(() => {
     openFilesRef.current = openFiles;
   }, [openFiles]);
+
+  useEffect(() => {
+    stopRequestedRef.current = stopRequested;
+  }, [stopRequested]);
 
   useEffect(() => {
     if (!hasWorkspace || !isBuilding) return undefined;
@@ -588,6 +595,11 @@ export default function AiBuilderClient() {
       setBuildStatus('Building');
       setIsBuilding(true);
       setActiveCommand(`$ ${action}`);
+    }
+    if (action === 'stop') {
+      setBuildStatus('Stopping');
+      setStopRequested(true);
+      setActiveCommand('$ stop');
     }
     runCommand(action);
     if (action === 'files') {
@@ -812,7 +824,7 @@ export default function AiBuilderClient() {
                 Omega AI Builder
               </p>
               <h1 className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight">
-                Build websites, apps, and full products from a single prompt.
+                Build websites, apps, and full products from a single prompt — with any tech stack that fits.
               </h1>
               <p className="mt-4 text-slate-600 text-lg">
                 Web, mobile (iOS/Android), desktop (macOS/Windows/Linux), and wearable-ready builds
@@ -847,7 +859,6 @@ export default function AiBuilderClient() {
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Build chat</p>
                   <p className="text-xs text-slate-500">Guided setup for any product</p>
-                  <p className="text-[11px] text-slate-400">Model: {activeModel}</p>
                 </div>
                 <span
                   className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${statusBadge}`}
@@ -868,13 +879,27 @@ export default function AiBuilderClient() {
                       </span>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setLogs([])}
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-500 hover:bg-slate-50"
-                  >
-                    Clear logs
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setLogs([])}
+                      className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-500 hover:bg-slate-50"
+                    >
+                      Clear logs
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickAction('stop')}
+                      disabled={!isBuilding}
+                      className={`rounded-lg border px-2 py-1 text-[10px] font-semibold transition ${
+                        isBuilding
+                          ? 'border-rose-300 bg-rose-50 text-rose-600 hover:bg-rose-100'
+                          : 'border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed'
+                      }`}
+                    >
+                      Stop build
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="border-b border-slate-200 px-4 py-3">
@@ -885,6 +910,7 @@ export default function AiBuilderClient() {
                   {[
                     { key: 'new', label: 'Create workspace' },
                     { key: 'build', label: 'Rebuild with Codex' },
+                    { key: 'stop', label: 'Stop build' },
                     { key: 'lint', label: 'Run lint' },
                     { key: 'files', label: 'List files' },
                     { key: 'install', label: 'Install deps' },
@@ -892,6 +918,8 @@ export default function AiBuilderClient() {
                     const disabled =
                       action.key === 'new'
                         ? !hasPrompt
+                        : action.key === 'stop'
+                        ? !isBuilding
                         : !hasWorkspace || isBuilding;
                     return (
                       <button
@@ -939,11 +967,6 @@ export default function AiBuilderClient() {
                         >
                           {message.role === 'assistant' ? 'Omega AI' : 'You'}
                         </p>
-                        {message.role === 'assistant' && (
-                          <span className="text-[10px] uppercase tracking-wide text-slate-400">
-                            Model: {activeModel}
-                          </span>
-                        )}
                       </div>
                       <p className="mt-1">{message.text}</p>
                       {message.questions && (
@@ -1078,12 +1101,18 @@ export default function AiBuilderClient() {
                     </div>
                     {isBuilding && (
                       <div className="px-4 py-2 border-b border-slate-800">
-                        <div className="flex items-center gap-2 text-[11px] text-slate-300">
-                          <span className="relative flex h-2 w-2">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-fuchsia-400 opacity-75" />
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-fuchsia-500" />
+                        <div className="flex items-center gap-3 text-[11px] text-slate-300">
+                          <span className="relative flex h-6 w-6 items-center justify-center">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-fuchsia-400/50" />
+                            <span className="absolute h-4 w-4 rounded-full border border-fuchsia-400/60 animate-spin" />
+                            <span className="relative h-2 w-2 rounded-full bg-fuchsia-400" />
                           </span>
-                          Codex is generating files…
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-100">Codex is generating files</p>
+                            <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-800">
+                              <div className="h-full w-2/3 animate-pulse rounded-full bg-gradient-to-r from-fuchsia-400 via-indigo-400 to-sky-400" />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1125,9 +1154,22 @@ export default function AiBuilderClient() {
                         </div>
                       </div>
                       {isBuilding && (
-                        <div className="mt-2 flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-200">
-                          <span className="h-2 w-2 animate-pulse rounded-full bg-fuchsia-400" />
-                          Codex working
+                        <div className="mt-3 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 shadow-sm">
+                          <div className="flex items-center gap-3 text-[11px] text-slate-600">
+                            <span className="relative flex h-5 w-5 items-center justify-center">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-fuchsia-400/40" />
+                              <span className="absolute h-4 w-4 rounded-full border border-indigo-400/70 animate-spin" />
+                              <span className="relative h-2 w-2 rounded-full bg-fuchsia-500" />
+                            </span>
+                            <div className="flex-1">
+                              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                Codex working
+                              </p>
+                              <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-slate-200">
+                                <div className="h-full w-3/4 animate-pulse rounded-full bg-gradient-to-r from-fuchsia-500 via-indigo-400 to-sky-400" />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
                       {!isPreviewCollapsed && (
