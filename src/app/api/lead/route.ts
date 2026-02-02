@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import nodemailer from "nodemailer";
-import { createClient } from "@supabase/supabase-js";
 
 // Ensure Node runtime (needed for nodemailer on Vercel)
 export const runtime = "nodejs";
@@ -137,28 +136,18 @@ async function parseRequestBody(req: Request): Promise<RawLeadInput> {
   }
 }
 
-/** ---------- Supabase (your exact env keys) ---------- */
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseSvcKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseSvcKey, {
-  auth: { persistSession: false },
-});
 
-/** ---------- Mailer (Brevo SMTP via your env keys) ---------- */
-const MAIL_HOST = process.env.BREVO_SMTP_HOST;
-const MAIL_PORT = Number(process.env.BREVO_SMTP_PORT ?? 587);
-const MAIL_USER = process.env.BREVO_SMTP_USER;
-const MAIL_PASS = process.env.BREVO_SMTP_PASS;
-const NOTIFY_FROM = process.env.NOTIFY_FROM || MAIL_USER || "";
-const NOTIFY_TO = process.env.NOTIFY_TO || "";
+/** ---------- Mailer (Gmail SMTP) ---------- */
+const GMAIL_USER = process.env.GMAIL_USER;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+const NOTIFY_FROM = process.env.NOTIFY_FROM || GMAIL_USER || "";
+const NOTIFY_TO = process.env.NOTIFY_TO || GMAIL_USER || "";
 
 const transporter =
-  MAIL_HOST && MAIL_USER && MAIL_PASS
+  GMAIL_USER && GMAIL_APP_PASSWORD
     ? nodemailer.createTransport({
-        host: MAIL_HOST,
-        port: MAIL_PORT,
-        secure: MAIL_PORT === 465, // 465 = SSL, 587 = STARTTLS
-        auth: { user: MAIL_USER, pass: MAIL_PASS },
+        service: "gmail",
+        auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
       })
     : null;
 
@@ -189,23 +178,9 @@ export async function POST(req: Request) {
     // Normalize service for HubSpot/Zapier compatibility
     const normalizedService = normalizeService(lead.service);
 
-    // Store in Supabase (using normalized service)
-    const { error: dbErr } = await supabase.from("leads").insert({
-      name: lead.name,
-      email: lead.email,
-      company: lead.company,
-      url: lead.url,
-      service: normalizedService,
-      message: lead.message,
-      ip,
-      ua,
-      source: "website",
-    });
-    if (dbErr) {
-      console.error("Supabase insert error:", dbErr);
-    }
+    // Supabase storage disabled: shortest path is email only.
 
-    // Notify via email (Brevo SMTP)
+    // Notify via email (Gmail SMTP)
     if (transporter && NOTIFY_TO && NOTIFY_FROM) {
       try {
         await transporter.sendMail({

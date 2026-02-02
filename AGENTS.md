@@ -187,3 +187,10 @@ There is no `test` script in `package.json` today.
 - Files: src/app/page.tsx
 - Notes: Shortened AI Builder CTA label and hid tagline on smaller widths.
 - Next: Review at 1280px and 1024px breakpoints.
+
+## 2026-02-02 11:35
+
+- Change: Disabled Supabase lead storage to send form submissions directly via email only.
+- Files: src/app/api/lead/route.ts
+- Notes: Lead flow now skips DB insert and uses Gmail SMTP for delivery.
+- Next: Verify Gmail SMTP app password and deliverability.
