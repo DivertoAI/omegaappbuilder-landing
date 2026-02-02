@@ -208,3 +208,17 @@ There is no `test` script in `package.json` today.
 - Files: src/app/dental-ai/page.tsx, src/app/ai/page.tsx, src/app/page.tsx, src/app/sitemap.ts, public/icons/tooth.svg, public/icons/spark.svg, public/videos/iris-demo-call.mp4, theme.md
 - Notes: Dental page uses the same lead form as homepage and includes demo video embed.
 - Next: Verify nav dropdown behavior and test lead form submissions in staging.
+
+## 2026-02-02 18:10
+
+- Change: Added local-only AI Builder client UI with chat + terminal wiring and a localhost agent script.
+- Files: src/components/ai/AiBuilderClient.tsx, src/app/ai/page.tsx, scripts/local-agent.mjs
+- Notes: Agent runs on ws://localhost:8787 with an allowlist; UI connects for live logs.
+- Next: Decide whether to expose via tunnel and refine allowed commands.
+
+## 2026-02-02 18:40
+
+- Change: Added quick actions bar, folder import upload, and optional tunnel instructions for the AI Builder demo.
+- Files: src/components/ai/AiBuilderClient.tsx, scripts/local-agent.mjs, docs/local-agent.md
+- Notes: Import writes into /imported-projects and agent can be gated for remote tunnel use.
+- Next: Wire real preview rendering or command confirmation prompts if needed.
