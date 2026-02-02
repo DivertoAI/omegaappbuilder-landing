@@ -909,7 +909,7 @@ export default function AiBuilderClient() {
                 <div className="mt-2 flex flex-wrap gap-2">
                   {[
                     { key: 'new', label: 'Create workspace' },
-                    { key: 'build', label: 'Rebuild with Codex' },
+                    { key: 'build', label: 'Rebuild with Omega Agent' },
                     { key: 'stop', label: 'Stop build' },
                     { key: 'lint', label: 'Run lint' },
                     { key: 'files', label: 'List files' },
@@ -1108,7 +1108,9 @@ export default function AiBuilderClient() {
                             <span className="relative h-2 w-2 rounded-full bg-fuchsia-400" />
                           </span>
                           <div className="flex-1">
-                            <p className="font-semibold text-slate-100">Codex is generating files</p>
+                            <p className="font-semibold text-slate-100">
+                              Omega Agent is generating files
+                            </p>
                             <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-800">
                               <div className="h-full w-2/3 animate-pulse rounded-full bg-gradient-to-r from-fuchsia-400 via-indigo-400 to-sky-400" />
                             </div>
@@ -1163,7 +1165,7 @@ export default function AiBuilderClient() {
                             </span>
                             <div className="flex-1">
                               <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                                Codex working
+                                Omega Agent working
                               </p>
                               <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-slate-200">
                                 <div className="h-full w-3/4 animate-pulse rounded-full bg-gradient-to-r from-fuchsia-500 via-indigo-400 to-sky-400" />

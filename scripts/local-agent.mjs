@@ -339,7 +339,7 @@ const broadcast = (payload) => {
 
 const runCommand = (command, ws, cwd) => {
   const [bin, ...args] = command;
-  ws.send(JSON.stringify({ type: 'log', line: `$ ${[bin, ...args].join(' ')}` }));
+  ws.send(JSON.stringify({ type: 'log', line: sanitizeLogLine(`$ ${[bin, ...args].join(' ')}`) }));
 
   const child = spawn(bin, args, {
     cwd,
@@ -379,7 +379,7 @@ const runCodexBuild = (ws, cwd, specText) => {
   ws.send(
     JSON.stringify({
       type: 'log',
-      line: `$ ${CODEX_BIN} ${args.join(' ')} <<PROMPT`,
+      line: 'Launching Omega Agent build...',
     })
   );
 
@@ -390,7 +390,7 @@ const runCodexBuild = (ws, cwd, specText) => {
     stdio: ['pipe', 'pipe', 'pipe'],
   });
   activeProcess = child;
-  activeProcessLabel = `${CODEX_BIN} ${args.join(' ')}`;
+  activeProcessLabel = 'Omega Agent build';
 
   child.stdin.write(prompt);
   child.stdin.end();
@@ -457,8 +457,16 @@ Deliverable:
 const emitLines = (ws, chunk) => {
   const lines = chunk.toString().split(/\r?\n/).filter(Boolean);
   lines.forEach((line) => {
-    ws.send(JSON.stringify({ type: 'log', line }));
+    ws.send(JSON.stringify({ type: 'log', line: sanitizeLogLine(line) }));
   });
+};
+
+const sanitizeLogLine = (line) => {
+  let safe = String(line || '');
+  safe = safe.replace(/gpt-5\.2-codex/gi, 'omega-agent');
+  safe = safe.replace(/openai codex/gi, 'Omega Agent');
+  safe = safe.replace(/\bcodex\b/gi, 'Omega Agent');
+  return safe;
 };
 
 const handleImport = async (req, res) => {
