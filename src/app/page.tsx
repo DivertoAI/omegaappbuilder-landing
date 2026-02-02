@@ -81,6 +81,58 @@ export default function Home() {
             <nav className="hidden md:flex items-center gap-6 text-sm">
               <a href="#agents" onClick={(e) => { e.preventDefault(); goTo('agents'); }} className="hover:text-fuchsia-600">AI Agents</a>
               <a href="#web3d" onClick={(e) => { e.preventDefault(); goTo('web3d'); }} className="hover:text-fuchsia-600">3D Websites</a>
+              <div className="relative group">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 hover:text-fuchsia-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500 rounded-md px-1"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  Solutions
+                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                <div className="absolute left-0 top-full mt-3 w-80 rounded-2xl border border-slate-200 bg-white shadow-xl opacity-0 translate-y-2 pointer-events-none transition group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto">
+                  <div className="p-3 grid gap-2">
+                    <a
+                      href="/dental-ai"
+                      className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-50"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-50">
+                        <Image src="/icons/tooth.svg" alt="" width={20} height={20} />
+                      </span>
+                      <span>
+                        <span className="block text-sm font-semibold text-slate-900">
+                          AI Dental Receptionist
+                        </span>
+                        <span className="block text-xs text-slate-500">
+                          Answer calls 24/7 and book patients automatically.
+                        </span>
+                      </span>
+                    </a>
+                    <div
+                      className="flex items-start gap-3 rounded-xl p-3 border border-dashed border-slate-200 bg-slate-50/60 opacity-70 cursor-not-allowed"
+                      aria-disabled="true"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50">
+                        <Image src="/icons/spark.svg" alt="" width={20} height={20} />
+                      </span>
+                      <span className="flex-1">
+                        <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
+                          AI Website Builder
+                          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                            Coming soon
+                          </span>
+                        </span>
+                        <span className="block text-xs text-slate-500">
+                          Generate on-brand marketing sites from a single brief.
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
               {/* <a href="#work" onClick={(e) => { e.preventDefault(); goTo('work'); }} className="hover:text-fuchsia-600">Work</a> */}
               <a href="#pricing" onClick={(e) => { e.preventDefault(); goTo('pricing'); }} className="hover:text-fuchsia-600">Pricing</a>
               <a href="#faq" onClick={(e) => { e.preventDefault(); goTo('faq'); }} className="hover:text-fuchsia-600">FAQ</a>

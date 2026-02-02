@@ -201,3 +201,10 @@ There is no `test` script in `package.json` today.
 - Files: package.json, package-lock.json
 - Notes: Next.js 15.5.7, React/ReactDOM 19.1.2, eslint-config-next 15.5.7.
 - Next: Trigger a Vercel build to confirm the CVE warning is cleared.
+
+## 2026-02-02 15:40
+
+- Change: Restored Dental AI and AI Builder landing pages, added solutions dropdown with icons, and wired demo video asset.
+- Files: src/app/dental-ai/page.tsx, src/app/ai/page.tsx, src/app/page.tsx, src/app/sitemap.ts, public/icons/tooth.svg, public/icons/spark.svg, public/videos/iris-demo-call.mp4, theme.md
+- Notes: Dental page uses the same lead form as homepage and includes demo video embed.
+- Next: Verify nav dropdown behavior and test lead form submissions in staging.

@@ -5,6 +5,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const routes = [
     "/",
     "/about",
+    "/ai",
+    "/dental-ai",
     "/pay",
     "/legal/privacy",
     "/legal/terms",
