@@ -108,6 +108,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.url?.startsWith('/download')) {
+    handleDownload(req, res);
+    return;
+  }
+
   if (req.url?.startsWith('/import') && req.method === 'POST') {
     handleImport(req, res);
     return;
@@ -657,6 +662,43 @@ const handlePreview = (req, res) => {
     res.writeHead(500, { 'Content-Type': 'text/plain' });
     res.end(error instanceof Error ? error.message : 'Failed to load preview');
   }
+};
+
+const handleDownload = (req, res) => {
+  const auth = authorizeRequest(req);
+  if (!auth.ok) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    res.end(auth.message || 'Forbidden');
+    return;
+  }
+
+  if (!currentWorkspace) {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    res.end('No workspace active');
+    return;
+  }
+
+  const filename = `${path.basename(currentWorkspace)}.zip`;
+  res.writeHead(200, {
+    'Content-Type': 'application/zip',
+    'Content-Disposition': `attachment; filename="${filename}"`,
+  });
+
+  const zip = spawn('zip', ['-r', '-', '.', '-x', 'node_modules/*', '.next/*', '.git/*'], {
+    cwd: currentWorkspace,
+    env: process.env,
+    shell: false,
+  });
+
+  zip.stdout.pipe(res);
+  zip.stderr.on('data', () => {});
+  zip.on('error', (error) => {
+    res.writeHead(500, { 'Content-Type': 'text/plain' });
+    res.end(error.message);
+  });
+  zip.on('close', () => {
+    res.end();
+  });
 };
 
 const createWorkspace = () => {

@@ -99,6 +99,15 @@ export default function AiBuilderClient() {
     [agentHttpUrl, agentToken]
   );
 
+  const downloadUrl = useMemo(() => {
+    const url = new URL(agentHttpUrl);
+    url.pathname = '/download';
+    if (agentToken) {
+      url.searchParams.set('token', agentToken);
+    }
+    return url.toString();
+  }, [agentHttpUrl, agentToken]);
+
   const loadFile = useCallback(
     async (path: string) => {
       setSelectedFile(path);
@@ -1154,6 +1163,22 @@ export default function AiBuilderClient() {
                           Live Preview
                         </p>
                         <div className="flex items-center gap-2 text-[11px]">
+                          <a
+                            href={hasWorkspace ? downloadUrl : undefined}
+                            aria-disabled={!hasWorkspace}
+                            onClick={(event) => {
+                              if (!hasWorkspace) {
+                                event.preventDefault();
+                              }
+                            }}
+                            className={`rounded-full px-3 py-1 font-semibold transition ${
+                              hasWorkspace
+                                ? 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                                : 'border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                            }`}
+                          >
+                            Download source
+                          </a>
                           <button
                             type="button"
                             onClick={() => setIsPreviewCollapsed((prev) => !prev)}
