@@ -50,6 +50,7 @@ export default function AiBuilderClient() {
   const wsRef = useRef<WebSocket | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const selectedFileRef = useRef<string | null>(null);
+  const openFilesRef = useRef<string[]>([]);
 
   const [agentStatus, setAgentStatus] = useState<AgentStatus>('offline');
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
@@ -73,6 +74,8 @@ export default function AiBuilderClient() {
   const [activeCommand, setActiveCommand] = useState('');
   const [lastCommand, setLastCommand] = useState('');
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [openFiles, setOpenFiles] = useState<string[]>([]);
+  const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(false);
 
   const runCommand = useCallback((command: string) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -101,6 +104,7 @@ export default function AiBuilderClient() {
       setFileContent('');
       setFileError('');
       setFileLoading(true);
+      setOpenFiles((prev) => (prev.includes(path) ? prev : [...prev, path]));
 
       try {
         const fileUrl = new URL(agentHttpUrl);
@@ -128,6 +132,95 @@ export default function AiBuilderClient() {
     },
     [agentHttpUrl, agentToken]
   );
+
+  const closeFileTab = (path: string) => {
+    const nextTabs = openFilesRef.current.filter((item) => item !== path);
+    setOpenFiles(nextTabs);
+    if (selectedFileRef.current === path) {
+      const fallback = nextTabs[nextTabs.length - 1];
+      if (fallback) {
+        loadFile(fallback);
+      } else {
+        setSelectedFile(null);
+        setFileContent('');
+        setFileError('');
+      }
+    }
+  };
+
+  const formatCode = (code: string, filePath: string | null) => {
+    const ext = filePath?.split('.').pop()?.toLowerCase() || '';
+    const escape = (value: string) =>
+      value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    let html = escape(code);
+
+    if (ext === 'html' || ext === 'htm') {
+      html = html.replace(
+        /(&lt;!--[\s\S]*?--&gt;)/g,
+        '<span class="text-rose-300">$1</span>'
+      );
+      html = html.replace(
+        /(&lt;[^&]*&gt;)/g,
+        '<span class="text-sky-300">$1</span>'
+      );
+      html = html.replace(
+        /("[^"]*"|'[^']*')/g,
+        '<span class="text-amber-200">$1</span>'
+      );
+      return html;
+    }
+
+    const commentRegex = new RegExp('(\\/\\*[\\s\\S]*?\\*\\/|\\/\\/.*$)', 'gm');
+    const stringRegex = new RegExp(
+      "(\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*'|`(?:\\\\.|[^`\\\\])*`)",
+      'g'
+    );
+    const numberRegex = new RegExp('\\b(\\d+(?:\\.\\d+)?)\\b', 'g');
+
+    html = html.replace(commentRegex, '<span class="text-slate-500">$1</span>');
+    html = html.replace(stringRegex, '<span class="text-amber-200">$1</span>');
+    html = html.replace(numberRegex, '<span class="text-violet-300">$1</span>');
+
+    const keywords = [
+      'const',
+      'let',
+      'var',
+      'function',
+      'return',
+      'export',
+      'import',
+      'default',
+      'class',
+      'extends',
+      'new',
+      'if',
+      'else',
+      'for',
+      'while',
+      'switch',
+      'case',
+      'break',
+      'async',
+      'await',
+      'try',
+      'catch',
+      'throw',
+      'true',
+      'false',
+      'null',
+      'undefined',
+      'type',
+      'interface',
+      'public',
+      'private',
+      'protected',
+      'readonly',
+    ];
+    const keywordRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'g');
+    html = html.replace(keywordRegex, '<span class="text-sky-300">$1</span>');
+    return html;
+  };
 
   const refreshFiles = useCallback(
     async (preferFile?: string, force = false) => {
@@ -379,6 +472,10 @@ export default function AiBuilderClient() {
   }, [selectedFile]);
 
   useEffect(() => {
+    openFilesRef.current = openFiles;
+  }, [openFiles]);
+
+  useEffect(() => {
     if (!hasWorkspace || !isBuilding) return undefined;
     const interval = setInterval(() => {
       refreshFiles(undefined, true);
@@ -473,6 +570,7 @@ export default function AiBuilderClient() {
     setPreviewUrl('');
     setActiveCommand('');
     setLastCommand('');
+    setOpenFiles([]);
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: 'reset' }));
     }
@@ -607,6 +705,11 @@ export default function AiBuilderClient() {
 
   const terminalStatus = activeCommand ? 'Running' : buildStatus;
   const terminalCommand = activeCommand || lastCommand || 'Idle';
+  const highlightedLines = useMemo(() => {
+    if (!selectedFile) return [''];
+    const html = formatCode(fileContent || '', selectedFile);
+    return html.split(/\r?\n/);
+  }, [fileContent, selectedFile]);
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -997,28 +1100,50 @@ export default function AiBuilderClient() {
                   </aside>
                   <div className="flex flex-col">
                     <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Live Preview
-                      </p>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Live Preview
+                        </p>
+                        <div className="flex items-center gap-2 text-[11px]">
+                          <button
+                            type="button"
+                            onClick={() => setIsPreviewCollapsed((prev) => !prev)}
+                            className="rounded-full border border-slate-200 bg-white px-3 py-1 font-semibold text-slate-500 hover:bg-slate-100"
+                          >
+                            {isPreviewCollapsed ? 'Show preview' : 'Hide preview'}
+                          </button>
+                          {previewUrl && (
+                            <a
+                              href={previewUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="rounded-full bg-slate-900 px-3 py-1 font-semibold text-white hover:bg-slate-800"
+                            >
+                              Fullscreen
+                            </a>
+                          )}
+                        </div>
+                      </div>
                       {isBuilding && (
                         <div className="mt-2 flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-200">
                           <span className="h-2 w-2 animate-pulse rounded-full bg-fuchsia-400" />
                           Codex working
                         </div>
                       )}
-                      <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4">
-                        {previewUrl ? (
-                          <div className="aspect-[16/9] w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
-                            <iframe
-                              title="Live preview"
-                              src={previewUrl}
-                              className="h-full w-full"
-                            />
-                          </div>
-                        ) : fileTree.length === 0 ? (
-                          <div className="aspect-[16/9] w-full rounded-xl border border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-white flex flex-col items-center justify-center gap-2 text-center text-xs text-slate-400 px-6">
-                            <p className="font-semibold text-slate-500">No preview yet</p>
-                            <p>Start a build or import a project to render a live preview.</p>
+                      {!isPreviewCollapsed && (
+                        <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4">
+                          {previewUrl ? (
+                            <div className="aspect-[16/9] w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
+                              <iframe
+                                title="Live preview"
+                                src={previewUrl}
+                                className="h-full w-full"
+                              />
+                            </div>
+                          ) : fileTree.length === 0 ? (
+                            <div className="aspect-[16/9] w-full rounded-xl border border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-white flex flex-col items-center justify-center gap-2 text-center text-xs text-slate-400 px-6">
+                              <p className="font-semibold text-slate-500">No preview yet</p>
+                              <p>Start a build or import a project to render a live preview.</p>
                             <button
                               type="button"
                               onClick={() => uploadInputRef.current?.click()}
@@ -1027,17 +1152,49 @@ export default function AiBuilderClient() {
                               Import project
                             </button>
                           </div>
-                        ) : (
-                          <div className="aspect-[16/9] w-full rounded-xl border border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-white flex items-center justify-center text-xs text-slate-400">
-                            Preview not available yet. Run a build to generate a preview file.
-                          </div>
-                        )}
-                      </div>
+                          ) : (
+                            <div className="aspect-[16/9] w-full rounded-xl border border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-white flex items-center justify-center text-xs text-slate-400">
+                              Preview not available yet. Run a build to generate a preview file.
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="border-b border-slate-800 bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                       Editor
                     </div>
-                    <div className="flex-1 bg-slate-950 px-4 py-4 font-mono text-xs text-slate-100 overflow-y-auto max-h-[320px]">
+                    {openFiles.length > 0 && (
+                      <div className="border-b border-slate-800 bg-slate-950 px-2 py-2">
+                        <div className="flex flex-wrap gap-2">
+                          {openFiles.map((file) => (
+                            <button
+                              key={file}
+                              type="button"
+                              onClick={() => loadFile(file)}
+                              className={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1 text-[11px] font-semibold transition ${
+                                selectedFile === file
+                                  ? 'border-fuchsia-400 bg-slate-900 text-white'
+                                  : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200'
+                              }`}
+                            >
+                              <span className="truncate">{file.split('/').pop() || file}</span>
+                              <span
+                                role="button"
+                                aria-label={`Close ${file}`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  closeFileTab(file);
+                                }}
+                                className="rounded-full px-1 text-slate-500 hover:text-white"
+                              >
+                                ×
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex-1 bg-slate-950 px-4 py-4 font-mono text-xs text-slate-100 overflow-y-auto max-h-[340px]">
                       {fileTree.length === 0 ? (
                         <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950 px-4 py-6 text-center text-xs text-slate-400">
                           <p className="font-semibold text-slate-300">No files yet</p>
@@ -1048,12 +1205,24 @@ export default function AiBuilderClient() {
                       ) : fileError ? (
                         <p className="text-rose-300">{fileError}</p>
                       ) : selectedFile ? (
-                        <>
-                          <p className="text-slate-400">/{selectedFile}</p>
-                          <pre className="mt-3 whitespace-pre-wrap text-slate-200">
-                            {fileContent || 'No content available.'}
-                          </pre>
-                        </>
+                        <div className="grid grid-cols-[auto_1fr] gap-4">
+                          <div className="select-none text-right text-[10px] text-slate-500">
+                            {highlightedLines.map((_, index) => (
+                              <div key={`line-${index}`} className="leading-5">
+                                {index + 1}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="text-slate-200">
+                            {highlightedLines.map((line, index) => (
+                              <div
+                                key={`code-${index}`}
+                                className="leading-5 whitespace-pre-wrap"
+                                dangerouslySetInnerHTML={{ __html: line || ' ' }}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       ) : (
                         <p className="text-slate-400">Select a file to view its contents.</p>
                       )}
