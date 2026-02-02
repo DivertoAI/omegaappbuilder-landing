@@ -57,10 +57,9 @@ export async function runBuildPipeline(buildId: string, config: BuildConfig, use
     });
 
     await startPreview(buildId);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+  } catch (error: any) {
     console.error("Build failed", error);
-    await appendBuildLog(buildId, `Build failed: ${message}`);
+    await appendBuildLog(buildId, `Build failed: ${error?.message || "Unknown error"}`);
     await prisma.build.update({
       where: { id: buildId },
       data: { status: "failed" },

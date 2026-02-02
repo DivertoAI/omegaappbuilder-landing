@@ -47,7 +47,7 @@ export default function ContactForm() {
       setStatus('success');
       setMessage('Thanks! We will reach out to confirm a demo time.');
       setForm({ name: '', email: '', phone: '', clinicName: '' });
-    } catch {
+    } catch (error) {
       setStatus('error');
       setMessage('Something went wrong. Please try again.');
     }

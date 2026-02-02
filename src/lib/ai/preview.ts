@@ -69,13 +69,12 @@ export async function startPreview(buildId: string) {
     });
     await appendBuildLog(buildId, "Preview failed to start");
     return null;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+  } catch (error: any) {
     await prisma.build.update({
       where: { id: buildId },
       data: { status: "preview_failed" },
     });
-    await appendBuildLog(buildId, `Preview error: ${message}`);
+    await appendBuildLog(buildId, `Preview error: ${error?.message || "Unknown error"}`);
     return null;
   }
 }

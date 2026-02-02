@@ -11,7 +11,7 @@ const BundleSchema = z.object({
 });
 
 export function parseCodexBundle(raw: string): FileBundle {
-  const jsonText = raw.trim();
+  let jsonText = raw.trim();
   try {
     return BundleSchema.parse(JSON.parse(jsonText)).files;
   } catch {

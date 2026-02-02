@@ -23,37 +23,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  type RazorpayWebhookPayload = {
-    event?: string;
-    payload?: {
-      subscription?: {
-        entity?: {
-          id?: string;
-          status?: string;
-          current_start?: number;
-          current_end?: number;
-        };
-      };
-    };
-  };
-
-  let payload: RazorpayWebhookPayload | null = null;
+  let payload: any = null;
   try {
-    payload = JSON.parse(bodyText) as RazorpayWebhookPayload;
+    payload = JSON.parse(bodyText);
   } catch (error) {
     console.error("Webhook JSON parse failed", error);
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const event = payload?.event;
+  const event = payload?.event as string | undefined;
   const subscriptionEntity = payload?.payload?.subscription?.entity;
 
   if (!subscriptionEntity?.id) {
     return NextResponse.json({ ok: true });
   }
 
-  const subId = subscriptionEntity.id;
-  const status = subscriptionEntity.status || "unknown";
+  const subId = subscriptionEntity.id as string;
+  const status = subscriptionEntity.status as string;
   const currentStart = subscriptionEntity.current_start
     ? new Date(subscriptionEntity.current_start * 1000)
     : null;
