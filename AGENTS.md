@@ -194,3 +194,10 @@ There is no `test` script in `package.json` today.
 - Files: src/app/api/lead/route.ts
 - Notes: Lead flow now skips DB insert and uses Gmail SMTP for delivery.
 - Next: Verify Gmail SMTP app password and deliverability.
+
+## 2026-02-02 12:05
+
+- Change: Updated Next.js + React to patched versions to satisfy Vercel security checks.
+- Files: package.json, package-lock.json
+- Notes: Next.js 15.5.7, React/ReactDOM 19.1.2, eslint-config-next 15.5.7.
+- Next: Trigger a Vercel build to confirm the CVE warning is cleared.
