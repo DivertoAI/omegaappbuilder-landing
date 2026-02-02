@@ -6,7 +6,6 @@
     "dev": "next dev --turbopack",
     "dev:server": "node server/index.js",
     "build": "next build --turbopack",
-    "postinstall": "prisma generate",
     "start": "next start",
     "start:server": "node server/index.js",
     "lint": "eslint",
