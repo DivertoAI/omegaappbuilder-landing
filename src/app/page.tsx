@@ -3,6 +3,7 @@
 
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useCallback, useState } from 'react';
 
 // Lazy-load the 3D canvas (no SSR) to keep LCP snappy
@@ -95,7 +96,7 @@ export default function Home() {
                 </button>
                 <div className="absolute left-0 top-full mt-3 w-80 rounded-2xl border border-slate-200 bg-white shadow-xl opacity-0 translate-y-2 pointer-events-none transition group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto">
                   <div className="p-3 grid gap-2">
-                    <a
+                    <Link
                       href="/dental-ai"
                       className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-50"
                     >
@@ -110,10 +111,10 @@ export default function Home() {
                           Answer calls 24/7 and book patients automatically.
                         </span>
                       </span>
-                    </a>
-                    <div
-                      className="flex items-start gap-3 rounded-xl p-3 border border-dashed border-slate-200 bg-slate-50/60 opacity-70 cursor-not-allowed"
-                      aria-disabled="true"
+                    </Link>
+                    <Link
+                      href="/ai"
+                      className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-50"
                     >
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50">
                         <Image src="/icons/spark.svg" alt="" width={20} height={20} />
@@ -121,15 +122,12 @@ export default function Home() {
                       <span className="flex-1">
                         <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
                           AI Website Builder
-                          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
-                            Coming soon
-                          </span>
                         </span>
                         <span className="block text-xs text-slate-500">
                           Generate on-brand marketing sites from a single brief.
                         </span>
                       </span>
-                    </div>
+                    </Link>
                   </div>
                 </div>
               </div>
