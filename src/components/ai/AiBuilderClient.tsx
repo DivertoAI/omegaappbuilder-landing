@@ -834,6 +834,20 @@ export default function AiBuilderClient() {
                 Credits + subscription based. Higher tiers unlock higher-reasoning models for deeper
                 architecture and planning.
               </p>
+              {isBuilding && (
+                <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-fuchsia-200/70 bg-white/80 px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm">
+                  <span className="relative flex h-4 w-4 items-center justify-center">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-fuchsia-400/40" />
+                    <span className="absolute h-4 w-4 rounded-full border border-indigo-400/70 animate-spin" />
+                    <span className="relative h-2 w-2 rounded-full bg-fuchsia-500" />
+                  </span>
+                  Omega Agent is working
+                  <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] text-fuchsia-500">
+                    Live
+                    <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-400 animate-pulse" />
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex flex-wrap gap-3">
               <button
