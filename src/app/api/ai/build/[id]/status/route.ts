@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getUserFromRequest } from "@/lib/auth/requireUser";
 import { getWorkspacePaths } from "@/lib/ai/paths";
@@ -18,16 +18,13 @@ async function readJson(filePath: string) {
   }
 }
 
-type RouteContext = { params: Promise<{ id: string }> };
-
-export async function GET(req: NextRequest, { params }: RouteContext) {
-  const { id } = await params;
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   const user = await getUserFromRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const build = await prisma.build.findUnique({ where: { id } });
+  const build = await prisma.build.findUnique({ where: { id: params.id } });
   if (!build || build.userId !== user.id) {
     return NextResponse.json({ error: "Build not found" }, { status: 404 });
   }
@@ -39,7 +36,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
   if (Array.isArray(manifest?.files)) {
     fileList = manifest.files
       .map((file: { path?: string }) => file.path)
-      .filter((filePath: string | undefined): filePath is string => Boolean(filePath));
+      .filter((filePath): filePath is string => Boolean(filePath));
   } else {
     try {
       fileList = await listFiles(paths.repo);

@@ -297,7 +297,7 @@ export default function ChatWizardPanel({ onBuild, buildStatus }: Props) {
   };
 
   const handleAnswer = (value: string) => {
-    const nextMessages: Message[] = [...messages, { role: "user", content: value }];
+    const nextMessages = [...messages, { role: "user", content: value }];
     const nextIndex = Math.min(stepIndex + 1, STEPS.length - 1);
     if (currentStep.key !== "prompt") {
       nextMessages.push({ role: "assistant", content: STEPS[nextIndex].prompt });

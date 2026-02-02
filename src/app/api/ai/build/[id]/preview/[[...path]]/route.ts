@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getUserFromRequest, getUserFromToken } from "@/lib/auth/requireUser";
 import { startPreview } from "@/lib/ai/preview";
@@ -6,10 +6,9 @@ import { startPreview } from "@/lib/ai/preview";
 export const runtime = "nodejs";
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string; path?: string[] }> }
+  req: Request,
+  { params }: { params: { id: string; path?: string[] } }
 ) {
-  const { id, path } = await params;
   let user = await getUserFromRequest(req);
   if (!user) {
     const url = new URL(req.url);
@@ -22,7 +21,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const build = await prisma.build.findUnique({ where: { id } });
+  const build = await prisma.build.findUnique({ where: { id: params.id } });
   if (!build || build.userId !== user.id) {
     return NextResponse.json({ error: "Build not found" }, { status: 404 });
   }
@@ -36,7 +35,7 @@ export async function GET(
     return NextResponse.json({ error: "Preview not available" }, { status: 503 });
   }
 
-  const pathSuffix = path?.join("/") || "";
+  const pathSuffix = params.path?.join("/") || "";
   const upstreamUrl = `http://127.0.0.1:${port}/${pathSuffix}`;
 
   const upstream = await fetch(upstreamUrl, {

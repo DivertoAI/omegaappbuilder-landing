@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getUserFromRequest } from "@/lib/auth/requireUser";
 import { getWorkspacePaths } from "@/lib/ai/paths";
@@ -8,16 +8,13 @@ import { validateRelativePath } from "@/lib/ai/workspace";
 
 export const runtime = "nodejs";
 
-type RouteContext = { params: Promise<{ id: string }> };
-
-export async function GET(req: NextRequest, { params }: RouteContext) {
-  const { id } = await params;
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   const user = await getUserFromRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const build = await prisma.build.findUnique({ where: { id } });
+  const build = await prisma.build.findUnique({ where: { id: params.id } });
   if (!build || build.userId !== user.id) {
     return NextResponse.json({ error: "Build not found" }, { status: 404 });
   }
