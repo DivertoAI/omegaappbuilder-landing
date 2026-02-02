@@ -824,8 +824,12 @@ export default function AiBuilderClient() {
                 Omega AI Builder
               </p>
               <h1 className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight">
-                Build websites, apps, and full products from a single prompt — with any tech stack that fits.
+                Build. Edit. Deploy.
               </h1>
+              <p className="mt-3 text-lg text-slate-700">
+                Build websites, apps, and full products from a single prompt —{' '}
+                <span className="font-semibold text-slate-900">with any tech stack that fits</span>.
+              </p>
               <p className="mt-4 text-slate-600 text-lg">
                 Web, mobile (iOS/Android), desktop (macOS/Windows/Linux), and wearable-ready builds
                 with chat-guided specs, live previews, and production-grade output.

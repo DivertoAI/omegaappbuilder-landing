@@ -222,3 +222,31 @@ There is no `test` script in `package.json` today.
 - Files: src/components/ai/AiBuilderClient.tsx, scripts/local-agent.mjs, docs/local-agent.md
 - Notes: Import writes into /imported-projects and agent can be gated for remote tunnel use.
 - Next: Wire real preview rendering or command confirmation prompts if needed.
+
+## 2026-02-02 20:15
+
+- Change: Fully wired Omega AI Builder local demo with Codex CLI builds, live file explorer, preview, editor tabs, and animated loaders.
+- Files: src/components/ai/AiBuilderClient.tsx, src/app/ai/page.tsx, scripts/local-agent.mjs, docs/local-agent.md, eslint.config.mjs, .gitignore
+- Notes:
+  - /ai now renders a single client UI (AiBuilderClient) with chat-guided specs, quick actions, build terminal, file explorer, code viewer, and live preview.
+  - Explorer is VS Code-inspired: expandable folder tree, active file highlight, colored file dots, and open file tabs.
+  - Editor shows line numbers + lightweight regex-based syntax highlighting (no external deps).
+  - Live preview loads from the local agent (/preview?path=...) and supports collapse + fullscreen (opens new tab).
+  - A polling loop runs every 2s while building to surface new files as they are generated.
+  - Animated Omega-themed loaders show in hero, Explorer, and preview while a build is active.
+  - Quick actions: create workspace, rebuild, lint, list files, install deps, stop build. Stop uses a server-side kill.
+  - Local agent (scripts/local-agent.mjs):
+    - WebSocket + HTTP server on ws/http://localhost:8787.
+    - Endpoints: /list, /file, /preview, /import (with CORS enabled).
+    - Workspace root: imported-projects/ (ignored by git + ESLint).
+    - Uses Codex CLI by default (LOCAL_AGENT_USE_CODEX != 0). Model: gpt-5.2-codex unless overridden.
+    - Prompting logic: asks questions unless full spec provided in one message.
+    - Build runs codex exec with workspace-write sandbox; logs are sanitized to remove "Codex" brand references (shown as Omega Agent).
+    - Stop command kills active process (SIGTERM -> SIGKILL fallback).
+  - Env knobs:
+    - NEXT_PUBLIC_LOCAL_AGENT_WS (override ws host), NEXT_PUBLIC_LOCAL_AGENT_TOKEN (optional auth).
+    - LOCAL_AGENT_TOKEN (server auth), LOCAL_AGENT_ALLOW_REMOTE=1 (allow non-local access).
+    - LOCAL_AGENT_USE_CODEX=0 to disable Codex CLI, LOCAL_AGENT_CODEX_MODEL to override model.
+  - Run locally:
+    - Start agent: node scripts/local-agent.mjs
+    - Start app: npm run dev (default http://localhost:3000/ai)
