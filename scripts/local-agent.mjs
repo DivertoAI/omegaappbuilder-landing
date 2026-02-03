@@ -19,6 +19,7 @@ const CODEX_MODEL =
 const CODEX_BIN = process.env.LOCAL_AGENT_CODEX_BIN || 'codex';
 let currentWorkspace = null;
 let latestSpec = '';
+let specSeed = '';
 let activeProcess = null;
 let activeProcessLabel = '';
 
@@ -154,7 +155,19 @@ wss.on('connection', (ws, req) => {
 
     if (payload.type === 'chat') {
       if (typeof payload.text === 'string' && payload.text.trim()) {
-        latestSpec = payload.text.trim();
+        const incoming = payload.text.trim();
+        if (!hasAskedQuestions) {
+          specSeed = incoming;
+          latestSpec = incoming;
+        } else if (!hasCapturedSpec) {
+          latestSpec = specSeed
+            ? `${specSeed}\nDetails: ${incoming}`
+            : incoming;
+        } else {
+          latestSpec = specSeed
+            ? `${specSeed}\nUpdate: ${incoming}`
+            : incoming;
+        }
       }
       if (!hasAskedQuestions) {
         if (isFullSpec(latestSpec)) {
@@ -320,6 +333,7 @@ wss.on('connection', (ws, req) => {
       hasAskedQuestions = false;
       hasCapturedSpec = false;
       latestSpec = '';
+      specSeed = '';
       currentWorkspace = null;
       ws.send(
         JSON.stringify({
@@ -448,7 +462,8 @@ Requirements:
 - Use: ${stack}
 - Ensure the site is responsive and visually polished.
 - Create a single-page landing page with a strong hero, benefits, schedule/details, and a CTA.
-- Include realistic placeholder copy relevant to the request.
+- Include realistic placeholder copy that is explicitly aligned with the request (do not invent unrelated themes).
+- If the request mentions an event, make all copy clearly about that event (name, agenda, venue, highlights).
 - Generate a static preview file at /index.html that mirrors the main page for live preview.
 - Keep dependencies minimal and make sure the project can run.
 - If a framework is used, include package.json and minimal config.

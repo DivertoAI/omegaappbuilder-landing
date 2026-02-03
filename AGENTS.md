@@ -247,6 +247,16 @@ There is no `test` script in `package.json` today.
     - NEXT_PUBLIC_LOCAL_AGENT_WS (override ws host), NEXT_PUBLIC_LOCAL_AGENT_TOKEN (optional auth).
     - LOCAL_AGENT_TOKEN (server auth), LOCAL_AGENT_ALLOW_REMOTE=1 (allow non-local access).
     - LOCAL_AGENT_USE_CODEX=0 to disable Codex CLI, LOCAL_AGENT_CODEX_MODEL to override model.
-  - Run locally:
+- Run locally:
     - Start agent: node scripts/local-agent.mjs
     - Start app: npm run dev (default http://localhost:3000/ai)
+
+## 2026-02-03 09:10
+
+- Change: Preserve original build intent when answering guided questions; prevent unrelated themes in generated content.
+- Files: scripts/local-agent.mjs
+- Notes:
+  - Agent now stores the first user prompt as a spec seed and appends guided answers instead of replacing the original request.
+  - Codex prompt tightened to require copy explicitly aligned with the request (e.g., event pages must stay on-event).
+  - Reset clears both the spec seed and latest spec.
+- Next: Consider exposing a visible “spec summary” panel in the UI so users can review the final build prompt before execution.
