@@ -1138,7 +1138,7 @@ export default function AiBuilderClient() {
               if (isFreePlan) return;
               uploadInputRef.current?.click();
             }}
-            className={`mt-2 self-center rounded-lg border font-semibold ${
+            className={`mt-2 mx-auto block rounded-lg border font-semibold ${
               isCompactPreview ? 'px-2 py-1 text-[10px]' : 'px-3 py-1 text-[11px]'
             } ${
               isFreePlan

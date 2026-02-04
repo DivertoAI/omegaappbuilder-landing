@@ -83,57 +83,6 @@ export default function PricingPage() {
     },
   ];
 
-  const simulatorAddOns = [
-    {
-      name: 'Simulator Add-On - Starter',
-      price: '$29',
-      cadence: 'per month',
-      summary: 'Premium native previews for iOS + Android.',
-      bullets: [
-        '1 simulator session at a time',
-        'Up to 45 minutes/day of simulator time',
-        'iOS + Android native preview access',
-        'Local simulator bridge',
-      ],
-    },
-    {
-      name: 'Simulator Add-On - Pro',
-      price: '$59',
-      cadence: 'per month',
-      summary: 'Extended simulator time for daily builders.',
-      bullets: [
-        '1 simulator session at a time',
-        'Up to 4 hours/day of simulator time',
-        'Priority launch queue',
-        'Local simulator bridge',
-      ],
-    },
-    {
-      name: 'Simulator Add-On - Team',
-      price: '$149',
-      cadence: 'per month',
-      summary: 'Shared simulator capacity for teams.',
-      bullets: [
-        'Up to 4 concurrent simulator sessions',
-        '12 hours/day pooled simulator time',
-        'Team usage dashboard',
-        'Priority support',
-      ],
-    },
-    {
-      name: 'Simulator Add-On - Enterprise',
-      price: 'Custom',
-      cadence: 'pricing',
-      summary: 'Dedicated simulator capacity and SLAs.',
-      bullets: [
-        'Dedicated simulator pool',
-        'Custom concurrency and hours',
-        'Private routing + audit logs',
-        'SLA + white-glove onboarding',
-      ],
-    },
-  ];
-
   const compareSections = [
     {
       title: 'Omega AI',
@@ -354,48 +303,6 @@ export default function PricingPage() {
                 </button>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 border-t border-slate-200 bg-slate-50/60">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <h2 className="text-3xl font-bold text-slate-900">Simulator preview add-ons</h2>
-              <p className="mt-2 text-slate-600 max-w-3xl">
-                Web previews ship with every plan. Upgrade to native iOS/Android simulator time when you
-                want premium device previews inside Omega with the local simulator bridge.
-              </p>
-            </div>
-          </div>
-          <div className="mt-8 grid gap-6 lg:grid-cols-4">
-            {simulatorAddOns.map((addOn) => (
-              <div
-                key={addOn.name}
-                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <p className="text-sm font-semibold text-slate-500">{addOn.name}</p>
-                <p className="mt-3 text-3xl font-bold text-slate-900">{addOn.price}</p>
-                <p className="mt-1 text-xs text-slate-500 uppercase tracking-wide">{addOn.cadence}</p>
-                <p className="mt-4 text-sm font-semibold text-slate-900">{addOn.summary}</p>
-                <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                  {addOn.bullets.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <span className="mt-1 h-2 w-2 rounded-full bg-fuchsia-400" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button className="mt-6 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                  Add {addOn.name.replace('Simulator Preview - ', '')}
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-3 text-xs text-slate-500">
-            Simulator preview add-ons require the local simulator bridge installed on your machine. Usage is
-            pooled per plan and subject to fair-use limits.
           </div>
         </div>
       </section>
