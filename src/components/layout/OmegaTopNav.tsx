@@ -92,7 +92,6 @@ export default function OmegaTopNav({
   }, []);
 
   const isBuilder = variant === 'builder';
-  const showCTA = variant === 'pricing';
   const navTextSize = isBuilder ? 'text-[12px]' : 'text-sm';
   const navPadding = isBuilder ? 'px-3' : 'px-4';
 
@@ -132,10 +131,10 @@ export default function OmegaTopNav({
             </nav>
             <div className="hidden lg:flex items-center gap-3">
             {userEmail && (
-              <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] text-slate-600 shadow-sm">
-                <div className="min-w-[110px]">
+              <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] text-slate-600 shadow-sm">
+                <div className="min-w-[84px]">
                   <p className="uppercase tracking-wide text-slate-400">Credits</p>
-                  <p className="text-sm font-semibold text-slate-900">{creditsRange}</p>
+                  <p className="text-xs font-semibold text-slate-900 whitespace-nowrap">{creditsRange}</p>
                   <div className="mt-1 h-1 w-full rounded-full bg-slate-100">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500"
@@ -143,19 +142,19 @@ export default function OmegaTopNav({
                     />
                   </div>
                 </div>
-                <div className="h-8 w-px bg-slate-200" />
-                <div>
+                <div className="h-6 w-px bg-slate-200" />
+                <div className="min-w-[60px]">
                   <p className="uppercase tracking-wide text-slate-400">Plan</p>
-                  <p className="text-sm font-semibold text-slate-900">{planMeta.label}</p>
+                  <p className="text-xs font-semibold text-slate-900 whitespace-nowrap">{planMeta.label}</p>
                 </div>
-                <div className="h-8 w-px bg-slate-200" />
-                <div>
+                <div className="h-6 w-px bg-slate-200" />
+                <div className="min-w-[70px]">
                   <p className="uppercase tracking-wide text-slate-400">Agent</p>
-                  <p className="text-sm font-semibold text-slate-900">{planMeta.agent}</p>
+                  <p className="text-xs font-semibold text-slate-900 whitespace-nowrap">{planMeta.agent}</p>
                 </div>
                 <Link
                   href="/pricing"
-                  className="rounded-full border border-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
+                  className="rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
                 >
                   Manage
                 </Link>
@@ -192,16 +191,6 @@ export default function OmegaTopNav({
                     Sign up
                   </Link>
                 </div>
-              )}
-              {showCTA && (
-                <a
-                  href="https://calendly.com/hello-omegaappbuilder/30min"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex rounded-full px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
-                >
-                  Book a Call
-                </a>
               )}
             </div>
           </div>

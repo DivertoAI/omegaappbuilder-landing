@@ -50,11 +50,11 @@ export default function PricingPage() {
     {
       name: 'Teams',
       price: '$35',
-      cadence: 'per user, per month, billed annually',
+      cadence: 'per month, billed annually',
       summary: 'Bring the power of Omega to your entire team.',
       bullets: [
         'Everything included with Core',
-        '$40 monthly credits per user',
+        '$40 monthly credits',
         'Upfront credits on annual plans',
         '50 viewer seats',
         'Centralized billing',
@@ -85,43 +85,43 @@ export default function PricingPage() {
 
   const simulatorAddOns = [
     {
-      name: 'Simulator Preview - Starter',
-      price: '$12',
+      name: 'Simulator Add-On - Starter',
+      price: '$29',
       cadence: 'per month',
-      summary: 'Preview iOS/Android builds in a live simulator.',
+      summary: 'Premium native previews for iOS + Android.',
       bullets: [
         '1 simulator session at a time',
-        'Up to 30 minutes/day of simulator time',
-        'iOS + Android preview access',
+        'Up to 45 minutes/day of simulator time',
+        'iOS + Android native preview access',
         'Local simulator bridge',
       ],
     },
     {
-      name: 'Simulator Preview - Pro',
-      price: '$29',
+      name: 'Simulator Add-On - Pro',
+      price: '$59',
       cadence: 'per month',
-      summary: 'More time for daily builders.',
+      summary: 'Extended simulator time for daily builders.',
       bullets: [
         '1 simulator session at a time',
-        'Up to 3 hours/day of simulator time',
+        'Up to 4 hours/day of simulator time',
         'Priority launch queue',
         'Local simulator bridge',
       ],
     },
     {
-      name: 'Simulator Preview - Team',
-      price: '$95',
+      name: 'Simulator Add-On - Team',
+      price: '$149',
       cadence: 'per month',
-      summary: 'Shared simulator time for teams.',
+      summary: 'Shared simulator capacity for teams.',
       bullets: [
-        'Up to 3 concurrent simulator sessions',
-        '10 hours/day pooled simulator time',
+        'Up to 4 concurrent simulator sessions',
+        '12 hours/day pooled simulator time',
         'Team usage dashboard',
         'Priority support',
       ],
     },
     {
-      name: 'Simulator Preview - Enterprise',
+      name: 'Simulator Add-On - Enterprise',
       price: 'Custom',
       cadence: 'pricing',
       summary: 'Dedicated simulator capacity and SLAs.',
@@ -364,8 +364,8 @@ export default function PricingPage() {
             <div>
               <h2 className="text-3xl font-bold text-slate-900">Simulator preview add-ons</h2>
               <p className="mt-2 text-slate-600 max-w-3xl">
-                Web previews ship with every plan. Add simulator time when you want native iOS/Android
-                previews inside Omega with the local simulator bridge.
+                Web previews ship with every plan. Upgrade to native iOS/Android simulator time when you
+                want premium device previews inside Omega with the local simulator bridge.
               </p>
             </div>
           </div>

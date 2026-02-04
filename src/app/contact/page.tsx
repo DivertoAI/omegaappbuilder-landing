@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
+  const calendlyUrl = 'https://calendly.com/hello-omegaappbuilder/30min';
+
   return (
     <main className="min-h-screen bg-white text-slate-900">
       <OmegaTopNav active="contact" variant="pricing" />
@@ -31,6 +33,20 @@ export default function ContactPage() {
                 Share your product, goals, and timeline. We will map the build scope, confirm your
                 content needs, and send a clear delivery plan.
               </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <a
+                  href={calendlyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 text-sm font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                >
+                  <span aria-hidden="true">📞</span>
+                  Book a Call
+                </a>
+                <span className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-600">
+                  30-min scoping call
+                </span>
+              </div>
               <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
                 <p className="text-sm text-slate-600">
                   You will receive a quick audit of your current site and a build outline within 48 hours.

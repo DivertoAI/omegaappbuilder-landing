@@ -102,8 +102,8 @@ export default function WorkflowPage() {
               },
               {
                 name: 'Teams',
-                detail: '$35 / user / month (billed annually)',
-                credits: '40 monthly credits per user',
+                detail: '$35 / month (billed annually)',
+                credits: '40 monthly credits',
                 notes: 'Omega 3 agent with shared workspaces, billing, and collaboration.',
               },
               {
