@@ -806,8 +806,15 @@ Requirements:
 - Keep dependencies minimal and make sure the project can run locally.
 - Include canonical entry files for the chosen stack (examples: Flutter -> pubspec.yaml + lib/main.dart; Android/Kotlin -> settings.gradle + app/build.gradle + app/src/main/AndroidManifest.xml + MainActivity.kt; SwiftUI -> Package.swift + Sources/App.swift; React Native -> App.tsx).
 - If the request is small, generate the simplest working app that satisfies it.
-- Generate a static preview file at /index.html that mirrors the app UI for the live preview panel.
+- Do not output only HTML/CSS/JS. Always include the native project files for the requested stack.
+- In addition to the native project, generate a fast web preview variant of the same UI so the builder can render it immediately.
+  - If the stack is React Native, implement the preview in a React Native Web style.
+  - If the stack is Flutter, implement the preview in a Flutter Web style.
+  - For any other native stack, implement the preview in a React Native Web style.
+  - Keep the preview self-contained (HTML/CSS/JS only, no build step required).
+- Place the preview at /index.html so the live preview panel can render it.
 - Include a short README with run instructions.
+- In the README, note that /index.html is a fast preview and the native project is the source of truth.
 
 Deliverable:
 - Write the full project files into the current working directory.
