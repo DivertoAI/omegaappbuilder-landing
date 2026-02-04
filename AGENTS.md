@@ -260,3 +260,27 @@ There is no `test` script in `package.json` today.
   - Codex prompt tightened to require copy explicitly aligned with the request (e.g., event pages must stay on-event).
   - Reset clears both the spec seed and latest spec.
 - Next: Consider exposing a visible “spec summary” panel in the UI so users can review the final build prompt before execution.
+
+## 2026-02-04 15:46 IST
+
+- Change: Added a full Builder Pricing page with Replit-style tiers, Omega Agent naming, and a plan comparison matrix.
+- Change: Enforced credit usage in the local agent: per-token decrement, stop builds on zero credits, and block imports for the free plan.
+- Change: AI Builder UI now shows live credits, plan, agent tier, last usage, low-credit warning, and upgrade CTA. Quick actions disable when out of credits.
+- Change: Added /api/credits endpoint for profile credit reads and aligned pricing copy to avoid model/reasoning terms.
+- Change: Build sanity fix to exclude imported-projects from TypeScript checks.
+- Files: scripts/local-agent.mjs, src/components/ai/AiBuilderClient.tsx, src/app/pricing/page.tsx, src/app/api/credits/route.ts, src/app/page.tsx, src/app/sitemap.ts, tsconfig.json
+- Notes:
+  - Omega 1/2/3 labels replace model names in UI.
+  - Pay-as-you-go usage is $1 per credit.
+  - Import is disabled on Starter/Free with an upgrade prompt.
+
+## 2026-02-04 16:01 IST
+
+- Change: Standardized credits to token-usage calculations, added chat attachments, hardened workspace access, and expanded preview modes.
+- Files: scripts/local-agent.mjs, src/components/ai/AiBuilderClient.tsx, README.md
+- Notes:
+  - Credits now use token usage with `LOCAL_AGENT_CREDIT_PER_USD` (default 1); plan copy aligns to 2 daily / 25 monthly / 40 monthly per user.
+  - Builder chat includes an attachment menu for file/folder uploads stored under `references/` in the active workspace.
+  - Local agent access is restricted to the active workspace with realpath, traversal, and symlink guards; downloads are blocked if symlinks exist.
+  - Preview supports device frames for iOS/Android/WearOS/watchOS with Auto detection and a mode selector.
+- Next: Decide how to stream emulator previews for native builds.

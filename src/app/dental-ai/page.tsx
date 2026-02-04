@@ -67,21 +67,24 @@ export default function DentalAiPage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
+          <div className="flex h-[72px] items-center justify-between gap-4">
+            <Link href="/" className="flex items-center gap-3">
               <Image src="/logo.png" alt="Omega logo" width={32} height={32} priority />
-              <span className="font-semibold tracking-tight">
-                Omega — AI Agents • 3D Web • Apps
-              </span>
+              <div className="leading-tight">
+                <p className="text-sm font-semibold tracking-tight">
+                  Omega — AI Agents • 3D Web • Apps
+                </p>
+                <p className="text-[11px] text-slate-500">Dental AI</p>
+              </div>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-6 text-sm">
-              <a href="#benefits" className="hover:text-fuchsia-600">Benefits</a>
-              <a href="#demo" className="hover:text-fuchsia-600">Demo</a>
-              <a href="#pricing" className="hover:text-fuchsia-600">Pricing</a>
-              <a href="#contact" className="hover:text-fuchsia-600">Contact</a>
+            <nav className="hidden lg:flex items-center rounded-full border border-slate-200 bg-slate-50/80 p-1 text-[12px] shadow-sm whitespace-nowrap">
+              <a href="#benefits" className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600">Benefits</a>
+              <a href="#demo" className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600">Demo</a>
+              <a href="#pricing" className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600">Pricing</a>
+              <a href="#contact" className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600">Contact</a>
             </nav>
 
             <div className="flex items-center gap-3">
@@ -89,7 +92,7 @@ export default function DentalAiPage() {
                 href={calendlyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex rounded-xl px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                className="inline-flex rounded-full px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-xs font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500 whitespace-nowrap"
               >
                 Schedule a Call
               </a>

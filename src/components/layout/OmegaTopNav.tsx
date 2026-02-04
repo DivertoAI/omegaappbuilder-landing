@@ -1,0 +1,269 @@
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { firebaseAuth } from '@/lib/firebaseClient';
+
+type NavItem = {
+  label: string;
+  href: string;
+  key: string;
+};
+
+const PLAN_META: Record<
+  string,
+  { label: string; agent: string; creditCap?: number | null }
+> = {
+  starter: { label: 'Starter', agent: 'Omega 1', creditCap: 0.25 },
+  core: { label: 'Core', agent: 'Omega 2', creditCap: 25 },
+  teams: { label: 'Teams', agent: 'Omega 3', creditCap: 40 },
+  enterprise: { label: 'Enterprise', agent: 'Omega 3', creditCap: null },
+};
+
+const formatCredits = (value: number | null | undefined) => {
+  if (value === null || value === undefined || Number.isNaN(value)) return '—';
+  if (value < 1) return value.toFixed(2);
+  if (value < 100) return value.toFixed(1).replace(/\.0$/, '');
+  return Math.round(value).toLocaleString();
+};
+
+export default function OmegaTopNav({
+  active,
+  variant = 'builder',
+}: {
+  active?: string;
+  variant?: 'builder' | 'pricing';
+}) {
+  const [credits, setCredits] = useState<number | null>(null);
+  const [planKey, setPlanKey] = useState('starter');
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const planMeta = useMemo(() => PLAN_META[planKey] || PLAN_META.starter, [planKey]);
+  const creditCap = planMeta.creditCap ?? null;
+  const creditsRange =
+    creditCap !== null ? `${formatCredits(credits)} / ${formatCredits(creditCap)}` : formatCredits(credits);
+  const creditsRatio =
+    credits !== null && creditCap ? Math.max(0, Math.min(1, credits / creditCap)) : 0;
+  const initials = userEmail
+    ? userEmail.split('@')[0].slice(0, 2).toUpperCase()
+    : 'GU';
+
+  const navItems: NavItem[] = [
+    { label: 'Builder', href: '/ai', key: 'builder' },
+    { label: 'Workflow', href: '/workflow', key: 'workflow' },
+    { label: 'Pricing', href: '/pricing', key: 'pricing' },
+    { label: 'Contact', href: '/contact', key: 'contact' },
+  ];
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadCredits = async (token?: string | null) => {
+      try {
+        const response = await fetch('/api/credits', {
+          cache: 'no-store',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        if (!response.ok) return;
+        const data = (await response.json()) as { credits?: number; plan?: string };
+        if (cancelled) return;
+        setCredits(typeof data.credits === 'number' ? data.credits : null);
+        setPlanKey(data.plan || 'starter');
+      } catch {
+        // ignore credit fetch errors
+      }
+    };
+    loadCredits();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
+      if (!mounted) return;
+      setUserEmail(user?.email || null);
+    });
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  const isBuilder = variant === 'builder';
+  const showCTA = variant === 'pricing';
+  const navTextSize = isBuilder ? 'text-[12px]' : 'text-sm';
+  const navPadding = isBuilder ? 'px-3' : 'px-4';
+
+  return (
+    <>
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-[72px] items-center justify-between gap-4">
+            <Link href="/" className="flex items-center gap-3">
+              <Image src="/logo.png" alt="Omega logo" width={32} height={32} priority />
+              <div className="leading-tight">
+                <p className="text-sm font-semibold tracking-tight">
+                  Omega — AI Agents • 3D Web • Apps
+                </p>
+                <p className="text-[11px] text-slate-500">Builder Console</p>
+              </div>
+            </Link>
+            <nav
+              className={`hidden lg:flex items-center rounded-full border border-slate-200 bg-slate-50/80 p-1 shadow-sm whitespace-nowrap ${navTextSize}`}
+            >
+              {navItems.map((item) => {
+                const isActive = active === item.key;
+                return (
+                  <Link
+                    key={item.key}
+                    href={item.href}
+                    className={`rounded-full ${navPadding} py-1.5 font-medium transition ${
+                      isActive
+                        ? 'bg-white text-fuchsia-600 shadow-sm'
+                        : 'text-slate-700 hover:bg-white hover:text-fuchsia-600'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="hidden lg:flex items-center gap-3">
+            {userEmail && (
+              <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] text-slate-600 shadow-sm">
+                <div className="min-w-[110px]">
+                  <p className="uppercase tracking-wide text-slate-400">Credits</p>
+                  <p className="text-sm font-semibold text-slate-900">{creditsRange}</p>
+                  <div className="mt-1 h-1 w-full rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500"
+                      style={{ width: `${creditsRatio * 100}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="h-8 w-px bg-slate-200" />
+                <div>
+                  <p className="uppercase tracking-wide text-slate-400">Plan</p>
+                  <p className="text-sm font-semibold text-slate-900">{planMeta.label}</p>
+                </div>
+                <div className="h-8 w-px bg-slate-200" />
+                <div>
+                  <p className="uppercase tracking-wide text-slate-400">Agent</p>
+                  <p className="text-sm font-semibold text-slate-900">{planMeta.agent}</p>
+                </div>
+                <Link
+                  href="/pricing"
+                  className="rounded-full border border-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  Manage
+                </Link>
+              </div>
+            )}
+              {userEmail ? (
+                <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 shadow-sm">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-500 text-white text-sm font-semibold">
+                    {initials}
+                  </span>
+                  <div className="text-left leading-tight">
+                    <p className="text-[10px] uppercase tracking-wide text-slate-400">Account</p>
+                    <p className="text-sm font-semibold text-slate-900">{userEmail}</p>
+                  </div>
+                  <Link
+                    href="/account"
+                    className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                    Settings
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/login"
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 text-xs font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400"
+                  >
+                    Sign up
+                  </Link>
+                </div>
+              )}
+              {showCTA && (
+                <a
+                  href="https://calendly.com/hello-omegaappbuilder/30min"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex rounded-full px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                >
+                  Book a Call
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+      <div className="lg:hidden mx-auto max-w-7xl px-4 sm:px-6 py-4 space-y-3">
+        {userEmail && (
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+            <div className="flex-1">
+              <p className="text-[11px] uppercase tracking-wide text-slate-400">Credits</p>
+              <p className="text-sm font-semibold text-slate-900">{creditsRange}</p>
+              <div className="mt-2 h-1.5 w-full rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500"
+                  style={{ width: `${creditsRatio * 100}%` }}
+                />
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[11px] uppercase tracking-wide text-slate-400">Plan</p>
+              <p className="text-sm font-semibold text-slate-900">{planMeta.label}</p>
+              <p className="text-[10px] font-semibold text-slate-500">{planMeta.agent}</p>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-500 text-white text-sm font-semibold">
+              {initials}
+            </span>
+            <div className="text-left">
+              <p className="text-[11px] uppercase tracking-wide text-slate-400">Account</p>
+              <p className="text-sm font-semibold text-slate-900">
+                {userEmail || 'Guest'}
+              </p>
+            </div>
+          </div>
+          {userEmail ? (
+            <Link
+              href="/account"
+              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              Settings
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login"
+                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-3 py-1 text-xs font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400"
+              >
+                Sign up
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}

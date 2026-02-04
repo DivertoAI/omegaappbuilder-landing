@@ -12,6 +12,7 @@
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.3.0",
     "@supabase/supabase-js": "^2.57.2",
+    "firebase": "^10.12.4",
     "next": "15.5.7",
     "nodemailer": "^7.0.6",
     "openai": "^6.2.0",

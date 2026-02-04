@@ -15,5 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default function AiBuilderPage() {
-  return <AiBuilderClient />;
+  return (
+    <AiBuilderClient />
+  );
 }

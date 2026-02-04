@@ -1,9 +1,21 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ChangeEvent, DragEvent } from 'react';
+import type { ChangeEvent, DragEvent, ReactNode } from 'react';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  setDoc,
+  doc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import OmegaTopNav from '@/components/layout/OmegaTopNav';
+import { firebaseAuth, firestore } from '@/lib/firebaseClient';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -13,16 +25,44 @@ type ChatMessage = {
 
 type AgentStatus = 'connected' | 'offline' | 'error';
 type ImportStatus = 'idle' | 'uploading' | 'success' | 'error';
+type ImportMode = 'project' | 'attachments';
+type PreviewMode = 'auto' | 'web' | 'mobile-android' | 'mobile-ios' | 'wearos' | 'watchos';
 type TreeNode = {
   name: string;
   path: string;
   type: 'dir' | 'file';
   children?: TreeNode[];
 };
-
+type ProjectItem = {
+  id: string;
+  name: string;
+  workspacePath?: string | null;
+  updatedAt?: string | null;
+};
+type CreditsUsage = {
+  inputTokens: number;
+  outputTokens: number;
+  credits: number;
+  estimated?: boolean;
+};
 const FILE_TREE: string[] = [];
 const INITIAL_LOGS: string[] = [];
 const INITIAL_MESSAGES: ChatMessage[] = [];
+const PLAN_META: Record<
+  string,
+  { label: string; agent: string; autonomy: string; creditCap?: number | null }
+> = {
+  starter: { label: 'Starter', agent: 'Omega 1', autonomy: 'Standard', creditCap: 0.25 },
+  core: { label: 'Core', agent: 'Omega 2', autonomy: 'Advanced', creditCap: 25 },
+  teams: { label: 'Teams', agent: 'Omega 3', autonomy: 'Advanced', creditCap: 40 },
+  enterprise: { label: 'Enterprise', agent: 'Omega 3', autonomy: 'Elite', creditCap: null },
+};
+const formatCredits = (value: number | null | undefined) => {
+  if (value === null || value === undefined || Number.isNaN(value)) return '—';
+  if (value < 1) return value.toFixed(2);
+  if (value < 100) return value.toFixed(1).replace(/\.0$/, '');
+  return Math.round(value).toLocaleString();
+};
 
 const getAgentToken = () => process.env.NEXT_PUBLIC_LOCAL_AGENT_TOKEN || '';
 
@@ -48,6 +88,8 @@ export default function AiBuilderClient() {
   }, [agentUrl]);
   const wsRef = useRef<WebSocket | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const attachmentInputRef = useRef<HTMLInputElement | null>(null);
+  const attachmentFolderInputRef = useRef<HTMLInputElement | null>(null);
   const selectedFileRef = useRef<string | null>(null);
   const openFilesRef = useRef<string[]>([]);
   const stopRequestedRef = useRef(false);
@@ -62,6 +104,7 @@ export default function AiBuilderClient() {
   const [isDragging, setIsDragging] = useState(false);
   const [workspaceLabel, setWorkspaceLabel] = useState('No workspace');
   const [hasWorkspace, setHasWorkspace] = useState(false);
+  const [workspacePath, setWorkspacePath] = useState<string | null>(null);
   const hasWorkspaceRef = useRef(hasWorkspace);
   const [hasPrompt, setHasPrompt] = useState(messages.length > 0);
   const [isBuilding, setIsBuilding] = useState(false);
@@ -77,6 +120,24 @@ export default function AiBuilderClient() {
   const [openFiles, setOpenFiles] = useState<string[]>([]);
   const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(false);
   const [stopRequested, setStopRequested] = useState(false);
+  const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState<PreviewMode>('auto');
+  const [credits, setCredits] = useState<number | null>(null);
+  const [planKey, setPlanKey] = useState('starter');
+  const [agentLabel, setAgentLabel] = useState('Omega 1');
+  const [autonomyLabel, setAutonomyLabel] = useState('Standard');
+  const [creditCap, setCreditCap] = useState<number | null>(null);
+  const [lastUsage, setLastUsage] = useState<CreditsUsage | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+  const requireAuth = useCallback(() => {
+    if (user) return true;
+    setShowAuthPrompt(true);
+    return false;
+  }, [user]);
 
   const runCommand = useCallback((command: string) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -141,6 +202,64 @@ export default function AiBuilderClient() {
       }
     },
     [agentHttpUrl, agentToken]
+  );
+
+  const loadProjects = useCallback(async () => {
+    if (!user) return;
+    setProjectsLoading(true);
+    try {
+      const q = query(
+        collection(firestore, 'projects'),
+        where('userId', '==', user.uid),
+        orderBy('updatedAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      const rows: ProjectItem[] = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data() as {
+          name: string;
+          workspacePath?: string | null;
+          updatedAt?: { toDate?: () => Date } | string | null;
+        };
+        const updatedAtValue =
+          typeof data.updatedAt === 'string'
+            ? data.updatedAt
+            : data.updatedAt?.toDate?.().toISOString();
+        return {
+          id: docSnap.id,
+          name: data.name,
+          workspacePath: data.workspacePath || null,
+          updatedAt: updatedAtValue || null,
+        };
+      });
+      setProjects(rows);
+    } catch {
+      // ignore
+    } finally {
+      setProjectsLoading(false);
+    }
+  }, [user]);
+
+  const saveProject = useCallback(
+    async (name: string, workspacePath: string) => {
+      if (!user) return;
+      try {
+        const safeId = `${user.uid}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+        await setDoc(
+          doc(firestore, 'projects', safeId),
+          {
+            userId: user.uid,
+            name,
+            workspacePath,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+        await loadProjects();
+      } catch {
+        // ignore project save failures
+      }
+    },
+    [user, loadProjects]
   );
 
   const closeFileTab = (path: string) => {
@@ -289,6 +408,50 @@ export default function AiBuilderClient() {
     [agentHttpUrl, agentToken, buildPreviewUrl, loadFile]
   );
 
+  const openProject = useCallback(
+    async (project: ProjectItem) => {
+      if (!requireAuth()) return;
+      if (!project) return;
+      try {
+        const selectUrl = new URL(agentHttpUrl);
+        selectUrl.pathname = '/workspaces/select';
+        const response = await fetch(selectUrl.toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(agentToken ? { 'x-omega-token': agentToken } : {}),
+          },
+          body: JSON.stringify({
+            path: project.workspacePath || undefined,
+            name: project.name,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+        const payload = await response.json();
+        if (payload?.name) {
+          setWorkspaceLabel(payload.name);
+          setHasWorkspace(true);
+          setWorkspacePath(payload.path || project.workspacePath || null);
+          if (Array.isArray(payload.files)) {
+            setFileTree(payload.files);
+          }
+          await refreshFiles(undefined, true);
+          if (project.workspacePath) {
+            await saveProject(project.name, project.workspacePath);
+          }
+        }
+      } catch (error) {
+        setLogs((prev) => [
+          ...prev,
+          error instanceof Error ? `Project open failed: ${error.message}` : 'Project open failed.',
+        ].slice(-200));
+      }
+    },
+    [agentHttpUrl, agentToken, refreshFiles, saveProject, requireAuth]
+  );
+
   const fileTreeNodes = useMemo(() => {
     const root: TreeNode = { name: 'root', path: '', type: 'dir', children: [] };
     const ensureChild = (parent: TreeNode, segment: string, path: string, type: 'dir' | 'file') => {
@@ -382,7 +545,37 @@ export default function AiBuilderClient() {
             name?: string;
             files?: string[];
             autoStart?: boolean;
+            path?: string;
+            credits?: number;
+            plan?: string;
+            agent?: string;
+            autonomy?: string;
+            creditCap?: number | null;
+            usage?: CreditsUsage;
+            exhausted?: boolean;
           };
+
+          if (msg.type === 'credits') {
+            const nextPlan = msg.plan || 'starter';
+            const meta = PLAN_META[nextPlan] || PLAN_META.starter;
+            setPlanKey(nextPlan);
+            setCredits(typeof msg.credits === 'number' ? msg.credits : null);
+            setAgentLabel(msg.agent || meta.agent);
+            setAutonomyLabel(msg.autonomy || meta.autonomy);
+            setCreditCap(
+              typeof msg.creditCap === 'number' || msg.creditCap === null
+                ? msg.creditCap
+                : meta.creditCap ?? null
+            );
+            if (msg.usage) {
+              setLastUsage(msg.usage);
+            }
+            if (msg.exhausted) {
+              setBuildStatus('Out of credits');
+              setIsBuilding(false);
+            }
+            return;
+          }
 
           if (msg.type === 'status' && msg.status) {
             setAgentStatus(msg.status);
@@ -443,12 +636,17 @@ export default function AiBuilderClient() {
 
           if (msg.type === 'workspace') {
             const name = typeof msg.name === 'string' ? msg.name : 'Workspace';
+            const workspacePath = typeof msg.path === 'string' ? msg.path : null;
             setWorkspaceLabel(name);
+            setWorkspacePath(workspacePath);
             if (Array.isArray(msg.files)) {
               setFileTree(msg.files);
             }
             setHasWorkspace(true);
             refreshFiles(undefined, true);
+            if (workspacePath) {
+              void saveProject(name, workspacePath);
+            }
           }
         } catch {
           setLogs((prev) => [...prev, 'Agent message could not be parsed.'].slice(-200));
@@ -465,14 +663,83 @@ export default function AiBuilderClient() {
         wsRef.current.close();
       }
     };
-  }, [agentUrl, refreshFiles, runCommand]);
+  }, [agentUrl, refreshFiles, runCommand, saveProject]);
 
   useEffect(() => {
-    const input = uploadInputRef.current;
-    if (input) {
+    let cancelled = false;
+    const loadCredits = async () => {
+      try {
+        const response = await fetch('/api/credits', {
+          cache: 'no-store',
+        });
+        if (!response.ok) return;
+        const data = (await response.json()) as {
+          credits?: number;
+          plan?: string;
+        };
+        if (cancelled) return;
+        const nextPlan = data.plan || 'starter';
+        const meta = PLAN_META[nextPlan] || PLAN_META.starter;
+        setPlanKey(nextPlan);
+        setCredits(typeof data.credits === 'number' ? data.credits : null);
+        setAgentLabel(meta.agent);
+        setAutonomyLabel(meta.autonomy);
+        setCreditCap(meta.creditCap ?? null);
+      } catch {
+        // Ignore credit fetch errors.
+      }
+    };
+    loadCredits();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (nextUser) => {
+      setUser(nextUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    void loadProjects();
+  }, [user, loadProjects]);
+
+  useEffect(() => {
+    if (!user || !workspacePath || !workspaceLabel || !hasWorkspace) return;
+    void saveProject(workspaceLabel, workspacePath);
+  }, [user, workspaceLabel, workspacePath, hasWorkspace, saveProject]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadUsage = async () => {
+      try {
+        const response = await fetch('/api/credits/usage', { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = (await response.json()) as { usage?: CreditsUsage };
+        if (cancelled) return;
+        if (data?.usage) {
+          setLastUsage(data.usage);
+        }
+      } catch {
+        // ignore usage fetch errors
+      }
+    };
+    loadUsage();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const inputs = [uploadInputRef.current, attachmentFolderInputRef.current];
+    inputs.forEach((input) => {
+      if (!input) return;
       input.setAttribute('webkitdirectory', '');
       input.setAttribute('directory', '');
-    }
+    });
   }, []);
 
   useEffect(() => {
@@ -568,6 +835,7 @@ export default function AiBuilderClient() {
     });
 
   const handleStartBuild = () => {
+    if (!requireAuth()) return;
     setWorkspaceLabel(`Workspace ${new Date().toISOString().slice(0, 19).replace('T', ' ')}`);
     setMessages([]);
     setLogs([]);
@@ -577,6 +845,7 @@ export default function AiBuilderClient() {
     setImportMessage('');
     setIsDragging(false);
     setHasWorkspace(false);
+    setWorkspacePath(null);
     setHasPrompt(false);
     setIsBuilding(false);
     setBuildStatus('Idle');
@@ -587,12 +856,14 @@ export default function AiBuilderClient() {
     setActiveCommand('');
     setLastCommand('');
     setOpenFiles([]);
+    setLastUsage(null);
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: 'reset' }));
     }
   };
 
   const handleQuickAction = (action: string) => {
+    if (!requireAuth()) return;
     if (action === 'new' && !hasPrompt) {
       setLogs((prev) => [
         ...prev,
@@ -617,6 +888,7 @@ export default function AiBuilderClient() {
   };
 
   const handleSend = () => {
+    if (!requireAuth()) return;
     const text = draft.trim();
     if (!text) return;
     setMessages((prev) => [...prev, { role: 'user', text }]);
@@ -648,20 +920,38 @@ export default function AiBuilderClient() {
       reader.readAsDataURL(file);
     });
 
-  const handleImportFiles = async (files: File[]) => {
+  const buildWorkspaceName = () =>
+    `workspace-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+
+  const handleImportFiles = async (
+    files: File[],
+    options?: { mode?: ImportMode; pathPrefix?: string; projectName?: string }
+  ) => {
+    if (!requireAuth()) return;
     if (!files.length) return;
+    const mode = options?.mode ?? 'project';
     setImportStatus('uploading');
-    setImportMessage('Uploading project folder...');
+    setImportMessage(mode === 'attachments' ? 'Uploading attachments...' : 'Uploading files...');
 
     try {
+      const fallbackName = buildWorkspaceName();
       const rootName =
         files[0]?.webkitRelativePath?.split('/')?.[0] ||
         files[0]?.name?.split('/')?.[0] ||
-        'imported-project';
+        fallbackName;
+      const targetName =
+        options?.projectName ||
+        (mode === 'attachments'
+          ? hasWorkspaceRef.current && workspaceLabel !== 'No workspace'
+            ? workspaceLabel
+            : fallbackName
+          : rootName);
+      const rawPrefix = options?.pathPrefix ?? (mode === 'attachments' ? 'references' : '');
+      const prefix = rawPrefix ? `${rawPrefix.replace(/\/+$/, '')}/` : '';
 
       const payloadFiles = await Promise.all(
         files.map(async (file) => ({
-          path: file.webkitRelativePath || file.name,
+          path: `${prefix}${file.webkitRelativePath || file.name}`,
           contentBase64: await readFileAsBase64(file),
         }))
       );
@@ -676,8 +966,10 @@ export default function AiBuilderClient() {
           ...(agentToken ? { 'x-omega-token': agentToken } : {}),
         },
         body: JSON.stringify({
-          projectName: rootName,
+          projectName: targetName,
           files: payloadFiles,
+          mode,
+          pathPrefix: rawPrefix || undefined,
         }),
       });
 
@@ -687,10 +979,16 @@ export default function AiBuilderClient() {
       }
 
       setImportStatus('success');
-      setImportMessage('Project folder imported successfully.');
-      setWorkspaceLabel(rootName);
+      setImportMessage(
+        mode === 'attachments'
+          ? 'Attachments uploaded successfully.'
+          : 'Files uploaded successfully.'
+      );
+      if (!hasWorkspaceRef.current || mode !== 'attachments') {
+        setWorkspaceLabel(targetName);
+      }
       setHasWorkspace(true);
-      setLogs((prev) => [...prev, 'Import complete. Project ready for updates.'].slice(-200));
+      setLogs((prev) => [...prev, 'Import complete. Files ready for updates.'].slice(-200));
       await refreshFiles(undefined, true);
     } catch (error) {
       setImportStatus('error');
@@ -700,16 +998,42 @@ export default function AiBuilderClient() {
 
   const handleFileInputChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    await handleImportFiles(files);
+    if (isFreePlan) {
+      setImportStatus('error');
+      setImportMessage('Import is available on Core and above.');
+      event.target.value = '';
+      return;
+    }
+    await handleImportFiles(files, { mode: 'project' });
+    event.target.value = '';
+  };
+
+  const handleAttachmentInputChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    await handleImportFiles(files, { mode: 'attachments', pathPrefix: 'references' });
     event.target.value = '';
   };
 
   const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDragging(false);
+    if (planKey === 'starter') {
+      setImportStatus('error');
+      setImportMessage('Import is available on Core and above.');
+      return;
+    }
     const files = Array.from(event.dataTransfer.files || []);
     await handleImportFiles(files);
   };
+
+  const planMeta = useMemo(() => PLAN_META[planKey] || PLAN_META.starter, [planKey]);
+  const resolvedCreditCap = creditCap ?? planMeta.creditCap ?? null;
+  const creditsValue = typeof credits === 'number' ? credits : null;
+  const creditsDisplay = formatCredits(creditsValue);
+  const creditsRange =
+    resolvedCreditCap !== null ? `${creditsDisplay} / ${formatCredits(resolvedCreditCap)}` : creditsDisplay;
+  const isFreePlan = planKey === 'starter';
+  const upgradeUrl = '/pricing';
 
   const statusBadge =
     agentStatus === 'connected'
@@ -731,94 +1055,113 @@ export default function AiBuilderClient() {
     const html = formatCode(fileContent || '', selectedFile);
     return html.split(/\r?\n/);
   }, [fileContent, selectedFile]);
+  const resolvedPreviewMode = useMemo<PreviewMode>(() => {
+    if (previewMode !== 'auto') return previewMode;
+    const files = fileTree.map((file) => file.toLowerCase());
+    const has = (value: string) => files.some((file) => file.includes(value));
+    const isFlutter = has('pubspec.yaml') || has('lib/main.dart');
+    const isAndroid =
+      has('android/') || has('app/src/main') || has('build.gradle') || has('androidmanifest.xml');
+    const isIOS =
+      has('ios/') || has('.xcodeproj') || has('appdelegate.swift') || has('info.plist');
+    const isWatchOS = has('watchos') || has('watchkit') || has('watch/extension');
+    const isWearOS = has('wearos') || has('wear/') || has('wearable') || has('wearapp');
+    if (isWatchOS) return 'watchos';
+    if (isWearOS) return 'wearos';
+    if (isIOS && !isAndroid) return 'mobile-ios';
+    if (isAndroid && !isIOS) return 'mobile-android';
+    if (isIOS && isAndroid) return 'mobile-ios';
+    if (isFlutter) return 'mobile-android';
+    return 'web';
+  }, [previewMode, fileTree]);
+  const previewLabelMap: Record<PreviewMode, string> = {
+    auto: 'Auto',
+    web: 'Web',
+    'mobile-android': 'Android',
+    'mobile-ios': 'iOS',
+    wearos: 'WearOS',
+    watchos: 'watchOS',
+  };
+  const previewModeLabel =
+    previewMode === 'auto'
+      ? `Auto (${previewLabelMap[resolvedPreviewMode]})`
+      : previewLabelMap[previewMode];
+  const previewShell = useMemo(() => {
+    if (resolvedPreviewMode === 'web') {
+      return {
+        outer: 'aspect-[16/9] w-full',
+        frame: 'rounded-xl border border-slate-200 bg-white',
+      };
+    }
+    if (resolvedPreviewMode === 'mobile-ios') {
+      return {
+        outer: 'aspect-[9/19.5] w-full max-w-[360px] mx-auto',
+        frame: 'rounded-[32px] border-[10px] border-slate-900 bg-white shadow-lg',
+      };
+    }
+    if (resolvedPreviewMode === 'mobile-android') {
+      return {
+        outer: 'aspect-[9/19.5] w-full max-w-[360px] mx-auto',
+        frame: 'rounded-[28px] border-[10px] border-slate-900 bg-white shadow-lg',
+      };
+    }
+    if (resolvedPreviewMode === 'wearos') {
+      return {
+        outer: 'aspect-square w-full max-w-[220px] mx-auto',
+        frame: 'rounded-full border-[12px] border-slate-900 bg-white shadow-lg',
+      };
+    }
+    return {
+      outer: 'aspect-square w-full max-w-[220px] mx-auto',
+      frame: 'rounded-[28px] border-[12px] border-slate-900 bg-white shadow-lg',
+    };
+  }, [resolvedPreviewMode]);
+  const renderPreviewShell = (content: ReactNode) => (
+    <div className={previewShell.outer}>
+      <div className={`${previewShell.frame} h-full w-full overflow-hidden`}>{content}</div>
+    </div>
+  );
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/logo.png" alt="Omega logo" width={32} height={32} priority />
-              <span className="font-semibold tracking-tight">
-                Omega — AI Agents • 3D Web • Apps
-              </span>
-            </Link>
-            <nav className="hidden md:flex items-center gap-6 text-sm">
-              <a href="#builder" className="hover:text-fuchsia-600">Builder</a>
-              <a href="#workflow" className="hover:text-fuchsia-600">Workflow</a>
-              <a href="#contact" className="hover:text-fuchsia-600">Contact</a>
-            </nav>
-            <div className="hidden lg:flex items-center gap-3">
-              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 shadow-sm">
-                <div>
-                  <p className="text-[11px] uppercase tracking-wide text-slate-400">Credits</p>
-                  <p className="text-sm font-semibold text-slate-900">6,420</p>
-                </div>
-                <div className="h-8 w-px bg-slate-200" />
-                <div>
-                  <p className="text-[11px] uppercase tracking-wide text-slate-400">Tier</p>
-                  <p className="text-sm font-semibold text-slate-900">Growth</p>
-                </div>
-                <button className="rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50">
-                  Manage
-                </button>
-              </div>
-              <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 shadow-sm">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-500 text-white text-sm font-semibold">
-                  DS
-                </span>
-                <div className="text-left">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-400">Account</p>
-                  <p className="text-sm font-semibold text-slate-900">Diverto Studio</p>
-                </div>
-                <button className="rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50">
-                  Settings
-                </button>
-              </div>
-              <a
-                href={calendlyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex rounded-xl px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
-              >
-                Book a Call
-              </a>
-            </div>
-          </div>
-        </div>
-      </header>
+      <OmegaTopNav active="builder" variant="builder" />
 
-      <div className="lg:hidden mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 space-y-3">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-slate-400">Credits</p>
-              <p className="text-sm font-semibold text-slate-900">6,420</p>
+      {showAuthPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4">
+          <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-fuchsia-600">
+                Sign in required
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowAuthPrompt(false)}
+                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-50"
+              >
+                Close
+              </button>
             </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-slate-400">Tier</p>
-              <p className="text-sm font-semibold text-slate-900">Growth</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-500 text-white text-sm font-semibold">
-              DS
-            </span>
-            <div className="text-left">
-              <p className="text-[11px] uppercase tracking-wide text-slate-400">Account</p>
-              <p className="text-sm font-semibold text-slate-900">Diverto Studio</p>
+            <h2 className="mt-3 text-2xl font-bold text-slate-900">Continue with Omega</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Log in to start a build, save your workspace, and track credits.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link
+                href="/login"
+                className="rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-2 text-sm font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Create account
+              </Link>
             </div>
           </div>
         </div>
-        <a
-          href={calendlyUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 text-sm font-semibold text-white"
-        >
-          Book a Call
-        </a>
-      </div>
+      )}
 
       <section id="builder" className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
@@ -844,8 +1187,8 @@ export default function AiBuilderClient() {
                 with chat-guided specs, live previews, and production-grade output.
               </p>
               <p className="mt-3 text-sm text-slate-500">
-                Credits + subscription based. Higher tiers unlock higher-reasoning models for deeper
-                architecture and planning.
+                Credits track Omega Agent usage across builds and previews. Higher tiers unlock deeper
+                autonomy, longer runs, and multi-platform output. Pay-as-you-go is $1 per credit.
               </p>
               {isBuilding && (
                 <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-fuchsia-200/70 bg-white/80 px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm">
@@ -930,6 +1273,35 @@ export default function AiBuilderClient() {
                 </div>
               </div>
               <div className="border-b border-slate-200 px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                      Credits
+                    </span>
+                    <span className="font-semibold text-slate-700">{creditsRange}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                      Agent
+                    </span>
+                    <span className="font-semibold text-slate-700">{agentLabel}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                      Autonomy
+                    </span>
+                    <span className="font-semibold text-slate-700">{autonomyLabel}</span>
+                  </div>
+                </div>
+                {lastUsage && (
+                  <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
+                    Last run: {formatCredits(lastUsage.credits)} credits • {lastUsage.inputTokens} in /{' '}
+                    {lastUsage.outputTokens} out
+                    {lastUsage.estimated ? ' (estimated)' : ''}
+                  </div>
+                )}
+              </div>
+              <div className="border-b border-slate-200 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Quick actions
                 </p>
@@ -963,6 +1335,56 @@ export default function AiBuilderClient() {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+              <div className="border-b border-slate-200 px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Projects
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => loadProjects()}
+                    className="rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-500 hover:bg-slate-50"
+                  >
+                    Refresh
+                  </button>
+                </div>
+                <div className="mt-2 space-y-2">
+                  {!user ? (
+                    <p className="text-xs text-slate-500">
+                      Sign in to view saved workspaces.
+                    </p>
+                  ) : projectsLoading ? (
+                    <p className="text-xs text-slate-500">Loading projects…</p>
+                  ) : projects.length === 0 ? (
+                    <p className="text-xs text-slate-500">
+                      No saved projects yet. Start a build to create one.
+                    </p>
+                  ) : (
+                    projects.slice(0, 5).map((project) => (
+                      <div
+                        key={project.id}
+                        className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"
+                      >
+                        <div>
+                          <p className="font-semibold text-slate-700">{project.name}</p>
+                          <p className="text-[10px] text-slate-400">
+                            {project.updatedAt
+                              ? new Date(project.updatedAt).toLocaleString()
+                              : '—'}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openProject(project)}
+                          className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
+                        >
+                          Open
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
               <div className="flex-1 space-y-4 px-4 py-5 text-sm text-slate-700 overflow-y-auto">
@@ -1016,12 +1438,55 @@ export default function AiBuilderClient() {
                     <span className="rounded-full bg-slate-100 px-2 py-1">Android</span>
                     <span className="rounded-full bg-slate-100 px-2 py-1">Desktop</span>
                     <span className="rounded-full bg-slate-100 px-2 py-1">Smartwatch</span>
-                    <span className="rounded-full bg-slate-100 px-2 py-1">Import folder</span>
+                    <span className="rounded-full bg-slate-100 px-2 py-1">
+                      {isFreePlan ? 'Import folder (Core+)' : 'Import folder'}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsAttachmentMenuOpen((prev) => !prev)}
+                        aria-label="Attach files"
+                        title="Attach files or folders"
+                        className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-50"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+                          <path d="M16.5 6.5v9a4.5 4.5 0 1 1-9 0V5.75a3.25 3.25 0 0 1 6.5 0v8.5a2 2 0 1 1-4 0V7h1.5v7.25a.5.5 0 0 0 1 0v-8.5a1.75 1.75 0 0 0-3.5 0V15.5a3 3 0 0 0 6 0v-9h1.5z" />
+                        </svg>
+                      </button>
+                      {isAttachmentMenuOpen && (
+                        <div className="absolute bottom-full left-0 mb-2 w-44 rounded-xl border border-slate-200 bg-white p-2 text-xs text-slate-600 shadow-lg">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsAttachmentMenuOpen(false);
+                              attachmentInputRef.current?.click();
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-slate-50"
+                          >
+                            <span className="text-slate-500">Upload files</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsAttachmentMenuOpen(false);
+                              attachmentFolderInputRef.current?.click();
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-slate-50"
+                          >
+                            <span className="text-slate-500">Upload folder</span>
+                          </button>
+                          <p className="px-2 pt-1 text-[10px] text-slate-400">
+                            Images, video, pdf, docs, assets.
+                          </p>
+                        </div>
+                      )}
+                    </div>
                     <input
                       value={draft}
                       onChange={(event) => setDraft(event.target.value)}
+                      onFocus={() => setIsAttachmentMenuOpen(false)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter') {
                           event.preventDefault();
@@ -1047,6 +1512,20 @@ export default function AiBuilderClient() {
                       </svg>
                     </button>
                   </div>
+                  <input
+                    ref={attachmentInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={handleAttachmentInputChange}
+                  />
+                  <input
+                    ref={attachmentFolderInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={handleAttachmentInputChange}
+                  />
                 </div>
               </div>
             </section>
@@ -1072,11 +1551,14 @@ export default function AiBuilderClient() {
                 <div className="border-b border-slate-200 px-4 py-3">
                   <div
                     className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed px-4 py-3 text-sm text-slate-600 transition ${
-                      isDragging
+                      isFreePlan
+                        ? 'border-slate-200 bg-slate-50/40'
+                        : isDragging
                         ? 'border-fuchsia-300 bg-fuchsia-50'
                         : 'border-slate-300 bg-slate-50/70'
                     }`}
                     onDragOver={(event) => {
+                      if (isFreePlan) return;
                       event.preventDefault();
                       setIsDragging(true);
                     }}
@@ -1088,6 +1570,17 @@ export default function AiBuilderClient() {
                       <p className="text-xs text-slate-500">
                         Drop your project folder to finish or modify it. We will map the structure and continue the build.
                       </p>
+                      {isFreePlan && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                          <span>Import is available on Core and above.</span>
+                          <Link
+                            href={upgradeUrl}
+                            className="inline-flex items-center rounded-full border border-fuchsia-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-fuchsia-600 hover:bg-fuchsia-50"
+                          >
+                            Upgrade plan
+                          </Link>
+                        </div>
+                      )}
                       {importMessage && (
                         <p
                           className={`mt-2 text-xs font-semibold ${
@@ -1104,8 +1597,15 @@ export default function AiBuilderClient() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => uploadInputRef.current?.click()}
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      onClick={() => {
+                        if (isFreePlan) return;
+                        uploadInputRef.current?.click();
+                      }}
+                      className={`rounded-xl border px-3 py-2 text-xs font-semibold ${
+                        isFreePlan
+                          ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                      }`}
                     >
                       Upload folder
                     </button>
@@ -1163,6 +1663,24 @@ export default function AiBuilderClient() {
                           Live Preview
                         </p>
                         <div className="flex items-center gap-2 text-[11px]">
+                          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-500">
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                              Preview
+                            </span>
+                            <select
+                              aria-label="Preview mode"
+                              value={previewMode}
+                              onChange={(event) => setPreviewMode(event.target.value as PreviewMode)}
+                              className="bg-transparent text-[11px] font-semibold text-slate-600 focus:outline-none"
+                            >
+                              <option value="auto">Auto</option>
+                              <option value="web">Web</option>
+                              <option value="mobile-ios">iOS</option>
+                              <option value="mobile-android">Android</option>
+                              <option value="watchos">watchOS</option>
+                              <option value="wearos">WearOS</option>
+                            </select>
+                          </div>
                           <a
                             href={hasWorkspace ? downloadUrl : undefined}
                             aria-disabled={!hasWorkspace}
@@ -1219,30 +1737,51 @@ export default function AiBuilderClient() {
                       )}
                       {!isPreviewCollapsed && (
                         <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4">
+                          <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                            <span className="rounded-full bg-slate-100 px-2 py-1">
+                              Mode: {previewModeLabel}
+                            </span>
+                            {resolvedPreviewMode !== 'web' && (
+                              <span className="rounded-full bg-slate-100 px-2 py-1">
+                                Native preview uses the generated storyboard. Run an emulator for full device preview.
+                              </span>
+                            )}
+                          </div>
                           {previewUrl ? (
-                            <div className="aspect-[16/9] w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
+                            renderPreviewShell(
                               <iframe
                                 title="Live preview"
                                 src={previewUrl}
                                 className="h-full w-full"
                               />
-                            </div>
+                            )
                           ) : fileTree.length === 0 ? (
-                            <div className="aspect-[16/9] w-full rounded-xl border border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-white flex flex-col items-center justify-center gap-2 text-center text-xs text-slate-400 px-6">
-                              <p className="font-semibold text-slate-500">No preview yet</p>
-                              <p>Start a build or import a project to render a live preview.</p>
-                            <button
-                              type="button"
-                              onClick={() => uploadInputRef.current?.click()}
-                              className="mt-1 rounded-lg border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
-                            >
-                              Import project
-                            </button>
-                          </div>
+                            renderPreviewShell(
+                              <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-center text-xs text-slate-400 px-6">
+                                <p className="font-semibold text-slate-500">No preview yet</p>
+                                <p>Start a build or import a project to render a live preview.</p>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (isFreePlan) return;
+                                    uploadInputRef.current?.click();
+                                  }}
+                                  className={`mt-1 rounded-lg border px-3 py-1 text-[11px] font-semibold ${
+                                    isFreePlan
+                                      ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  Import project
+                                </button>
+                              </div>
+                            )
                           ) : (
-                            <div className="aspect-[16/9] w-full rounded-xl border border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-white flex items-center justify-center text-xs text-slate-400">
-                              Preview not available yet. Run a build to generate a preview file.
-                            </div>
+                            renderPreviewShell(
+                              <div className="flex h-full w-full items-center justify-center text-xs text-slate-400 px-6">
+                                Preview not available yet. Run a build to generate a preview file.
+                              </div>
+                            )
                           )}
                         </div>
                       )}
@@ -1352,152 +1891,6 @@ export default function AiBuilderClient() {
         </div>
       </section>
 
-      <section id="workflow" className="py-16 scroll-mt-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {[
-              {
-                title: 'Describe the product',
-                description:
-                  'Share the product goal, audience, and platforms (web, mobile, desktop, wearable).',
-              },
-              {
-                title: 'Pick stack + architecture',
-                description:
-                  'Choose preferred frameworks or let the AI recommend the best fit.',
-              },
-              {
-                title: 'Generate + ship',
-                description:
-                  'Get clean code, previews, and a deploy-ready build in one workspace.',
-              },
-            ].map((item) => (
-              <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-900">{item.title}</h3>
-                <p className="mt-2 text-sm text-slate-600">{item.description}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            {[
-              {
-                name: 'Starter',
-                detail: 'Lower reasoning model',
-                credits: '2,000 credits / mo',
-                notes: 'Great for simple websites and MVPs.',
-              },
-              {
-                name: 'Growth',
-                detail: 'Balanced reasoning model',
-                credits: '8,000 credits / mo',
-                notes: 'Best for full web apps and mobile builds.',
-              },
-              {
-                name: 'Elite',
-                detail: 'Highest reasoning model',
-                credits: '20,000 credits / mo',
-                notes: 'Ideal for complex systems and multi-platform products.',
-              },
-            ].map((tier) => (
-              <div key={tier.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <p className="text-sm font-semibold text-slate-500">{tier.name}</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">{tier.detail}</p>
-                <p className="mt-2 text-sm text-slate-600">{tier.credits}</p>
-                <p className="mt-4 text-sm text-slate-500">{tier.notes}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="contact" className="py-16 bg-slate-50/60 scroll-mt-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-12 gap-10">
-            <div className="lg:col-span-5">
-              <h2 className="text-3xl font-bold text-slate-900">Start your build</h2>
-              <p className="mt-3 text-slate-600">
-                Share your product, goals, and timeline. We will map the build scope, confirm your
-                content needs, and send a clear delivery plan.
-              </p>
-              <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
-                <p className="text-sm text-slate-600">
-                  You will receive a quick audit of your current site and a build outline within 48 hours.
-                </p>
-              </div>
-            </div>
-
-            <form
-              className="lg:col-span-7 rounded-2xl border border-slate-200 bg-white p-6 grid gap-3 shadow-sm"
-              method="POST"
-              action="/api/lead?redirect=/thank-you"
-            >
-              <input type="text" name="hp" tabIndex={-1} autoComplete="off" className="hidden" />
-              <input type="hidden" name="service" value="ai_builder" />
-
-              <div className="grid sm:grid-cols-2 gap-3">
-                <label className="grid gap-1 text-sm">
-                  <span className="text-slate-700">Name</span>
-                  <input
-                    className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                    placeholder="Your name"
-                    name="name"
-                    required
-                  />
-                </label>
-                <label className="grid gap-1 text-sm">
-                  <span className="text-slate-700">Email</span>
-                  <input
-                    className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                    type="email"
-                    placeholder="you@company.com"
-                    name="email"
-                    required
-                  />
-                </label>
-              </div>
-
-              <label className="grid gap-1 text-sm">
-                <span className="text-slate-700">Company</span>
-                <input
-                  className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                  placeholder="Company"
-                  name="company"
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm">
-                <span className="text-slate-700">Website/App URL</span>
-                <input
-                  className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                  placeholder="https://example.com"
-                  name="url"
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm">
-                <span className="text-slate-700">Goal (30 days)</span>
-                <textarea
-                  className="rounded-xl bg-white border border-slate-300 px-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 min-h-[120px]"
-                  placeholder="What should the AI builder help you ship?"
-                  name="message"
-                />
-              </label>
-
-              <button
-                className="mt-1 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
-                aria-label="Send builder request"
-              >
-                Send Builder Request
-              </button>
-
-              <p className="text-xs text-slate-500">
-                Submitting this form adds you to our updates. You can opt out anytime.
-              </p>
-            </form>
-          </div>
-        </div>
-      </section>
     </main>
   );
 }

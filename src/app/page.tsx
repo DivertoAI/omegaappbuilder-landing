@@ -63,10 +63,10 @@ export default function Home() {
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <a href="#home" className="flex items-center gap-2">
+          <div className="flex h-[72px] items-center justify-between gap-3">
+            <a href="#home" className="flex items-center gap-3">
               <Image
                 src="/logo.png"
                 alt="Omega logo"
@@ -74,18 +74,39 @@ export default function Home() {
                 height={32}
                 priority
               />
-              <span className="font-semibold tracking-tight">
-                Omega — AI Agents • 3D Web • Apps
-              </span>
+              <div className="leading-tight">
+                <p className="text-sm font-semibold tracking-tight">
+                  Omega — AI Agents • 3D Web • Apps
+                </p>
+                <p className="text-[11px] text-slate-500">Studio</p>
+              </div>
             </a>
 
-            <nav className="hidden md:flex items-center gap-6 text-sm">
-              <a href="#agents" onClick={(e) => { e.preventDefault(); goTo('agents'); }} className="hover:text-fuchsia-600">AI Agents</a>
-              <a href="#web3d" onClick={(e) => { e.preventDefault(); goTo('web3d'); }} className="hover:text-fuchsia-600">3D Websites</a>
+            <nav className="hidden lg:flex items-center rounded-full border border-slate-200 bg-slate-50/80 p-1 text-[12px] shadow-sm whitespace-nowrap">
+              <a
+                href="#agents"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo('agents');
+                }}
+                className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap"
+              >
+                AI Agents
+              </a>
+              <a
+                href="#web3d"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo('web3d');
+                }}
+                className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap"
+              >
+                3D Websites
+              </a>
               <div className="relative group">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 hover:text-fuchsia-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500 rounded-md px-1"
+                  className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500 whitespace-nowrap"
                   aria-haspopup="true"
                   aria-expanded="false"
                 >
@@ -121,27 +142,59 @@ export default function Home() {
                       </span>
                       <span className="flex-1">
                         <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
-                          AI Website Builder
+                          AI App Builder
                         </span>
                         <span className="block text-xs text-slate-500">
-                          Generate on-brand marketing sites from a single brief.
+                          Generate full products from a single brief.
                         </span>
                       </span>
                     </Link>
                   </div>
                 </div>
               </div>
-              {/* <a href="#work" onClick={(e) => { e.preventDefault(); goTo('work'); }} className="hover:text-fuchsia-600">Work</a> */}
-              <a href="#pricing" onClick={(e) => { e.preventDefault(); goTo('pricing'); }} className="hover:text-fuchsia-600">Pricing</a>
-              <a href="#faq" onClick={(e) => { e.preventDefault(); goTo('faq'); }} className="hover:text-fuchsia-600">FAQ</a>
-              <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); }} className="hover:text-fuchsia-600">Contact</a>
+              <Link href="/pricing" className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap">
+                Builder Pricing
+              </Link>
+              <a
+                href="#pricing"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo('pricing');
+                }}
+                className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap"
+              >
+                Studio Pricing
+              </a>
+              <a
+                href="#faq"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo('faq');
+                }}
+                className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap"
+              >
+                FAQ
+              </a>
+              <a
+                href="#contact"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo('contact');
+                }}
+                className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap"
+              >
+                Contact
+              </a>
             </nav>
 
             <div className="flex items-center gap-3">
               <a
                 href="#contact"
-                onClick={(e) => { e.preventDefault(); goTo('contact'); }}
-                className="hidden sm:inline-flex rounded-xl px-4 py-2 bg-slate-900/5 hover:bg-slate-900/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo('contact');
+                }}
+                className="hidden sm:inline-flex rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500 whitespace-nowrap"
               >
                 Free Demo Funnel Audit
               </a>
@@ -149,7 +202,7 @@ export default function Home() {
                 href={calendlyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex rounded-xl px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                className="inline-flex rounded-full px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-xs font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500 whitespace-nowrap"
                 aria-label="Book a call on Calendly (opens in a new tab)"
               >
                 Book a Call
@@ -743,7 +796,7 @@ export default function Home() {
           <h2 className="text-3xl font-bold">FAQ</h2>
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             {[
-              { q: 'Which models do you use?', a: 'We pick per use-case (OpenAI/Anthropic/etc.) and can swap for quality/cost. Data is isolated per client.' },
+              { q: 'Which Omega Agents do you use?', a: 'We pick the best Omega Agent per use-case and can swap for quality/cost. Data is isolated per client.' },
               { q: 'How do you keep agents safe?', a: 'Guardrails, role & rate limits, approval steps, audit trails, and transcripts. Sensitive actions require human sign-off.' },
               { q: 'What about performance on 3D pages?', a: 'We budget assets, lazy-load, and measure Core Web Vitals. We ship fast fallbacks for low-end devices.' },
               { q: 'Do you work globally?', a: 'Yes—worldwide. USD pricing. Cards and bank transfer supported.' },
