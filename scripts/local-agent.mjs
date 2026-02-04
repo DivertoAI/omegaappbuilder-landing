@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 import http from 'node:http';
-import { spawn } from 'node:child_process';
+import { spawn, execFile } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { promisify } from 'node:util';
 import { WebSocketServer } from 'ws';
 import { createClient } from '@supabase/supabase-js';
 
+const execFileAsync = promisify(execFile);
 const PORT = Number(process.env.LOCAL_AGENT_PORT || 8787);
 const WORKDIR = process.env.LOCAL_AGENT_CWD || process.cwd();
 const REQUIRED_TOKEN = process.env.LOCAL_AGENT_TOKEN || '';
@@ -110,10 +112,10 @@ const QUESTIONS = [
 
 const isFullSpec = (text) => {
   const value = String(text || '').toLowerCase();
-  if (value.length < 24) return false;
+  if (value.length < 18) return false;
   const checks = [
-    /(website|web app|landing page|mobile|ios|android|desktop|macos|windows|linux|smartwatch)/,
-    /(next|react|flutter|electron|tauri|vue|svelte|angular)/,
+    /(website|web app|landing page|mobile|ios|android|desktop|macos|windows|linux|watchos|wearos|smartwatch)/,
+    /(stack|framework|language|tech|next|react|flutter|react native|expo|electron|tauri|vue|svelte|angular|xamarin|kotlin|swift|objective-c|java|rust|go|c#|c\+\+|unity|godot|qt|gtk|wpf|winui|uwp|swiftui)/,
     /(modular|monolith|microservices|serverless|architecture)/,
     /(scratch|from scratch|greenfield|import)/,
   ];
@@ -421,6 +423,21 @@ wss.on('connection', (ws, req) => {
       runCommand(command, ws);
     }
 
+    if (payload.type === 'simulator') {
+      const platform = String(payload.platform || '').toLowerCase();
+      const url = typeof payload.url === 'string' ? payload.url : '';
+      if (platform !== 'ios' && platform !== 'android') {
+        ws.send(
+          JSON.stringify({
+            type: 'error',
+            message: 'Simulator platform not supported. Use iOS or Android.',
+          })
+        );
+        return;
+      }
+      void openInSimulator(ws, platform, url);
+    }
+
     if (payload.type === 'reset') {
       hasAskedQuestions = false;
       hasCapturedSpec = false;
@@ -480,6 +497,127 @@ const runCommand = (command, ws) => {
     activeProcessLabel = '';
     ws.send(JSON.stringify({ type: 'exit', code }));
   });
+};
+
+const normalizeUrl = (raw) => {
+  if (!raw) return null;
+  try {
+    return new URL(raw);
+  } catch {
+    return null;
+  }
+};
+
+const rewriteAndroidUrl = (raw) => {
+  const url = normalizeUrl(raw);
+  if (!url) return null;
+  if (['localhost', '127.0.0.1', '::1'].includes(url.hostname)) {
+    url.hostname = '10.0.2.2';
+  }
+  return url.toString();
+};
+
+const findAndroidBinary = (name) => {
+  const roots = [
+    process.env.ANDROID_HOME,
+    process.env.ANDROID_SDK_ROOT,
+    path.join(process.env.HOME || '', 'Library/Android/sdk'),
+  ].filter(Boolean);
+  for (const root of roots) {
+    const candidate =
+      name === 'emulator'
+        ? path.join(root, 'emulator', 'emulator')
+        : path.join(root, 'platform-tools', name);
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return name;
+};
+
+const pickIosDevice = async () => {
+  try {
+    const { stdout } = await execFileAsync('xcrun', ['simctl', 'list', 'devices', 'available', '-j']);
+    const data = JSON.parse(stdout);
+    const all = Object.values(data.devices || {}).flat();
+    const iphones = all.filter((device) => device.isAvailable && /iphone/i.test(device.name));
+    const device = iphones[0] || all.find((item) => item.isAvailable);
+    return device?.udid || null;
+  } catch {
+    return null;
+  }
+};
+
+const listAndroidAvds = async (emulatorBin) => {
+  try {
+    const { stdout } = await execFileAsync(emulatorBin, ['-list-avds']);
+    return stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+};
+
+const openInSimulator = async (ws, platform, url) => {
+  if (platform === 'ios') {
+    const device = await pickIosDevice();
+    if (!device) {
+      ws.send(
+        JSON.stringify({
+          type: 'error',
+          message: 'No iOS Simulator device found. Open Xcode and install a simulator first.',
+        })
+      );
+      return;
+    }
+    try {
+      ws.send(JSON.stringify({ type: 'log', line: 'Opening iOS Simulator...' }));
+      await execFileAsync('xcrun', ['simctl', 'boot', device]).catch(() => null);
+      await execFileAsync('open', ['-a', 'Simulator']);
+      if (url) {
+        await execFileAsync('xcrun', ['simctl', 'openurl', device, url]);
+      }
+      ws.send(JSON.stringify({ type: 'log', line: 'iOS Simulator launched.' }));
+    } catch (error) {
+      ws.send(
+        JSON.stringify({
+          type: 'error',
+          message: `Failed to open iOS Simulator: ${error?.message || 'Unknown error'}`,
+        })
+      );
+    }
+    return;
+  }
+
+  if (platform === 'android') {
+    const emulatorBin = findAndroidBinary('emulator');
+    const adbBin = findAndroidBinary('adb');
+    const avds = await listAndroidAvds(emulatorBin);
+    if (!avds.length) {
+      ws.send(
+        JSON.stringify({
+          type: 'error',
+          message: 'No Android AVDs found. Create one in Android Studio first.',
+        })
+      );
+      return;
+    }
+    ws.send(JSON.stringify({ type: 'log', line: `Launching Android emulator (${avds[0]})...` }));
+    const child = spawn(emulatorBin, ['-avd', avds[0]], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+    const androidUrl = rewriteAndroidUrl(url);
+    if (androidUrl) {
+      setTimeout(() => {
+        spawn(adbBin, ['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', androidUrl], {
+          stdio: 'ignore',
+        });
+      }, 6000);
+    }
+    ws.send(JSON.stringify({ type: 'log', line: 'Android emulator launched.' }));
+  }
 };
 
 const runCodexBuild = async (ws, cwd, specText) => {
@@ -645,9 +783,41 @@ const buildCodexPrompt = (specText) => {
   const spec = specText || 'Build a modern product landing page.';
   const wantsNext = /next(\\.js|js)?|nextjs/i.test(spec);
   const wantsReact = /react/i.test(spec);
+  const wantsReactNative = /react native|react-native|expo/i.test(spec);
+  const wantsFlutter = /flutter/i.test(spec);
+  const wantsWeb = /(website|web app|landing page|marketing site)/i.test(spec) || wantsNext;
+  const wantsNativePlatform = /(mobile|ios|android|desktop|macos|windows|linux|watchos|wearos|smartwatch)/i.test(
+    spec
+  );
+  const mentionsNonWebStack =
+    /(xamarin|kotlin|swift|objective-c|java|rust|go|c#|c\+\+|unity|godot|qt|gtk|wpf|winui|uwp|swiftui|tauri|electron)/i.test(
+      spec
+    ) || wantsFlutter || wantsReactNative;
+
+  if (!wantsWeb && (wantsNativePlatform || mentionsNonWebStack)) {
+    return `
+You are an expert software engineer. Build a clean, production-ready app project based on this request:
+
+${spec}
+
+Requirements:
+- Build a real app project (not a marketing landing page).
+- Use the exact tech stack requested by the user (if any). If multiple options are given, choose the most standard.
+- Keep dependencies minimal and make sure the project can run locally.
+- Include canonical entry files for the chosen stack (examples: Flutter -> pubspec.yaml + lib/main.dart; Android/Kotlin -> settings.gradle + app/build.gradle + app/src/main/AndroidManifest.xml + MainActivity.kt; SwiftUI -> Package.swift + Sources/App.swift; React Native -> App.tsx).
+- If the request is small, generate the simplest working app that satisfies it.
+- Generate a static preview file at /index.html that mirrors the app UI for the live preview panel.
+- Include a short README with run instructions.
+
+Deliverable:
+- Write the full project files into the current working directory.
+- Do not ask questions. Proceed with sensible defaults.
+`.trim();
+  }
+
   const stack = wantsNext
     ? 'Next.js 15 App Router + TypeScript + Tailwind CSS'
-    : wantsReact
+    : wantsReact && !wantsReactNative
     ? 'React + Vite + TypeScript'
     : 'Static HTML/CSS/JS';
 

@@ -147,6 +147,17 @@ export default function AiBuilderClient() {
     wsRef.current.send(JSON.stringify({ type: 'run', command }));
   }, []);
 
+  const sendSimulatorRequest = useCallback(
+    (platform: 'ios' | 'android', url: string) => {
+      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+        setLogs((prev) => [...prev, 'Local agent not connected.'].slice(-200));
+        return;
+      }
+      wsRef.current.send(JSON.stringify({ type: 'simulator', platform, url }));
+    },
+    []
+  );
+
   const buildPreviewUrl = useCallback(
     (path: string) => {
       const preview = new URL(agentHttpUrl);
@@ -244,14 +255,15 @@ export default function AiBuilderClient() {
       if (!user) return;
       try {
         const safeId = `${user.uid}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+        const payload: Record<string, unknown> = {
+          userId: user.uid,
+          name,
+          workspacePath,
+          updatedAt: serverTimestamp(),
+        };
         await setDoc(
           doc(firestore, 'projects', safeId),
-          {
-            userId: user.uid,
-            name,
-            workspacePath,
-            updatedAt: serverTimestamp(),
-          },
+          payload,
           { merge: true }
         );
         await loadProjects();
@@ -908,6 +920,14 @@ export default function AiBuilderClient() {
     wsRef.current.send(JSON.stringify({ type: 'chat', text }));
   };
 
+  const handleOpenSimulator = (platform: 'ios' | 'android') => {
+    if (!requireAuth()) return;
+    const url = previewUrl || buildPreviewUrl('index.html');
+    sendSimulatorRequest(platform, url);
+  };
+
+  // Appetize integration removed.
+
   const readFileAsBase64 = (file: File) =>
     new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -1042,12 +1062,6 @@ export default function AiBuilderClient() {
       ? 'bg-amber-100 text-amber-700'
       : 'bg-slate-200 text-slate-600';
 
-  const previewBadge = previewUrl
-    ? 'bg-emerald-100 text-emerald-700'
-    : hasWorkspace
-    ? 'bg-amber-100 text-amber-700'
-    : 'bg-slate-100 text-slate-500';
-
   const terminalStatus = activeCommand ? 'Running' : buildStatus;
   const terminalCommand = activeCommand || lastCommand || 'Idle';
   const highlightedLines = useMemo(() => {
@@ -1088,6 +1102,12 @@ export default function AiBuilderClient() {
       : previewLabelMap[previewMode];
   const isCompactPreview =
     resolvedPreviewMode === 'watchos' || resolvedPreviewMode === 'wearos';
+  const activePreviewUrl = previewUrl;
+  const previewBadge = previewUrl
+    ? 'bg-emerald-100 text-emerald-700'
+    : hasWorkspace
+    ? 'bg-amber-100 text-amber-700'
+    : 'bg-slate-100 text-slate-500';
   const previewPlaceholderCopy = (
     <div
       className="h-full w-full"
@@ -1095,28 +1115,32 @@ export default function AiBuilderClient() {
     >
       <div
         className={`flex flex-col items-center justify-center gap-2 text-center ${
-          isCompactPreview ? 'text-[10px] leading-tight max-w-[140px]' : 'text-xs max-w-[200px]'
-        } text-slate-400`}
+          isCompactPreview ? 'text-[10px] leading-tight max-w-[150px]' : 'text-xs max-w-[220px]'
+        } text-slate-600`}
         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
       >
-        <p className="font-semibold text-slate-500">No preview yet</p>
-        <p>Start a build or import a project to render a live preview.</p>
-        <button
-          type="button"
-          onClick={() => {
-            if (isFreePlan) return;
-            uploadInputRef.current?.click();
-          }}
-          className={`mt-1 self-center rounded-lg border font-semibold ${
-            isCompactPreview ? 'px-2 py-1 text-[10px]' : 'px-3 py-1 text-[11px]'
-          } ${
-            isFreePlan
-              ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
-              : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-          }`}
-        >
-          Import project
-        </button>
+        <div className="rounded-xl border border-slate-200/80 bg-white/90 px-4 py-3 shadow-sm">
+          <p className="font-semibold text-slate-700">No preview yet</p>
+          <p className="mt-1 text-slate-500">
+            Start a build or import a project to render a live preview.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              if (isFreePlan) return;
+              uploadInputRef.current?.click();
+            }}
+            className={`mt-2 self-center rounded-lg border font-semibold ${
+              isCompactPreview ? 'px-2 py-1 text-[10px]' : 'px-3 py-1 text-[11px]'
+            } ${
+              isFreePlan
+                ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            Import project
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1125,7 +1149,7 @@ export default function AiBuilderClient() {
       className="h-full w-full px-6"
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
-      <div className="text-center text-xs text-slate-400 max-w-[220px]">
+      <div className="rounded-xl border border-slate-200/80 bg-white/90 px-4 py-3 text-center text-xs text-slate-500 shadow-sm max-w-[240px]">
         Preview not available yet. Run a build to generate a preview file.
       </div>
     </div>
@@ -1685,7 +1709,7 @@ export default function AiBuilderClient() {
                       Project: {workspaceLabel}
                     </span>
                     <span className={`rounded-full px-2 py-1 text-xs font-semibold ${previewBadge}`}>
-                      {previewUrl ? 'Preview ready' : hasWorkspace ? 'Preview pending' : 'No preview'}
+                      {activePreviewUrl ? 'Preview ready' : hasWorkspace ? 'Preview pending' : 'No preview'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -1828,6 +1852,20 @@ export default function AiBuilderClient() {
                               <option value="wearos">WearOS</option>
                             </select>
                           </div>
+                          {(resolvedPreviewMode === 'mobile-ios' ||
+                            resolvedPreviewMode === 'mobile-android') && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleOpenSimulator(
+                                  resolvedPreviewMode === 'mobile-ios' ? 'ios' : 'android'
+                                )
+                              }
+                              className="rounded-full border border-slate-200 bg-white px-3 py-1 font-semibold text-slate-600 hover:bg-slate-100"
+                            >
+                              Open in Simulator
+                            </button>
+                          )}
                           <a
                             href={hasWorkspace ? downloadUrl : undefined}
                             aria-disabled={!hasWorkspace}
@@ -1851,9 +1889,9 @@ export default function AiBuilderClient() {
                           >
                             {isPreviewCollapsed ? 'Show preview' : 'Hide preview'}
                           </button>
-                          {previewUrl && (
+                          {activePreviewUrl && (
                             <a
-                              href={previewUrl}
+                              href={activePreviewUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="rounded-full bg-slate-900 px-3 py-1 font-semibold text-white hover:bg-slate-800"
@@ -1894,11 +1932,11 @@ export default function AiBuilderClient() {
                               </span>
                             )}
                           </div>
-                          {previewUrl ? (
+                          {activePreviewUrl ? (
                             renderPreviewShell(
                               <iframe
                                 title="Live preview"
-                                src={previewUrl}
+                                src={activePreviewUrl}
                                 className="h-full w-full"
                               />
                             )
