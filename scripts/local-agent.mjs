@@ -62,6 +62,7 @@ let cachedProfile = null;
 let cachedProfileAt = 0;
 let lastUsageSnapshot = null;
 const envNotified = new Set();
+let hasBuiltOnce = false;
 
 const isPathInside = (target, root) => {
   if (!target || !root) return false;
@@ -373,9 +374,11 @@ wss.on('connection', (ws, req) => {
 
     if (payload.type === 'chat') {
       let incoming = '';
+      let hadEnv = false;
       if (typeof payload.text === 'string' && payload.text.trim()) {
         const raw = payload.text.trim();
         const { entries, cleaned } = extractEnvEntries(raw);
+        hadEnv = entries.length > 0;
 
         if (entries.length) {
           if (!currentWorkspace) {
@@ -418,6 +421,15 @@ wss.on('connection', (ws, req) => {
           }
         }
       }
+      if (!incoming && hadEnv) {
+        ws.send(
+          JSON.stringify({
+            type: 'chat',
+            text: 'Env values saved. Share project details or your next update when ready.',
+          })
+        );
+        return;
+      }
       if (!hasAskedQuestions) {
         if (isFullSpec(latestSpec)) {
           hasAskedQuestions = true;
@@ -453,7 +465,7 @@ wss.on('connection', (ws, req) => {
         );
         return;
       }
-      const intent = String(payload.text || '').toLowerCase();
+      const intent = String(incoming || payload.text || '').toLowerCase();
       const wantsNewWorkspace = /new build|start over|fresh project|new project|start new/.test(intent);
       const wantsBuild = /build|run|compile|do it|start/.test(intent);
 
@@ -474,7 +486,7 @@ wss.on('connection', (ws, req) => {
         );
       }
 
-      if (wantsBuild && currentWorkspace) {
+      if ((wantsBuild || !hasBuiltOnce) && currentWorkspace) {
         ws.send(
           JSON.stringify({
             type: 'chat',
@@ -482,7 +494,25 @@ wss.on('connection', (ws, req) => {
           })
         );
         if (USE_CODEX_CLI) {
-          void runCodexBuild(ws, currentWorkspace, latestSpec);
+          void runCodexBuild(ws, currentWorkspace, latestSpec, { mode: 'full' });
+        } else {
+          runCommand(ALLOWED_COMMANDS.build, ws);
+        }
+        return;
+      }
+
+      if (currentWorkspace && hasBuiltOnce && incoming) {
+        ws.send(
+          JSON.stringify({
+            type: 'chat',
+            text: 'Applying your update with Omega Agent...',
+          })
+        );
+        if (USE_CODEX_CLI) {
+          void runCodexBuild(ws, currentWorkspace, latestSpec, {
+            mode: 'update',
+            updateText: incoming,
+          });
         } else {
           runCommand(ALLOWED_COMMANDS.build, ws);
         }
@@ -777,7 +807,7 @@ const openInSimulator = async (ws, platform, url) => {
   }
 };
 
-const runCodexBuild = async (ws, cwd, specText) => {
+const runCodexBuild = async (ws, cwd, specText, options = {}) => {
   const workspace = resolveWorkspaceDir(cwd);
   if (!workspace) {
     currentWorkspace = null;
@@ -793,7 +823,7 @@ const runCodexBuild = async (ws, cwd, specText) => {
   if (supabase && !profile) {
     return;
   }
-  const prompt = buildCodexPrompt(specText);
+  const prompt = buildCodexPrompt(specText, options);
   const args = [
     'exec',
     '--skip-git-repo-check',
@@ -821,6 +851,7 @@ const runCodexBuild = async (ws, cwd, specText) => {
   });
   activeProcess = child;
   activeProcessLabel = 'Omega Agent build';
+  hasBuiltOnce = true;
 
   const usageState = {
     inputTokens: estimateTokens(prompt),
@@ -985,8 +1016,10 @@ const syncWorkspaceFiles = (cwd) => {
   }
 };
 
-const buildCodexPrompt = (specText) => {
+const buildCodexPrompt = (specText, options = {}) => {
   const spec = specText || 'Build a modern product landing page.';
+  const mode = options.mode || 'full';
+  const updateText = options.updateText || '';
   const wantsNext = /next(\\.js|js)?|nextjs/i.test(spec);
   const wantsReact = /react/i.test(spec);
   const wantsReactNative = /react native|react-native|expo/i.test(spec);
@@ -999,6 +1032,25 @@ const buildCodexPrompt = (specText) => {
     /(xamarin|kotlin|swift|objective-c|java|rust|go|c#|c\+\+|unity|godot|qt|gtk|wpf|winui|uwp|swiftui|tauri|electron)/i.test(
       spec
     ) || wantsFlutter || wantsReactNative;
+
+  if (mode === 'update') {
+    return `
+You are an expert software engineer. Update the existing project in this workspace.
+
+Project context:
+${spec}
+
+Update request:
+${updateText}
+
+Rules:
+- Make minimal, targeted edits only. Do not regenerate or replace the whole project.
+- Preserve existing structure and keep unrelated files unchanged.
+- If the app has a live preview (/index.html), update it to reflect the changes.
+- For native builds, keep the native project as the source of truth, and update the preview accordingly.
+- Do not ask questions. Apply the update and finish.
+`.trim();
+  }
 
   if (!wantsWeb && (wantsNativePlatform || mentionsNonWebStack)) {
     return `
@@ -1273,6 +1325,7 @@ const handleImport = async (req, res) => {
       line: `Imported ${files.length} files to ${workspaceDir} (${bytesWritten} bytes).`,
     });
     currentWorkspace = workspaceDir;
+    hasBuiltOnce = listedFiles.length > 0;
     broadcast({
       type: 'workspace',
       name: projectName,
@@ -1361,6 +1414,7 @@ const handleWorkspaceSelect = async (req, res) => {
 
     currentWorkspace = workspaceDir;
     const files = listFiles(workspaceDir, workspaceDir);
+    hasBuiltOnce = files.length > 0;
     broadcast({
       type: 'workspace',
       name: path.basename(workspaceDir),
@@ -1597,6 +1651,7 @@ const createWorkspace = () => {
   if (!safeDir) {
     throw new Error('Invalid workspace path.');
   }
+  hasBuiltOnce = false;
 
   const specText = latestSpec || 'New project workspace.';
   fs.writeFileSync(path.join(safeDir, 'README.md'), 'Omega AI Builder workspace.');

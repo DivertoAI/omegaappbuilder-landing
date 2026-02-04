@@ -102,6 +102,7 @@ export default function AiBuilderClient() {
   const [importStatus, setImportStatus] = useState<ImportStatus>('idle');
   const [importMessage, setImportMessage] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
+  const [isAttachmentDragging, setIsAttachmentDragging] = useState(false);
   const [workspaceLabel, setWorkspaceLabel] = useState('No workspace');
   const [hasWorkspace, setHasWorkspace] = useState(false);
   const [workspacePath, setWorkspacePath] = useState<string | null>(null);
@@ -1034,6 +1035,13 @@ export default function AiBuilderClient() {
     event.target.value = '';
   };
 
+  const handleAttachmentDrop = async (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsAttachmentDragging(false);
+    const files = Array.from(event.dataTransfer.files || []);
+    await handleImportFiles(files, { mode: 'attachments', pathPrefix: 'references' });
+  };
+
   const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDragging(false);
@@ -1588,7 +1596,7 @@ export default function AiBuilderClient() {
                           {message.role === 'assistant' ? 'Omega AI' : 'You'}
                         </p>
                       </div>
-                      <p className="mt-1">{message.text}</p>
+                      <p className="mt-1 whitespace-pre-line">{message.text}</p>
                       {message.questions && (
                         <div className="mt-3 space-y-2 text-xs text-slate-600">
                           {message.questions.map((question) => (
@@ -1601,7 +1609,17 @@ export default function AiBuilderClient() {
                 )}
               </div>
               <div className="border-t border-slate-200 px-4 py-4 mt-auto">
-                <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                <div
+                  className={`rounded-2xl border border-slate-200 bg-white p-3 transition ${
+                    isAttachmentDragging ? 'border-fuchsia-300 bg-fuchsia-50/60' : ''
+                  }`}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setIsAttachmentDragging(true);
+                  }}
+                  onDragLeave={() => setIsAttachmentDragging(false)}
+                  onDrop={handleAttachmentDrop}
+                >
                   <div className="mb-2 flex flex-wrap gap-2 text-[11px] text-slate-500">
                     <span className="rounded-full bg-slate-100 px-2 py-1">Website</span>
                     <span className="rounded-full bg-slate-100 px-2 py-1">Web app</span>
@@ -1613,6 +1631,11 @@ export default function AiBuilderClient() {
                       {isFreePlan ? 'Import folder (Core+)' : 'Import folder'}
                     </span>
                   </div>
+                  {isAttachmentDragging && (
+                    <div className="mb-2 rounded-xl border border-dashed border-fuchsia-200 bg-white px-3 py-2 text-xs text-fuchsia-700">
+                      Drop files to attach to this build.
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
                     <div className="relative">
                       <button
