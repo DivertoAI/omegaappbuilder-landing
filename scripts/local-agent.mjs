@@ -61,6 +61,7 @@ let activeProcessLabel = '';
 let cachedProfile = null;
 let cachedProfileAt = 0;
 let lastUsageSnapshot = null;
+const envNotified = new Set();
 
 const isPathInside = (target, root) => {
   if (!target || !root) return false;
@@ -109,6 +110,131 @@ const QUESTIONS = [
   'Key features and integrations? (Auth, payments, CRM, analytics)',
   'Starting from scratch or importing an existing project folder?',
 ];
+
+const ENV_KEY_HINT = /key|token|secret|password|passwd|pass|url|uri|id|project|app|client|api/i;
+
+const normalizeEnvKey = (raw) => {
+  if (!raw) return null;
+  const normalized = String(raw)
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/_{2,}/g, '_');
+  if (!normalized || normalized.length < 3) return null;
+  return normalized;
+};
+
+const extractEnvEntries = (text) => {
+  if (!text) return { entries: [], cleaned: '' };
+  const entries = [];
+  let cleanedLines = [];
+
+  const trimmed = text.trim();
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    try {
+      const obj = JSON.parse(trimmed);
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        Object.entries(obj).forEach(([key, value]) => {
+          const envKey = normalizeEnvKey(key);
+          if (!envKey) return;
+          entries.push({ key: envKey, value: String(value) });
+        });
+        return { entries, cleaned: '' };
+      }
+    } catch {
+      // fall through to line parsing
+    }
+  }
+
+  const lines = text.split(/\r?\n/);
+  lines.forEach((line) => {
+    const raw = line.trim();
+    if (!raw) {
+      cleanedLines.push(line);
+      return;
+    }
+
+    const eqMatch = raw.match(/^([A-Za-z0-9_ .-]{2,})\s*=\s*(.+)$/);
+    if (eqMatch) {
+      const envKey = normalizeEnvKey(eqMatch[1]);
+      if (envKey) {
+        entries.push({ key: envKey, value: eqMatch[2].trim() });
+        return;
+      }
+    }
+
+    const colonMatch = raw.match(/^([A-Za-z0-9_ .-]{2,})\s*:\s*(.+)$/);
+    if (colonMatch && ENV_KEY_HINT.test(colonMatch[1])) {
+      const envKey = normalizeEnvKey(colonMatch[1]);
+      if (envKey) {
+        entries.push({ key: envKey, value: colonMatch[2].trim() });
+        return;
+      }
+    }
+
+    cleanedLines.push(line);
+  });
+
+  return { entries, cleaned: cleanedLines.join('\n').trim() };
+};
+
+const writeEnvEntries = (workspace, entries) => {
+  if (!workspace || !entries.length) return { created: false, updatedKeys: [] };
+  const envPath = path.join(workspace, '.env');
+  const existed = fs.existsSync(envPath);
+  let lines = existed ? fs.readFileSync(envPath, 'utf8').split(/\r?\n/) : [];
+  const updatedKeys = [];
+
+  entries.forEach(({ key, value }) => {
+    let found = false;
+    lines = lines.map((line) => {
+      const match = line.match(/^\s*(?:export\s+)?([A-Za-z0-9_]+)\s*=/);
+      if (match && match[1] === key) {
+        found = true;
+        return `${key}=${value}`;
+      }
+      return line;
+    });
+    if (!found) {
+      lines.push(`${key}=${value}`);
+    }
+    updatedKeys.push(key);
+  });
+
+  fs.writeFileSync(
+    envPath,
+    lines.filter((line, index, arr) => index < arr.length - 1 || line.trim() !== '').join('\n')
+  );
+  return { created: !existed, updatedKeys };
+};
+
+const notifyEnvUpdate = (ws, workspace, updatedKeys, created) => {
+  if (!updatedKeys.length || !workspace) return;
+  const envPath = path.join(workspace, '.env');
+  envNotified.add(envPath);
+  ws.send(
+    JSON.stringify({
+      type: 'chat',
+      text: `${created ? 'Created' : 'Updated'} .env with ${updatedKeys.length} ${
+        updatedKeys.length === 1 ? 'entry' : 'entries'
+      }: ${updatedKeys.join(', ')}`,
+    })
+  );
+};
+
+const ensureEnvNotified = (ws, workspace) => {
+  if (!workspace) return;
+  const envPath = path.join(workspace, '.env');
+  if (!fs.existsSync(envPath) || envNotified.has(envPath)) return;
+  envNotified.add(envPath);
+  ws.send(
+    JSON.stringify({
+      type: 'chat',
+      text: 'Detected a new .env file in this workspace. Review values before running or deploying.',
+    })
+  );
+};
 
 const isFullSpec = (text) => {
   const value = String(text || '').toLowerCase();
@@ -246,19 +372,50 @@ wss.on('connection', (ws, req) => {
     }
 
     if (payload.type === 'chat') {
+      let incoming = '';
       if (typeof payload.text === 'string' && payload.text.trim()) {
-        const incoming = payload.text.trim();
-        if (!hasAskedQuestions) {
-          specSeed = incoming;
-          latestSpec = incoming;
-        } else if (!hasCapturedSpec) {
-          latestSpec = specSeed
-            ? `${specSeed}\nDetails: ${incoming}`
-            : incoming;
-        } else {
-          latestSpec = specSeed
-            ? `${specSeed}\nUpdate: ${incoming}`
-            : incoming;
+        const raw = payload.text.trim();
+        const { entries, cleaned } = extractEnvEntries(raw);
+
+        if (entries.length) {
+          if (!currentWorkspace) {
+            const workspace = createWorkspace();
+            currentWorkspace = workspace.path;
+            broadcast({
+              type: 'workspace',
+              name: workspace.name,
+              path: workspace.path,
+              files: workspace.files,
+            });
+            ws.send(
+              JSON.stringify({
+                type: 'log',
+                line: `Workspace created at ${workspace.path}`,
+              })
+            );
+          }
+          const workspace = getActiveWorkspace();
+          if (workspace) {
+            const { created, updatedKeys } = writeEnvEntries(workspace, entries);
+            notifyEnvUpdate(ws, workspace, updatedKeys, created);
+            syncWorkspaceFiles(workspace);
+          }
+        }
+
+        incoming = cleaned;
+        if (incoming) {
+          if (!hasAskedQuestions) {
+            specSeed = incoming;
+            latestSpec = incoming;
+          } else if (!hasCapturedSpec) {
+            latestSpec = specSeed
+              ? `${specSeed}\nDetails: ${incoming}`
+              : incoming;
+          } else {
+            latestSpec = specSeed
+              ? `${specSeed}\nUpdate: ${incoming}`
+              : incoming;
+          }
         }
       }
       if (!hasAskedQuestions) {
@@ -672,6 +829,45 @@ const runCodexBuild = async (ws, cwd, specText) => {
     outputChars: 0,
     estimated: true,
   };
+  const summaryState = {
+    active: false,
+    lines: [],
+  };
+
+  const captureSummary = (line) => {
+    const trimmed = String(line || '').trim();
+    if (!trimmed) {
+      if (summaryState.active && summaryState.lines.length < 60) {
+        summaryState.lines.push('');
+      }
+      return;
+    }
+    if (/^process exited/i.test(trimmed) || /^tokens used/i.test(trimmed)) {
+      summaryState.active = false;
+      return;
+    }
+    const isHeader =
+      trimmed === 'Summary' ||
+      trimmed === 'Tests' ||
+      trimmed === 'Next steps' ||
+      trimmed.startsWith('Omega Agent');
+    if (isHeader) {
+      summaryState.active = true;
+      summaryState.lines.push(trimmed);
+      return;
+    }
+    if (!summaryState.active) return;
+    if (
+      /^diff --git/i.test(trimmed) ||
+      /^file update/i.test(trimmed) ||
+      /^exec\b/i.test(trimmed)
+    ) {
+      return;
+    }
+    if (summaryState.lines.length < 60) {
+      summaryState.lines.push(trimmed);
+    }
+  };
 
   const trackUsage = (chunk) => {
     const text = chunk.toString();
@@ -685,6 +881,7 @@ const runCodexBuild = async (ws, cwd, specText) => {
         usageState.totalTokens = usage.totalTokens;
         usageState.estimated = false;
       }
+      captureSummary(line);
     });
   };
 
@@ -707,6 +904,15 @@ const runCodexBuild = async (ws, cwd, specText) => {
     activeProcessLabel = '';
     ws.send(JSON.stringify({ type: 'exit', code }));
     syncWorkspaceFiles(workspace);
+    ensureEnvNotified(ws, workspace);
+    if (summaryState.lines.length) {
+      ws.send(
+        JSON.stringify({
+          type: 'chat',
+          text: summaryState.lines.join('\n'),
+        })
+      );
+    }
     const outputTokens =
       usageState.outputTokens || Math.max(1, Math.ceil(usageState.outputChars / 4));
     const inputTokens = usageState.inputTokens || estimateTokens(prompt);
