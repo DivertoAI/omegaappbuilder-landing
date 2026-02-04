@@ -90,6 +90,7 @@ export default function AiBuilderClient() {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
   const attachmentFolderInputRef = useRef<HTMLInputElement | null>(null);
+  const chatInputRef = useRef<HTMLTextAreaElement | null>(null);
   const selectedFileRef = useRef<string | null>(null);
   const openFilesRef = useRef<string[]>([]);
   const stopRequestedRef = useRef(false);
@@ -900,6 +901,13 @@ export default function AiBuilderClient() {
     }
   };
 
+  const resizeChatInput = () => {
+    const el = chatInputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  };
+
   const handleSend = () => {
     if (!requireAuth()) return;
     const text = draft.trim();
@@ -907,6 +915,7 @@ export default function AiBuilderClient() {
     setMessages((prev) => [...prev, { role: 'user', text }]);
     setHasPrompt(true);
     setDraft('');
+    setTimeout(() => resizeChatInput(), 0);
 
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       setMessages((prev) => [
@@ -1677,21 +1686,29 @@ export default function AiBuilderClient() {
                         </div>
                       )}
                     </div>
-                    <input
+                    <textarea
+                      ref={chatInputRef}
                       value={draft}
-                      onChange={(event) => setDraft(event.target.value)}
+                      rows={1}
+                      onChange={(event) => {
+                        setDraft(event.target.value);
+                        resizeChatInput();
+                      }}
                       onFocus={() => setIsAttachmentMenuOpen(false)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter') {
-                          event.preventDefault();
-                          handleSend();
+                          if (!event.shiftKey) {
+                            event.preventDefault();
+                            handleSend();
+                            resizeChatInput();
+                          }
                         }
                       }}
                       onBlur={() => {
                         if (draft.trim()) setHasPrompt(true);
                       }}
                       placeholder="Describe your project or answer the guided questions..."
-                      className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                      className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none resize-none leading-relaxed max-h-40 overflow-y-auto"
                       aria-label="Message Omega AI"
                     />
                     <button
