@@ -1077,50 +1077,197 @@ export default function AiBuilderClient() {
   const previewLabelMap: Record<PreviewMode, string> = {
     auto: 'Auto',
     web: 'Web',
-    'mobile-android': 'Android',
-    'mobile-ios': 'iOS',
-    wearos: 'WearOS',
-    watchos: 'watchOS',
+    'mobile-android': 'Android (S25 Ultra)',
+    'mobile-ios': 'iOS (iPhone 17 Pro Max)',
+    wearos: 'Wear OS (Round)',
+    watchos: 'watchOS (Apple Watch Ultra)',
   };
   const previewModeLabel =
     previewMode === 'auto'
       ? `Auto (${previewLabelMap[resolvedPreviewMode]})`
       : previewLabelMap[previewMode];
-  const previewShell = useMemo(() => {
-    if (resolvedPreviewMode === 'web') {
-      return {
-        outer: 'aspect-[16/9] w-full',
-        frame: 'rounded-xl border border-slate-200 bg-white',
-      };
-    }
-    if (resolvedPreviewMode === 'mobile-ios') {
-      return {
-        outer: 'aspect-[9/19.5] w-full max-w-[360px] mx-auto',
-        frame: 'rounded-[32px] border-[10px] border-slate-900 bg-white shadow-lg',
-      };
-    }
-    if (resolvedPreviewMode === 'mobile-android') {
-      return {
-        outer: 'aspect-[9/19.5] w-full max-w-[360px] mx-auto',
-        frame: 'rounded-[28px] border-[10px] border-slate-900 bg-white shadow-lg',
-      };
-    }
-    if (resolvedPreviewMode === 'wearos') {
-      return {
-        outer: 'aspect-square w-full max-w-[220px] mx-auto',
-        frame: 'rounded-full border-[12px] border-slate-900 bg-white shadow-lg',
-      };
-    }
-    return {
-      outer: 'aspect-square w-full max-w-[220px] mx-auto',
-      frame: 'rounded-[28px] border-[12px] border-slate-900 bg-white shadow-lg',
-    };
-  }, [resolvedPreviewMode]);
-  const renderPreviewShell = (content: ReactNode) => (
-    <div className={previewShell.outer}>
-      <div className={`${previewShell.frame} h-full w-full overflow-hidden`}>{content}</div>
+  const isCompactPreview =
+    resolvedPreviewMode === 'watchos' || resolvedPreviewMode === 'wearos';
+  const previewPlaceholderCopy = (
+    <div
+      className="h-full w-full"
+      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    >
+      <div
+        className={`flex flex-col items-center justify-center gap-2 text-center ${
+          isCompactPreview ? 'text-[10px] leading-tight max-w-[140px]' : 'text-xs max-w-[200px]'
+        } text-slate-400`}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+      >
+        <p className="font-semibold text-slate-500">No preview yet</p>
+        <p>Start a build or import a project to render a live preview.</p>
+        <button
+          type="button"
+          onClick={() => {
+            if (isFreePlan) return;
+            uploadInputRef.current?.click();
+          }}
+          className={`mt-1 self-center rounded-lg border font-semibold ${
+            isCompactPreview ? 'px-2 py-1 text-[10px]' : 'px-3 py-1 text-[11px]'
+          } ${
+            isFreePlan
+              ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+              : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          Import project
+        </button>
+      </div>
     </div>
   );
+  const previewUnavailableCopy = (
+    <div
+      className="h-full w-full px-6"
+      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    >
+      <div className="text-center text-xs text-slate-400 max-w-[220px]">
+        Preview not available yet. Run a build to generate a preview file.
+      </div>
+    </div>
+  );
+  const previewShell = useMemo(
+    () => ({
+      outer: 'aspect-[16/9] w-full',
+      frame: 'relative flex items-center justify-center rounded-xl border border-slate-200 bg-white',
+    }),
+    []
+  );
+  const renderSkinnedFrame = (
+    frameSrc: string,
+    screenStyle: React.CSSProperties,
+    content: ReactNode,
+    outerClassName = 'flex w-full justify-center',
+    frameClassName = 'relative aspect-square w-full max-w-[240px]'
+  ) => (
+    <div className={outerClassName}>
+      <div className={frameClassName}>
+        <img
+          src={frameSrc}
+          alt="Device frame"
+          className="pointer-events-none absolute inset-0 h-full w-full"
+        />
+        <div
+          className="absolute overflow-hidden bg-white"
+          style={{
+            ...screenStyle,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {content}
+        </div>
+      </div>
+    </div>
+  );
+  const deviceSizes = {
+    ios: { width: 428, height: 868, scale: 0.72 },
+    android: { width: 380, height: 828, scale: 0.76 },
+    watch: { width: 360, height: 380, scale: 0.9 },
+  };
+
+  const renderDeviceCssFrame = (
+    deviceClass: string,
+    size: { width: number; height: number; scale: number },
+    content: ReactNode,
+    extras: ReactNode
+  ) => (
+    <div className="flex w-full justify-center">
+      <div
+        className="flex items-start justify-center"
+        style={{
+          width: size.width * size.scale,
+          height: size.height * size.scale,
+        }}
+      >
+        <div
+          className={`device ${deviceClass}`}
+          style={{ transform: `scale(${size.scale})`, transformOrigin: 'top center' }}
+        >
+          <div className="device-frame">
+            <div
+              className="device-screen overflow-hidden bg-white"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              {content}
+            </div>
+          </div>
+          {extras}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderPreviewShell = (content: ReactNode) => {
+    if (resolvedPreviewMode === 'mobile-ios') {
+      return renderDeviceCssFrame(
+        'device-iphone-14-pro device-black',
+        deviceSizes.ios,
+        content,
+        <>
+          <div className="device-stripe" />
+          <div className="device-header" />
+          <div className="device-sensors" />
+          <div className="device-btns" />
+          <div className="device-power" />
+          <div className="device-home" />
+        </>
+      );
+    }
+    if (resolvedPreviewMode === 'mobile-android') {
+      return renderDeviceCssFrame(
+        'device-galaxy-s8 device-blue',
+        deviceSizes.android,
+        content,
+        <>
+          <div className="device-stripe" />
+          <div className="device-sensors" />
+          <div className="device-btns" />
+          <div className="device-power" />
+        </>
+      );
+    }
+    if (resolvedPreviewMode === 'watchos') {
+      return renderDeviceCssFrame(
+        'device-apple-watch-ultra',
+        deviceSizes.watch,
+        content,
+        <>
+          <div className="device-header" />
+          <div className="device-btns" />
+          <div className="device-stripe" />
+          <div className="device-power" />
+          <div className="device-home" />
+        </>
+      );
+    }
+    if (resolvedPreviewMode === 'wearos') {
+      return renderSkinnedFrame(
+        '/device-frames/wearos-flagship.svg',
+        {
+          top: '102px',
+          bottom: '102px',
+          left: '102px',
+          right: '102px',
+          borderRadius: '9999px',
+        },
+        content,
+        'flex w-full justify-center',
+        'relative aspect-square w-full max-w-[360px]'
+      );
+    }
+
+    return (
+      <div className={previewShell.outer}>
+        <div className={`${previewShell.frame} h-full w-full overflow-hidden`}>{content}</div>
+      </div>
+    );
+  };
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -1756,32 +1903,9 @@ export default function AiBuilderClient() {
                               />
                             )
                           ) : fileTree.length === 0 ? (
-                            renderPreviewShell(
-                              <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-center text-xs text-slate-400 px-6">
-                                <p className="font-semibold text-slate-500">No preview yet</p>
-                                <p>Start a build or import a project to render a live preview.</p>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (isFreePlan) return;
-                                    uploadInputRef.current?.click();
-                                  }}
-                                  className={`mt-1 rounded-lg border px-3 py-1 text-[11px] font-semibold ${
-                                    isFreePlan
-                                      ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
-                                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  Import project
-                                </button>
-                              </div>
-                            )
+                            renderPreviewShell(previewPlaceholderCopy)
                           ) : (
-                            renderPreviewShell(
-                              <div className="flex h-full w-full items-center justify-center text-xs text-slate-400 px-6">
-                                Preview not available yet. Run a build to generate a preview file.
-                              </div>
-                            )
+                            renderPreviewShell(previewUnavailableCopy)
                           )}
                         </div>
                       )}

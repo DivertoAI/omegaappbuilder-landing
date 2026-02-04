@@ -33,6 +33,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="stylesheet" href="/device-frames/devices.min.css" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} bg-white text-slate-900 antialiased`}>
         <div className="flex min-h-screen flex-col">
           <div className="flex-1">

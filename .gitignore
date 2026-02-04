@@ -26,6 +26,10 @@
 # misc
 .DS_Store
 *.pem
+public/device-frames/phone-android.svg
+public/device-frames/phone-ios.svg
+public/device-frames/watch-round.svg
+public/device-frames/watch-square.svg
 
 # debug
 npm-debug.log*

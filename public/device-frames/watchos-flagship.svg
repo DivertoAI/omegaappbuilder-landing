@@ -1,0 +1,17 @@
+<svg width="360" height="360" viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0f1a"/>
+      <stop offset="0.55" stop-color="#111827"/>
+      <stop offset="1" stop-color="#06080d"/>
+    </linearGradient>
+    <mask id="screen-cutout">
+      <rect width="360" height="360" fill="white"/>
+      <rect x="38" y="38" width="284" height="284" rx="50" fill="black"/>
+    </mask>
+  </defs>
+  <rect width="360" height="360" rx="70" fill="url(#frame)" mask="url(#screen-cutout)"/>
+  <rect x="38" y="38" width="284" height="284" rx="50" fill="none" stroke="#1f2937" stroke-width="2"/>
+  <rect x="352" y="160" width="8" height="40" rx="4" fill="#111827"/>
+  <rect x="348" y="210" width="12" height="20" rx="6" fill="#111827"/>
+</svg>
