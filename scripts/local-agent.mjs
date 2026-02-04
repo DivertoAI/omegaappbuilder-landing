@@ -810,7 +810,7 @@ Requirements:
 - In addition to the native project, generate a fast web preview variant of the same UI so the builder can render it immediately.
   - If the stack is React Native, implement the preview in a React Native Web style.
   - If the stack is Flutter, implement the preview in a Flutter Web style.
-  - For any other native stack, implement the preview in a React Native Web style.
+  - For any other native stack (Swift/Kotlin/Java/Xamarin, macOS/Windows/Linux, watchOS/WearOS), implement the preview in a React Native Web style.
   - Keep the preview self-contained (HTML/CSS/JS only, no build step required).
 - Place the preview at /index.html so the live preview panel can render it.
 - Include a short README with run instructions.
