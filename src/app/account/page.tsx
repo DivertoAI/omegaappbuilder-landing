@@ -40,6 +40,18 @@ export default function AccountPage() {
   const [editUsername, setEditUsername] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'error' | 'success'>('idle');
   const [saveMessage, setSaveMessage] = useState('');
+  const [renameMessage, setRenameMessage] = useState('');
+
+  const buildAgentUrl = () => {
+    const explicit = process.env.NEXT_PUBLIC_LOCAL_AGENT_HTTP;
+    if (explicit) return explicit.replace(/\/$/, '');
+    if (typeof window !== 'undefined') {
+      const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
+      const host = window.location.hostname || 'localhost';
+      return `${protocol}://${host}:8787`;
+    }
+    return 'http://localhost:8787';
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, (nextUser) => {
@@ -136,6 +148,58 @@ export default function AccountPage() {
   const handleSignOut = async () => {
     await signOut(firebaseAuth);
     window.location.href = '/login';
+  };
+
+  const handleRenameProject = async (project: Project) => {
+    if (!project.workspacePath) return;
+    const nextName = window.prompt('Rename workspace', project.name || '');
+    if (!nextName) return;
+    try {
+      const renameUrl = new URL(`${buildAgentUrl()}/workspaces/rename`);
+      const response = await fetch(renameUrl.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(user?.email ? { 'x-omega-user-email': user.email } : {}),
+        },
+        body: JSON.stringify({
+          path: project.workspacePath,
+          name: nextName,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      const payload = await response.json();
+      const newName = payload?.name || nextName;
+      const newPath = payload?.path || project.workspacePath;
+      await setDoc(
+        doc(firestore, 'projects', project.id),
+        {
+          name: newName,
+          workspacePath: newPath,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+      setProjects((prev) =>
+        prev.map((item) =>
+          item.id === project.id
+            ? {
+                ...item,
+                name: newName,
+                workspacePath: newPath,
+                updatedAt: new Date().toISOString(),
+              }
+            : item
+        )
+      );
+      setRenameMessage('Workspace renamed.');
+      setTimeout(() => setRenameMessage(''), 1500);
+    } catch (error) {
+      setRenameMessage(error instanceof Error ? error.message : 'Rename failed.');
+      setTimeout(() => setRenameMessage(''), 2000);
+    }
   };
 
   const handleProfileSave = async () => {
@@ -311,7 +375,7 @@ export default function AccountPage() {
                   projects.map((project) => (
                     <div
                       key={project.id}
-                      className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3"
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3"
                     >
                       <div>
                         <p className="text-sm font-semibold text-slate-900">{project.name}</p>
@@ -321,16 +385,28 @@ export default function AccountPage() {
                             : '—'}
                         </p>
                       </div>
-                      <Link
-                        href="/ai"
-                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        Open
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleRenameProject(project)}
+                          className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                        >
+                          Rename
+                        </button>
+                        <Link
+                          href="/ai"
+                          className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          Open
+                        </Link>
+                      </div>
                     </div>
                   ))
                 )}
               </div>
+              {renameMessage && (
+                <p className="mt-3 text-xs font-semibold text-slate-500">{renameMessage}</p>
+              )}
             </div>
           </div>
         </div>

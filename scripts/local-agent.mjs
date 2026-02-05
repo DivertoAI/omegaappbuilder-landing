@@ -29,6 +29,7 @@ const DEFAULT_USER_ID =
   process.env.OMEGA_DEFAULT_USER_ID ||
   process.env.LOCAL_AGENT_USER_ID ||
   '';
+const ADMIN_EMAIL = (process.env.OMEGA_ADMIN_EMAIL || 'divertoai@gmail.com').toLowerCase();
 const CREDIT_RATE_INPUT = Number(process.env.OMEGA_CREDIT_INPUT_PER_MILLION || '1');
 const CREDIT_RATE_OUTPUT = Number(process.env.OMEGA_CREDIT_OUTPUT_PER_MILLION || '4');
 const AGENT_MULTIPLIERS = {
@@ -67,6 +68,17 @@ let hasBuiltOnce = false;
 const isPathInside = (target, root) => {
   if (!target || !root) return false;
   return target === root || target.startsWith(`${root}${path.sep}`);
+};
+
+const isAdminEmail = (email) => {
+  if (!email) return false;
+  return String(email).toLowerCase() === ADMIN_EMAIL;
+};
+
+const getUserEmailFromRequest = (req) => {
+  const headerEmail = req.headers['x-omega-user-email'];
+  if (Array.isArray(headerEmail)) return headerEmail[0];
+  return headerEmail || '';
 };
 
 const resolveWorkspaceDir = (workspacePath) => {
@@ -348,6 +360,9 @@ wss.on('connection', (ws, req) => {
     return;
   }
 
+  let sessionUserEmail = '';
+  const isAdminSession = () => isAdminEmail(sessionUserEmail);
+
   let hasAskedQuestions = false;
   let hasCapturedSpec = false;
 
@@ -375,6 +390,10 @@ wss.on('connection', (ws, req) => {
     } catch {
       ws.send(JSON.stringify({ type: 'error', message: 'Invalid JSON payload.' }));
       return;
+    }
+
+    if (payload.userEmail || payload.email) {
+      sessionUserEmail = String(payload.userEmail || payload.email || '').trim();
     }
 
     if (payload.type === 'chat') {
@@ -499,7 +518,7 @@ wss.on('connection', (ws, req) => {
           })
         );
         if (USE_CODEX_CLI) {
-          void runCodexBuild(ws, currentWorkspace, latestSpec, { mode: 'full' });
+          void runCodexBuild(ws, currentWorkspace, latestSpec, { mode: 'full', isAdmin: isAdminSession() });
         } else {
           runCommand(ALLOWED_COMMANDS.build, ws);
         }
@@ -517,6 +536,7 @@ wss.on('connection', (ws, req) => {
           void runCodexBuild(ws, currentWorkspace, latestSpec, {
             mode: 'update',
             updateText: incoming,
+            isAdmin: isAdminSession(),
           });
         } else {
           runCommand(ALLOWED_COMMANDS.build, ws);
@@ -587,7 +607,7 @@ wss.on('connection', (ws, req) => {
           );
           return;
         }
-        void runCodexBuild(ws, currentWorkspace, latestSpec);
+        void runCodexBuild(ws, currentWorkspace, latestSpec, { isAdmin: isAdminSession() });
         return;
       }
 
@@ -813,6 +833,7 @@ const openInSimulator = async (ws, platform, url) => {
 };
 
 const runCodexBuild = async (ws, cwd, specText, options = {}) => {
+  const isAdmin = options.isAdmin === true;
   const workspace = resolveWorkspaceDir(cwd);
   if (!workspace) {
     currentWorkspace = null;
@@ -824,7 +845,7 @@ const runCodexBuild = async (ws, cwd, specText, options = {}) => {
     );
     return;
   }
-  const profile = supabase ? await ensureCreditsAvailable(ws) : null;
+  const profile = supabase ? await ensureCreditsAvailable(ws, isAdmin) : null;
   if (supabase && !profile) {
     return;
   }
@@ -971,7 +992,19 @@ const runCodexBuild = async (ws, cwd, specText, options = {}) => {
       at: new Date().toISOString(),
     };
     if (supabase && profile) {
-      const updated = await updateCredits(-creditsUsed);
+      if (isAdmin) {
+        const payload = buildCreditsPayload(buildAdminProfile(), {
+          inputTokens,
+          outputTokens,
+          credits: creditsUsed,
+          estimated: usageState.estimated,
+        });
+        if (payload) {
+          broadcastCredits(payload);
+        }
+        return;
+      }
+      const updated = await updateCredits(-creditsUsed, isAdmin);
       if (updated) {
         const payload = buildCreditsPayload(updated, {
           inputTokens,
@@ -1181,6 +1214,13 @@ const extractUsageFromLine = (line) => {
 
 const resolvePlanMeta = (plan) => PLAN_META[plan] || PLAN_META.starter;
 
+const buildAdminProfile = () => ({
+  id: DEFAULT_USER_ID || 'admin',
+  credits: null,
+  plan: 'enterprise',
+  admin: true,
+});
+
 const getProfile = async () => {
   if (!supabase || !DEFAULT_USER_ID) return null;
   const now = Date.now();
@@ -1203,7 +1243,8 @@ const getProfile = async () => {
   return profile;
 };
 
-const updateCredits = async (delta) => {
+const updateCredits = async (delta, isAdmin) => {
+  if (isAdmin) return buildAdminProfile();
   if (!supabase || !DEFAULT_USER_ID) return null;
   const profile = await getProfile();
   if (!profile) return null;
@@ -1237,14 +1278,16 @@ const calculateCredits = (usage, plan) => {
 const buildCreditsPayload = (profile, usage) => {
   if (!profile) return null;
   const meta = resolvePlanMeta(profile.plan);
+  const isAdmin = profile.admin === true;
   return {
-    credits: profile.credits,
+    credits: isAdmin ? null : profile.credits,
     plan: profile.plan,
     agent: meta.agent,
     autonomy: meta.autonomy,
-    creditCap: meta.creditCap ?? null,
+    creditCap: isAdmin ? null : meta.creditCap ?? null,
     usage,
-    exhausted: Number(profile.credits || 0) <= 0,
+    exhausted: isAdmin ? false : Number(profile.credits || 0) <= 0,
+    admin: isAdmin,
   };
 };
 
@@ -1253,7 +1296,15 @@ const broadcastCredits = (payload) => {
   broadcast({ type: 'credits', ...payload });
 };
 
-const ensureCreditsAvailable = async (ws) => {
+const ensureCreditsAvailable = async (ws, isAdmin) => {
+  if (isAdmin) {
+    const profile = buildAdminProfile();
+    const payload = buildCreditsPayload(profile);
+    if (payload) {
+      ws.send(JSON.stringify({ type: 'credits', ...payload }));
+    }
+    return profile;
+  }
   const profile = await getProfile();
   if (!profile) return null;
   if (Number(profile.credits || 0) <= 0) {
@@ -1283,9 +1334,14 @@ const handleImport = async (req, res) => {
   try {
     const body = await readJsonBody(req, 50 * 1024 * 1024);
     const mode = String(body?.mode || 'project');
+    const isAdminRequest = isAdminEmail(getUserEmailFromRequest(req));
     const profile = await getProfile();
-    const meta = profile ? resolvePlanMeta(profile.plan || 'starter') : PLAN_META.core;
-    if (profile && !meta.allowImport && mode !== 'attachments') {
+    const meta = isAdminRequest
+      ? PLAN_META.enterprise
+      : profile
+      ? resolvePlanMeta(profile.plan || 'starter')
+      : PLAN_META.core;
+    if (!isAdminRequest && profile && !meta.allowImport && mode !== 'attachments') {
       res.writeHead(403, { 'Content-Type': 'text/plain' });
       res.end('Import is available on Core and above.');
       return;
@@ -1354,17 +1410,19 @@ const handleCredits = async (req, res) => {
     return;
   }
 
-  const profile = await getProfile();
+  const isAdminRequest = isAdminEmail(getUserEmailFromRequest(req));
+  const profile = isAdminRequest ? buildAdminProfile() : await getProfile();
   const meta = resolvePlanMeta(profile?.plan || 'starter');
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(
     JSON.stringify({
-      credits: profile ? Number(profile.credits || 0) : null,
+      credits: profile?.admin ? null : Number(profile?.credits || 0),
       plan: profile?.plan || 'starter',
       agent: meta.agent,
       autonomy: meta.autonomy,
-      creditCap: meta.creditCap ?? null,
+      creditCap: profile?.admin ? null : meta.creditCap ?? null,
       usage: lastUsageSnapshot,
+      admin: profile?.admin || false,
     })
   );
 };

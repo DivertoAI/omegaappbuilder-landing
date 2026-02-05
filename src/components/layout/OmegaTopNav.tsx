@@ -29,6 +29,8 @@ const formatCredits = (value: number | null | undefined) => {
   return Math.round(value).toLocaleString();
 };
 
+const ADMIN_EMAIL = 'divertoai@gmail.com';
+
 export default function OmegaTopNav({
   active,
   variant = 'builder',
@@ -39,10 +41,17 @@ export default function OmegaTopNav({
   const [credits, setCredits] = useState<number | null>(null);
   const [planKey, setPlanKey] = useState('starter');
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const planMeta = useMemo(() => PLAN_META[planKey] || PLAN_META.starter, [planKey]);
-  const creditCap = planMeta.creditCap ?? null;
-  const creditsRange =
-    creditCap !== null ? `${formatCredits(credits)} / ${formatCredits(creditCap)}` : formatCredits(credits);
+  const isAdminUser = Boolean(userEmail) && userEmail?.toLowerCase() === ADMIN_EMAIL;
+  const planMeta = useMemo(
+    () => (isAdminUser ? PLAN_META.enterprise : PLAN_META[planKey] || PLAN_META.starter),
+    [isAdminUser, planKey]
+  );
+  const creditCap = isAdminUser ? null : planMeta.creditCap ?? null;
+  const creditsRange = isAdminUser
+    ? 'Unlimited'
+    : creditCap !== null
+    ? `${formatCredits(credits)} / ${formatCredits(creditCap)}`
+    : formatCredits(credits);
   const creditsRatio =
     credits !== null && creditCap ? Math.max(0, Math.min(1, credits / creditCap)) : 0;
   const initials = userEmail
@@ -73,11 +82,16 @@ export default function OmegaTopNav({
         // ignore credit fetch errors
       }
     };
+    if (isAdminUser) {
+      setCredits(null);
+      setPlanKey('enterprise');
+      return;
+    }
     loadCredits();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAdminUser]);
 
   useEffect(() => {
     let mounted = true;

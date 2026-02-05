@@ -65,6 +65,7 @@ const formatCredits = (value: number | null | undefined) => {
 };
 
 const getAgentToken = () => process.env.NEXT_PUBLIC_LOCAL_AGENT_TOKEN || '';
+const ADMIN_EMAIL = 'divertoai@gmail.com';
 
 export default function AiBuilderClient() {
   const calendlyUrl = 'https://calendly.com/hello-omegaappbuilder/30min';
@@ -138,6 +139,15 @@ export default function AiBuilderClient() {
   const [renameStatus, setRenameStatus] = useState<'idle' | 'saving' | 'error' | 'success'>('idle');
   const [renameMessage, setRenameMessage] = useState('');
   const workspaceNameRef = useRef('');
+  const userEmail = user?.email || '';
+  const isAdminUser = Boolean(userEmail) && userEmail.toLowerCase() === ADMIN_EMAIL;
+  const agentHeaders = useMemo(
+    () => ({
+      ...(agentToken ? { 'x-omega-token': agentToken } : {}),
+      ...(userEmail ? { 'x-omega-user-email': userEmail } : {}),
+    }),
+    [agentToken, userEmail]
+  );
 
   const resolveWorkspaceDisplayName = useCallback(
     (path?: string | null, fallback?: string) => {
@@ -159,8 +169,8 @@ export default function AiBuilderClient() {
       setLogs((prev) => [...prev, 'Local agent not connected.'].slice(-200));
       return;
     }
-    wsRef.current.send(JSON.stringify({ type: 'run', command, ...payload }));
-  }, []);
+    wsRef.current.send(JSON.stringify({ type: 'run', command, userEmail, ...payload }));
+  }, [userEmail]);
 
   const requestWorkspaceCreation = useCallback(() => {
     const name = workspaceNameRef.current.trim();
@@ -173,9 +183,9 @@ export default function AiBuilderClient() {
         setLogs((prev) => [...prev, 'Local agent not connected.'].slice(-200));
         return;
       }
-      wsRef.current.send(JSON.stringify({ type: 'simulator', platform, url }));
+      wsRef.current.send(JSON.stringify({ type: 'simulator', platform, url, userEmail }));
     },
-    []
+    [userEmail]
   );
 
   const buildPreviewUrl = useCallback(
@@ -188,7 +198,7 @@ export default function AiBuilderClient() {
       }
       return preview.toString();
     },
-    [agentHttpUrl, agentToken]
+    [agentHttpUrl, agentHeaders]
   );
 
   const downloadUrl = useMemo(() => {
@@ -214,9 +224,7 @@ export default function AiBuilderClient() {
         fileUrl.searchParams.set('path', path);
 
         const response = await fetch(fileUrl.toString(), {
-          headers: {
-            ...(agentToken ? { 'x-omega-token': agentToken } : {}),
-          },
+          headers: agentHeaders,
         });
 
         if (!response.ok) {
@@ -391,9 +399,7 @@ export default function AiBuilderClient() {
         listUrl.pathname = '/list';
 
         const response = await fetch(listUrl.toString(), {
-          headers: {
-            ...(agentToken ? { 'x-omega-token': agentToken } : {}),
-          },
+          headers: agentHeaders,
         });
 
         if (!response.ok) {
@@ -437,7 +443,7 @@ export default function AiBuilderClient() {
         ].slice(-200));
       }
     },
-    [agentHttpUrl, agentToken, buildPreviewUrl, loadFile]
+    [agentHttpUrl, agentHeaders, buildPreviewUrl, loadFile]
   );
 
   const renameWorkspace = useCallback(async () => {
@@ -462,7 +468,7 @@ export default function AiBuilderClient() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(agentToken ? { 'x-omega-token': agentToken } : {}),
+          ...agentHeaders,
         },
         body: JSON.stringify({
           path: workspacePath,
@@ -494,7 +500,7 @@ export default function AiBuilderClient() {
     }
   }, [
     agentHttpUrl,
-    agentToken,
+    agentHeaders,
     loadProjects,
     refreshFiles,
     requireAuth,
@@ -514,7 +520,7 @@ export default function AiBuilderClient() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(agentToken ? { 'x-omega-token': agentToken } : {}),
+            ...agentHeaders,
           },
           body: JSON.stringify({
             path: project.workspacePath || undefined,
@@ -548,7 +554,7 @@ export default function AiBuilderClient() {
         ].slice(-200));
       }
     },
-    [agentHttpUrl, agentToken, refreshFiles, saveProject, requireAuth]
+    [agentHttpUrl, agentHeaders, refreshFiles, requireAuth, resolveWorkspaceDisplayName, saveProject]
   );
 
   const fileTreeNodes = useMemo(() => {
@@ -655,6 +661,17 @@ export default function AiBuilderClient() {
           };
 
           if (msg.type === 'credits') {
+            if (isAdminUser) {
+              setPlanKey('enterprise');
+              setCredits(null);
+              setAgentLabel('Omega 3');
+              setAutonomyLabel('Elite');
+              setCreditCap(null);
+              if (msg.usage) {
+                setLastUsage(msg.usage);
+              }
+              return;
+            }
             const nextPlan = msg.plan || 'starter';
             const meta = PLAN_META[nextPlan] || PLAN_META.starter;
             setPlanKey(nextPlan);
@@ -770,6 +787,14 @@ export default function AiBuilderClient() {
   useEffect(() => {
     let cancelled = false;
     const loadCredits = async () => {
+      if (isAdminUser) {
+        setPlanKey('enterprise');
+        setCredits(null);
+        setAgentLabel('Omega 3');
+        setAutonomyLabel('Elite');
+        setCreditCap(null);
+        return;
+      }
       try {
         const response = await fetch('/api/credits', {
           cache: 'no-store',
@@ -795,7 +820,7 @@ export default function AiBuilderClient() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAdminUser]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, (nextUser) => {
@@ -1023,7 +1048,7 @@ export default function AiBuilderClient() {
       ]);
       return;
     }
-    wsRef.current.send(JSON.stringify({ type: 'chat', text }));
+    wsRef.current.send(JSON.stringify({ type: 'chat', text, userEmail }));
   };
 
   const handleOpenSimulator = (platform: 'ios' | 'android') => {
@@ -1089,7 +1114,7 @@ export default function AiBuilderClient() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(agentToken ? { 'x-omega-token': agentToken } : {}),
+          ...agentHeaders,
         },
         body: JSON.stringify({
           projectName: targetName,
@@ -1162,9 +1187,12 @@ export default function AiBuilderClient() {
   const planMeta = useMemo(() => PLAN_META[planKey] || PLAN_META.starter, [planKey]);
   const resolvedCreditCap = creditCap ?? planMeta.creditCap ?? null;
   const creditsValue = typeof credits === 'number' ? credits : null;
-  const creditsDisplay = formatCredits(creditsValue);
-  const creditsRange =
-    resolvedCreditCap !== null ? `${creditsDisplay} / ${formatCredits(resolvedCreditCap)}` : creditsDisplay;
+  const creditsDisplay = isAdminUser ? 'Unlimited' : formatCredits(creditsValue);
+  const creditsRange = isAdminUser
+    ? 'Unlimited'
+    : resolvedCreditCap !== null
+    ? `${creditsDisplay} / ${formatCredits(resolvedCreditCap)}`
+    : creditsDisplay;
   const isFreePlan = planKey === 'starter';
   const upgradeUrl = '/pricing';
 
