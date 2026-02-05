@@ -382,7 +382,7 @@ wss.on('connection', (ws, req) => {
 
         if (entries.length) {
           if (!currentWorkspace) {
-            const workspace = createWorkspace();
+            const workspace = createWorkspace(payload.name);
             currentWorkspace = workspace.path;
             broadcast({
               type: 'workspace',
@@ -470,7 +470,7 @@ wss.on('connection', (ws, req) => {
       const wantsBuild = /build|run|compile|do it|start/.test(intent);
 
       if (wantsNewWorkspace || !currentWorkspace) {
-        const workspace = createWorkspace();
+        const workspace = createWorkspace(payload.workspaceName || payload.name);
         currentWorkspace = workspace.path;
         broadcast({
           type: 'workspace',
@@ -555,7 +555,7 @@ wss.on('connection', (ws, req) => {
         return;
       }
       if (commandKey === 'new') {
-        const workspace = createWorkspace();
+        const workspace = createWorkspace(payload.name);
         currentWorkspace = workspace.path;
         broadcast({
           type: 'workspace',
@@ -1642,9 +1642,13 @@ const handleDownload = (req, res) => {
   });
 };
 
-const createWorkspace = () => {
+const createWorkspace = (customName) => {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const name = `workspace-${stamp}`;
+  const baseName = customName ? sanitizeName(customName) : `workspace-${stamp}`;
+  let name = baseName;
+  if (fs.existsSync(path.join(WORKSPACE_ROOT_REAL, name))) {
+    name = `${baseName}-${stamp}`;
+  }
   const dir = path.join(WORKSPACE_ROOT_REAL, name);
   fs.mkdirSync(dir, { recursive: true });
   const safeDir = resolveWorkspaceDir(dir);

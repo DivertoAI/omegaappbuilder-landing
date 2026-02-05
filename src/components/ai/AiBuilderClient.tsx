@@ -134,6 +134,8 @@ export default function AiBuilderClient() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [workspaceNameDraft, setWorkspaceNameDraft] = useState('');
+  const workspaceNameRef = useRef('');
 
   const requireAuth = useCallback(() => {
     if (user) return true;
@@ -141,13 +143,18 @@ export default function AiBuilderClient() {
     return false;
   }, [user]);
 
-  const runCommand = useCallback((command: string) => {
+  const runCommand = useCallback((command: string, payload?: { name?: string }) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       setLogs((prev) => [...prev, 'Local agent not connected.'].slice(-200));
       return;
     }
-    wsRef.current.send(JSON.stringify({ type: 'run', command }));
+    wsRef.current.send(JSON.stringify({ type: 'run', command, ...payload }));
   }, []);
+
+  const requestWorkspaceCreation = useCallback(() => {
+    const name = workspaceNameRef.current.trim();
+    runCommand('new', name ? { name } : undefined);
+  }, [runCommand]);
 
   const sendSimulatorRequest = useCallback(
     (platform: 'ios' | 'android', url: string) => {
@@ -643,7 +650,7 @@ export default function AiBuilderClient() {
             setHasPrompt(true);
             setBuildStatus('Queued');
             if (msg.autoStart && !hasWorkspaceRef.current) {
-              runCommand('new');
+              requestWorkspaceCreation();
               setTimeout(() => runCommand('build'), 300);
             }
           }
@@ -677,7 +684,7 @@ export default function AiBuilderClient() {
         wsRef.current.close();
       }
     };
-  }, [agentUrl, refreshFiles, runCommand, saveProject]);
+  }, [agentUrl, refreshFiles, requestWorkspaceCreation, runCommand, saveProject]);
 
   useEffect(() => {
     let cancelled = false;
@@ -850,7 +857,7 @@ export default function AiBuilderClient() {
 
   const handleStartBuild = () => {
     if (!requireAuth()) return;
-    setWorkspaceLabel(`Workspace ${new Date().toISOString().slice(0, 19).replace('T', ' ')}`);
+    setWorkspaceLabel('New workspace');
     setMessages([]);
     setLogs([]);
     setFileTree([]);
@@ -871,6 +878,8 @@ export default function AiBuilderClient() {
     setLastCommand('');
     setOpenFiles([]);
     setLastUsage(null);
+    setWorkspaceNameDraft('');
+    workspaceNameRef.current = '';
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: 'reset' }));
     }
@@ -883,6 +892,10 @@ export default function AiBuilderClient() {
         ...prev,
         'Add your project details first (platform + stack) before creating a workspace.',
       ].slice(-200));
+      return;
+    }
+    if (action === 'new') {
+      requestWorkspaceCreation();
       return;
     }
     if (action === 'build') {
@@ -1493,6 +1506,21 @@ export default function AiBuilderClient() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Quick actions
                 </p>
+                <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    Workspace
+                  </span>
+                  <input
+                    value={workspaceNameDraft}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setWorkspaceNameDraft(next);
+                      workspaceNameRef.current = next;
+                    }}
+                    placeholder="Name this workspace"
+                    className="flex-1 bg-transparent text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                  />
+                </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {[
                     { key: 'new', label: 'Create workspace' },
