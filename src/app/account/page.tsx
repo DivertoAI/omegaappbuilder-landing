@@ -78,30 +78,57 @@ export default function AccountPage() {
   useEffect(() => {
     const loadProjects = async () => {
       if (!user) return;
-      const q = query(
-        collection(firestore, 'projects'),
-        where('userId', '==', user.uid),
-        orderBy('updatedAt', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      const rows: Project[] = snapshot.docs.map((docSnap) => {
-        const data = docSnap.data() as {
-          name: string;
-          workspacePath?: string | null;
-          updatedAt?: { toDate?: () => Date } | string | null;
-        };
-        const updatedAtValue =
-          typeof data.updatedAt === 'string'
-            ? data.updatedAt
-            : data.updatedAt?.toDate?.().toISOString();
-        return {
-          id: docSnap.id,
-          name: data.name,
-          workspacePath: data.workspacePath || null,
-          updatedAt: updatedAtValue || null,
-        };
-      });
-      setProjects(rows);
+      try {
+        const q = query(
+          collection(firestore, 'projects'),
+          where('userId', '==', user.uid),
+          orderBy('updatedAt', 'desc')
+        );
+        const snapshot = await getDocs(q);
+        const rows: Project[] = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data() as {
+            name: string;
+            workspacePath?: string | null;
+            updatedAt?: { toDate?: () => Date } | string | null;
+          };
+          const updatedAtValue =
+            typeof data.updatedAt === 'string'
+              ? data.updatedAt
+              : data.updatedAt?.toDate?.().toISOString();
+          return {
+            id: docSnap.id,
+            name: data.name,
+            workspacePath: data.workspacePath || null,
+            updatedAt: updatedAtValue || null,
+          };
+        });
+        setProjects(rows);
+      } catch {
+        const q = query(
+          collection(firestore, 'projects'),
+          where('userId', '==', user.uid)
+        );
+        const snapshot = await getDocs(q);
+        const rows: Project[] = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data() as {
+            name: string;
+            workspacePath?: string | null;
+            updatedAt?: { toDate?: () => Date } | string | null;
+          };
+          const updatedAtValue =
+            typeof data.updatedAt === 'string'
+              ? data.updatedAt
+              : data.updatedAt?.toDate?.().toISOString();
+          return {
+            id: docSnap.id,
+            name: data.name,
+            workspacePath: data.workspacePath || null,
+            updatedAt: updatedAtValue || null,
+          };
+        });
+        rows.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+        setProjects(rows);
+      }
     };
     loadProjects();
   }, [user]);
