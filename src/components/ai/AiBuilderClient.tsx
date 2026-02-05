@@ -94,6 +94,7 @@ export default function AiBuilderClient() {
   const chatInputRef = useRef<HTMLTextAreaElement | null>(null);
   const selectedFileRef = useRef<string | null>(null);
   const openFilesRef = useRef<string[]>([]);
+  const messagesRef = useRef<ChatMessage[]>(INITIAL_MESSAGES);
   const stopRequestedRef = useRef(false);
 
   const [agentStatus, setAgentStatus] = useState<AgentStatus>('offline');
@@ -491,7 +492,7 @@ export default function AiBuilderClient() {
   }, []);
 
   const loadChatForWorkspace = useCallback(
-    (path: string | null) => {
+    (path: string | null, fallbackMessages?: ChatMessage[]) => {
       if (typeof window === 'undefined') return;
       if (!path) {
         setMessages([]);
@@ -501,8 +502,17 @@ export default function AiBuilderClient() {
       try {
         const raw = window.localStorage.getItem(buildChatStorageKey(path));
         if (!raw) {
-          setMessages([]);
-          setHasPrompt(false);
+          if (fallbackMessages && fallbackMessages.length > 0) {
+            setMessages(fallbackMessages);
+            setHasPrompt(true);
+            window.localStorage.setItem(
+              buildChatStorageKey(path),
+              JSON.stringify(fallbackMessages)
+            );
+          } else {
+            setMessages([]);
+            setHasPrompt(false);
+          }
           return;
         }
         const parsed = JSON.parse(raw) as ChatMessage[];
@@ -576,7 +586,7 @@ export default function AiBuilderClient() {
           if (Array.isArray(data.files)) {
             setFileTree(data.files);
           }
-          loadChatForWorkspace(workspacePath);
+          loadChatForWorkspace(workspacePath, messagesRef.current);
           saveWorkspaceName(workspacePath, displayName);
           persistLastWorkspace(displayName || data.name, workspacePath);
           await refreshFiles(undefined, true);
@@ -960,7 +970,7 @@ export default function AiBuilderClient() {
               setFileTree(msg.files);
             }
             setHasWorkspace(true);
-            loadChatForWorkspace(workspacePath);
+            loadChatForWorkspace(workspacePath, messagesRef.current);
             saveWorkspaceName(workspacePath, displayName);
             persistLastWorkspace(displayName || name, workspacePath);
             refreshFiles(undefined, true);
@@ -1053,6 +1063,10 @@ export default function AiBuilderClient() {
     if (!user || !workspacePath || !workspaceLabel || !hasWorkspace) return;
     void saveProject(workspaceLabel, workspacePath);
   }, [user, workspaceLabel, workspacePath, hasWorkspace, saveProject]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     if (!workspacePath || !hasWorkspace) return;
