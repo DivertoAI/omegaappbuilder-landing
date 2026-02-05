@@ -167,69 +167,6 @@ export default function AiBuilderClient() {
     runCommand('new', name ? { name } : undefined);
   }, [runCommand]);
 
-  const renameWorkspace = useCallback(async () => {
-    if (!requireAuth()) return;
-    if (!workspacePath) {
-      setRenameStatus('error');
-      setRenameMessage('No workspace selected.');
-      return;
-    }
-    const nextName = workspaceNameDraft.trim();
-    if (!nextName) {
-      setRenameStatus('error');
-      setRenameMessage('Enter a workspace name.');
-      return;
-    }
-    try {
-      setRenameStatus('saving');
-      setRenameMessage('');
-      const renameUrl = new URL(agentHttpUrl);
-      renameUrl.pathname = '/workspaces/rename';
-      const response = await fetch(renameUrl.toString(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(agentToken ? { 'x-omega-token': agentToken } : {}),
-        },
-        body: JSON.stringify({
-          path: workspacePath,
-          name: nextName,
-        }),
-      });
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-      const payload = await response.json();
-      const newName = payload?.name || nextName;
-      const newPath = payload?.path || workspacePath;
-      setWorkspaceLabel(newName);
-      setWorkspacePath(newPath);
-      setRenameStatus('success');
-      setRenameMessage('Workspace renamed.');
-      if (newPath) {
-        await saveProject(newName, newPath);
-      }
-      await refreshFiles(undefined, true);
-      void loadProjects();
-      setTimeout(() => {
-        setRenameStatus('idle');
-        setRenameMessage('');
-      }, 1500);
-    } catch (error) {
-      setRenameStatus('error');
-      setRenameMessage(error instanceof Error ? error.message : 'Rename failed.');
-    }
-  }, [
-    agentHttpUrl,
-    agentToken,
-    loadProjects,
-    refreshFiles,
-    requireAuth,
-    saveProject,
-    workspaceNameDraft,
-    workspacePath,
-  ]);
-
   const sendSimulatorRequest = useCallback(
     (platform: 'ios' | 'android', url: string) => {
       if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -356,6 +293,69 @@ export default function AiBuilderClient() {
     },
     [user, loadProjects]
   );
+
+  const renameWorkspace = useCallback(async () => {
+    if (!requireAuth()) return;
+    if (!workspacePath) {
+      setRenameStatus('error');
+      setRenameMessage('No workspace selected.');
+      return;
+    }
+    const nextName = workspaceNameDraft.trim();
+    if (!nextName) {
+      setRenameStatus('error');
+      setRenameMessage('Enter a workspace name.');
+      return;
+    }
+    try {
+      setRenameStatus('saving');
+      setRenameMessage('');
+      const renameUrl = new URL(agentHttpUrl);
+      renameUrl.pathname = '/workspaces/rename';
+      const response = await fetch(renameUrl.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(agentToken ? { 'x-omega-token': agentToken } : {}),
+        },
+        body: JSON.stringify({
+          path: workspacePath,
+          name: nextName,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      const payload = await response.json();
+      const newName = payload?.name || nextName;
+      const newPath = payload?.path || workspacePath;
+      setWorkspaceLabel(newName);
+      setWorkspacePath(newPath);
+      setRenameStatus('success');
+      setRenameMessage('Workspace renamed.');
+      if (newPath) {
+        await saveProject(newName, newPath);
+      }
+      await refreshFiles(undefined, true);
+      void loadProjects();
+      setTimeout(() => {
+        setRenameStatus('idle');
+        setRenameMessage('');
+      }, 1500);
+    } catch (error) {
+      setRenameStatus('error');
+      setRenameMessage(error instanceof Error ? error.message : 'Rename failed.');
+    }
+  }, [
+    agentHttpUrl,
+    agentToken,
+    loadProjects,
+    refreshFiles,
+    requireAuth,
+    saveProject,
+    workspaceNameDraft,
+    workspacePath,
+  ]);
 
   const closeFileTab = (path: string) => {
     const nextTabs = openFilesRef.current.filter((item) => item !== path);
