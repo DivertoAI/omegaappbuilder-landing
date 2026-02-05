@@ -330,6 +330,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.url?.startsWith('/workspaces/rename') && req.method === 'POST') {
+    handleWorkspaceRename(req, res);
+    return;
+  }
+
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('Omega local agent running');
 });
@@ -1434,6 +1439,60 @@ const handleWorkspaceSelect = async (req, res) => {
   } catch (error) {
     res.writeHead(500, { 'Content-Type': 'text/plain' });
     res.end(error instanceof Error ? error.message : 'Failed to select workspace');
+  }
+};
+
+const handleWorkspaceRename = async (req, res) => {
+  const auth = authorizeRequest(req);
+  if (!auth.ok) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    res.end(auth.message || 'Forbidden');
+    return;
+  }
+
+  try {
+    const body = await readJsonBody(req, 1024 * 1024);
+    const rawPath = body?.path ? String(body.path) : '';
+    const rawName = body?.name ? String(body.name) : '';
+    const workspaceDir = resolveWorkspaceDir(rawPath);
+    if (!workspaceDir) {
+      res.writeHead(400, { 'Content-Type': 'text/plain' });
+      res.end('Invalid workspace path');
+      return;
+    }
+    const safeName = sanitizeName(rawName);
+    if (!safeName) {
+      res.writeHead(400, { 'Content-Type': 'text/plain' });
+      res.end('Invalid workspace name');
+      return;
+    }
+    const targetDir = path.join(WORKSPACE_ROOT_REAL, safeName);
+    if (fs.existsSync(targetDir) && path.resolve(targetDir) !== workspaceDir) {
+      res.writeHead(409, { 'Content-Type': 'text/plain' });
+      res.end('Workspace name already exists');
+      return;
+    }
+    fs.renameSync(workspaceDir, targetDir);
+    currentWorkspace = targetDir;
+    const files = listFiles(targetDir, targetDir);
+    broadcast({
+      type: 'workspace',
+      name: path.basename(targetDir),
+      path: targetDir,
+      files,
+    });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(
+      JSON.stringify({
+        ok: true,
+        name: path.basename(targetDir),
+        path: targetDir,
+        files,
+      })
+    );
+  } catch (error) {
+    res.writeHead(500, { 'Content-Type': 'text/plain' });
+    res.end(error instanceof Error ? error.message : 'Rename failed');
   }
 };
 

@@ -135,7 +135,18 @@ export default function AiBuilderClient() {
   const [projectsLoading, setProjectsLoading] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [workspaceNameDraft, setWorkspaceNameDraft] = useState('');
+  const [renameStatus, setRenameStatus] = useState<'idle' | 'saving' | 'error' | 'success'>('idle');
+  const [renameMessage, setRenameMessage] = useState('');
   const workspaceNameRef = useRef('');
+
+  const resolveWorkspaceDisplayName = useCallback(
+    (path?: string | null, fallback?: string) => {
+      if (!path) return fallback || 'Workspace';
+      const parts = path.split('/');
+      return parts[parts.length - 1] || fallback || 'Workspace';
+    },
+    []
+  );
 
   const requireAuth = useCallback(() => {
     if (user) return true;
@@ -155,6 +166,69 @@ export default function AiBuilderClient() {
     const name = workspaceNameRef.current.trim();
     runCommand('new', name ? { name } : undefined);
   }, [runCommand]);
+
+  const renameWorkspace = useCallback(async () => {
+    if (!requireAuth()) return;
+    if (!workspacePath) {
+      setRenameStatus('error');
+      setRenameMessage('No workspace selected.');
+      return;
+    }
+    const nextName = workspaceNameDraft.trim();
+    if (!nextName) {
+      setRenameStatus('error');
+      setRenameMessage('Enter a workspace name.');
+      return;
+    }
+    try {
+      setRenameStatus('saving');
+      setRenameMessage('');
+      const renameUrl = new URL(agentHttpUrl);
+      renameUrl.pathname = '/workspaces/rename';
+      const response = await fetch(renameUrl.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(agentToken ? { 'x-omega-token': agentToken } : {}),
+        },
+        body: JSON.stringify({
+          path: workspacePath,
+          name: nextName,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      const payload = await response.json();
+      const newName = payload?.name || nextName;
+      const newPath = payload?.path || workspacePath;
+      setWorkspaceLabel(newName);
+      setWorkspacePath(newPath);
+      setRenameStatus('success');
+      setRenameMessage('Workspace renamed.');
+      if (newPath) {
+        await saveProject(newName, newPath);
+      }
+      await refreshFiles(undefined, true);
+      void loadProjects();
+      setTimeout(() => {
+        setRenameStatus('idle');
+        setRenameMessage('');
+      }, 1500);
+    } catch (error) {
+      setRenameStatus('error');
+      setRenameMessage(error instanceof Error ? error.message : 'Rename failed.');
+    }
+  }, [
+    agentHttpUrl,
+    agentToken,
+    loadProjects,
+    refreshFiles,
+    requireAuth,
+    saveProject,
+    workspaceNameDraft,
+    workspacePath,
+  ]);
 
   const sendSimulatorRequest = useCallback(
     (platform: 'ios' | 'android', url: string) => {
@@ -451,13 +525,17 @@ export default function AiBuilderClient() {
           throw new Error(await response.text());
         }
         const payload = await response.json();
-        if (payload?.name) {
-          setWorkspaceLabel(payload.name);
-          setHasWorkspace(true);
-          setWorkspacePath(payload.path || project.workspacePath || null);
-          if (Array.isArray(payload.files)) {
-            setFileTree(payload.files);
-          }
+          if (payload?.name) {
+            const workspacePath = payload.path || project.workspacePath || null;
+            const displayName = resolveWorkspaceDisplayName(workspacePath, payload.name);
+            setWorkspaceLabel(displayName);
+            setWorkspaceNameDraft(displayName);
+            workspaceNameRef.current = displayName;
+            setHasWorkspace(true);
+            setWorkspacePath(workspacePath);
+            if (Array.isArray(payload.files)) {
+              setFileTree(payload.files);
+            }
           await refreshFiles(undefined, true);
           if (project.workspacePath) {
             await saveProject(project.name, project.workspacePath);
@@ -658,7 +736,10 @@ export default function AiBuilderClient() {
           if (msg.type === 'workspace') {
             const name = typeof msg.name === 'string' ? msg.name : 'Workspace';
             const workspacePath = typeof msg.path === 'string' ? msg.path : null;
-            setWorkspaceLabel(name);
+            const displayName = resolveWorkspaceDisplayName(workspacePath, name);
+            setWorkspaceLabel(displayName);
+            setWorkspaceNameDraft(displayName);
+            workspaceNameRef.current = displayName;
             setWorkspacePath(workspacePath);
             if (Array.isArray(msg.files)) {
               setFileTree(msg.files);
@@ -880,6 +961,8 @@ export default function AiBuilderClient() {
     setLastUsage(null);
     setWorkspaceNameDraft('');
     workspaceNameRef.current = '';
+    setRenameStatus('idle');
+    setRenameMessage('');
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: 'reset' }));
     }
@@ -1523,7 +1606,7 @@ export default function AiBuilderClient() {
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {[
-                    { key: 'new', label: 'Create workspace' },
+                    { key: 'new', label: 'Rename workspace' },
                     { key: 'build', label: 'Rebuild with Omega Agent' },
                     { key: 'stop', label: 'Stop build' },
                     { key: 'lint', label: 'Run lint' },
@@ -1532,14 +1615,20 @@ export default function AiBuilderClient() {
                   ].map((action) => {
                     const disabled =
                       action.key === 'new'
-                        ? !hasPrompt
+                        ? !hasWorkspace
                         : action.key === 'stop'
                         ? !isBuilding
                         : !hasWorkspace || isBuilding;
                     return (
                       <button
                         key={action.key}
-                        onClick={() => handleQuickAction(action.key)}
+                        onClick={() => {
+                          if (action.key === 'new') {
+                            renameWorkspace();
+                          } else {
+                            handleQuickAction(action.key);
+                          }
+                        }}
                         disabled={disabled}
                         className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
                           disabled
@@ -1552,6 +1641,19 @@ export default function AiBuilderClient() {
                     );
                   })}
                 </div>
+                {renameMessage && (
+                  <div
+                    className={`mt-2 rounded-lg border px-2 py-1 text-[10px] ${
+                      renameStatus === 'error'
+                        ? 'border-rose-200 bg-rose-50 text-rose-600'
+                        : renameStatus === 'success'
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
+                        : 'border-slate-200 bg-slate-50 text-slate-500'
+                    }`}
+                  >
+                    {renameMessage}
+                  </div>
+                )}
               </div>
               <div className="border-b border-slate-200 px-4 py-3">
                 <div className="flex items-center justify-between">
