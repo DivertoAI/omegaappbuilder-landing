@@ -266,7 +266,7 @@ const applyCors = (req, res) => {
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-omega-token');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-omega-token, x-omega-user-email');
 };
 
 const isLocalRequest = (req) => {
@@ -1467,8 +1467,12 @@ const handleWorkspaceSelect = async (req, res) => {
     const body = await readJsonBody(req, 1024 * 1024);
     const rawPath = body?.path ? String(body.path) : '';
     const rawName = body?.name ? String(body.name) : '';
-    const target = rawPath || (rawName ? path.join(WORKSPACE_ROOT_REAL, rawName) : '');
-    const workspaceDir = resolveWorkspaceDir(target);
+    const primaryTarget = rawPath || '';
+    const fallbackTarget = rawName ? path.join(WORKSPACE_ROOT_REAL, rawName) : '';
+    let workspaceDir = resolveWorkspaceDir(primaryTarget);
+    if (!workspaceDir && fallbackTarget) {
+      workspaceDir = resolveWorkspaceDir(fallbackTarget);
+    }
     if (!workspaceDir) {
       res.writeHead(400, { 'Content-Type': 'text/plain' });
       res.end('Invalid workspace path');

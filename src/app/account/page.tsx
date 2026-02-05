@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut, updateProfile, User } from 'firebase/auth';
 import {
@@ -33,6 +34,7 @@ type Profile = {
 };
 
 export default function AccountPage() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -41,6 +43,9 @@ export default function AccountPage() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'error' | 'success'>('idle');
   const [saveMessage, setSaveMessage] = useState('');
   const [renameMessage, setRenameMessage] = useState('');
+  const [openMessage, setOpenMessage] = useState('');
+
+  const agentToken = process.env.NEXT_PUBLIC_LOCAL_AGENT_TOKEN || '';
 
   const buildAgentUrl = () => {
     const explicit = process.env.NEXT_PUBLIC_LOCAL_AGENT_HTTP;
@@ -51,6 +56,48 @@ export default function AccountPage() {
       return `${protocol}://${host}:8787`;
     }
     return 'http://localhost:8787';
+  };
+
+  const openWorkspace = async (project: Project) => {
+    if (!user) return;
+    setOpenMessage('');
+    try {
+      if (typeof window !== 'undefined') {
+        const pathValue = project.workspacePath || null;
+        window.localStorage.setItem(
+          'omega:lastWorkspace',
+          JSON.stringify({
+            name: project.name,
+            path: pathValue,
+          })
+        );
+        if (pathValue) {
+          window.localStorage.setItem(`omega:workspaceName:${pathValue}`, project.name);
+        }
+      }
+      const selectUrl = new URL(buildAgentUrl());
+      selectUrl.pathname = '/workspaces/select';
+      const response = await fetch(selectUrl.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(agentToken ? { 'x-omega-token': agentToken } : {}),
+          ...(user.email ? { 'x-omega-user-email': user.email } : {}),
+        },
+        body: JSON.stringify({
+          path: project.workspacePath || undefined,
+          name: project.name,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      router.push('/ai');
+    } catch (error) {
+      setOpenMessage(
+        error instanceof Error ? `Open failed: ${error.message}` : 'Open failed.'
+      );
+    }
   };
 
   useEffect(() => {
@@ -102,7 +149,9 @@ export default function AccountPage() {
             name: string;
             workspacePath?: string | null;
             updatedAt?: { toDate?: () => Date } | string | null;
+            deletedAt?: { toDate?: () => Date } | string | null;
           };
+          if (data.deletedAt) return null;
           const updatedAtValue =
             typeof data.updatedAt === 'string'
               ? data.updatedAt
@@ -113,7 +162,7 @@ export default function AccountPage() {
             workspacePath: data.workspacePath || null,
             updatedAt: updatedAtValue || null,
           };
-        });
+        }).filter(Boolean) as Project[];
         setProjects(rows);
       } catch {
         const q = query(
@@ -126,7 +175,9 @@ export default function AccountPage() {
             name: string;
             workspacePath?: string | null;
             updatedAt?: { toDate?: () => Date } | string | null;
+            deletedAt?: { toDate?: () => Date } | string | null;
           };
+          if (data.deletedAt) return null;
           const updatedAtValue =
             typeof data.updatedAt === 'string'
               ? data.updatedAt
@@ -137,7 +188,7 @@ export default function AccountPage() {
             workspacePath: data.workspacePath || null,
             updatedAt: updatedAtValue || null,
           };
-        });
+        }).filter(Boolean) as Project[];
         rows.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
         setProjects(rows);
       }
@@ -160,6 +211,9 @@ export default function AccountPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(process.env.NEXT_PUBLIC_LOCAL_AGENT_TOKEN
+            ? { 'x-omega-token': process.env.NEXT_PUBLIC_LOCAL_AGENT_TOKEN }
+            : {}),
           ...(user?.email ? { 'x-omega-user-email': user.email } : {}),
         },
         body: JSON.stringify({
@@ -200,6 +254,20 @@ export default function AccountPage() {
       setRenameMessage(error instanceof Error ? error.message : 'Rename failed.');
       setTimeout(() => setRenameMessage(''), 2000);
     }
+  };
+
+  const handleDeleteProject = async (project: Project) => {
+    if (!user) return;
+    const confirmed = window.confirm(`Delete workspace "${project.name}"? This cannot be undone.`);
+    if (!confirmed) return;
+    await setDoc(
+      doc(firestore, 'projects', project.id),
+      {
+        deletedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    setProjects((prev) => prev.filter((item) => item.id !== project.id));
   };
 
   const handleProfileSave = async () => {
@@ -393,19 +461,29 @@ export default function AccountPage() {
                         >
                           Rename
                         </button>
-                        <Link
-                          href="/ai"
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProject(project)}
+                          className="rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                        >
+                          Delete
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openWorkspace(project)}
                           className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                         >
                           Open
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   ))
                 )}
               </div>
-              {renameMessage && (
-                <p className="mt-3 text-xs font-semibold text-slate-500">{renameMessage}</p>
+              {(renameMessage || openMessage) && (
+                <p className="mt-3 text-xs font-semibold text-slate-500">
+                  {renameMessage || openMessage}
+                </p>
               )}
             </div>
           </div>

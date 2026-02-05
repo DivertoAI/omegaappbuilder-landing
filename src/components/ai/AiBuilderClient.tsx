@@ -139,6 +139,7 @@ export default function AiBuilderClient() {
   const [renameStatus, setRenameStatus] = useState<'idle' | 'saving' | 'error' | 'success'>('idle');
   const [renameMessage, setRenameMessage] = useState('');
   const workspaceNameRef = useRef('');
+  const hasHydratedWorkspaceRef = useRef(false);
   const userEmail = user?.email || '';
   const isAdminUser = Boolean(userEmail) && userEmail.toLowerCase() === ADMIN_EMAIL;
   const agentHeaders = useMemo(
@@ -258,7 +259,9 @@ export default function AiBuilderClient() {
           name: string;
           workspacePath?: string | null;
           updatedAt?: { toDate?: () => Date } | string | null;
+          deletedAt?: { toDate?: () => Date } | string | null;
         };
+        if (data.deletedAt) return null;
         const updatedAtValue =
           typeof data.updatedAt === 'string'
             ? data.updatedAt
@@ -269,7 +272,7 @@ export default function AiBuilderClient() {
           workspacePath: data.workspacePath || null,
           updatedAt: updatedAtValue || null,
         };
-      });
+      }).filter(Boolean) as ProjectItem[];
       setProjects(rows);
     } catch {
       // ignore
@@ -282,6 +285,13 @@ export default function AiBuilderClient() {
     async (name: string, workspacePath: string) => {
       if (!user) return;
       try {
+        const activeLimit = planKey === 'starter' ? 2 : Number.POSITIVE_INFINITY;
+        if (!isAdminUser && projects.length >= activeLimit) {
+          setLogs((prev) =>
+            [...prev, 'Starter plan allows up to 2 saved projects. Upgrade to save more.'].slice(-200)
+          );
+          return;
+        }
         const safeId = `${user.uid}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
         const payload: Record<string, unknown> = {
           userId: user.uid,
@@ -299,7 +309,7 @@ export default function AiBuilderClient() {
         // ignore project save failures
       }
     },
-    [user, loadProjects]
+    [user, loadProjects, planKey, projects.length, isAdminUser]
   );
 
   const closeFileTab = (path: string) => {
@@ -446,6 +456,156 @@ export default function AiBuilderClient() {
     [agentHttpUrl, agentHeaders, buildPreviewUrl, loadFile]
   );
 
+  const buildWorkspaceNameKey = useCallback((path: string | null) => {
+    if (!path) return '';
+    return `omega:workspaceName:${path}`;
+  }, []);
+
+  const readWorkspaceName = useCallback(
+    (path: string | null) => {
+      if (typeof window === 'undefined' || !path) return '';
+      try {
+        return window.localStorage.getItem(buildWorkspaceNameKey(path)) || '';
+      } catch {
+        return '';
+      }
+    },
+    [buildWorkspaceNameKey]
+  );
+
+  const saveWorkspaceName = useCallback(
+    (path: string | null, name: string) => {
+      if (typeof window === 'undefined' || !path || !name) return;
+      try {
+        window.localStorage.setItem(buildWorkspaceNameKey(path), name);
+      } catch {
+        // Ignore storage failures.
+      }
+    },
+    [buildWorkspaceNameKey]
+  );
+
+  const buildChatStorageKey = useCallback((path: string | null) => {
+    if (!path) return '';
+    return `omega:chat:${path}`;
+  }, []);
+
+  const loadChatForWorkspace = useCallback(
+    (path: string | null) => {
+      if (typeof window === 'undefined') return;
+      if (!path) {
+        setMessages([]);
+        setHasPrompt(false);
+        return;
+      }
+      try {
+        const raw = window.localStorage.getItem(buildChatStorageKey(path));
+        if (!raw) {
+          setMessages([]);
+          setHasPrompt(false);
+          return;
+        }
+        const parsed = JSON.parse(raw) as ChatMessage[];
+        if (Array.isArray(parsed)) {
+          const safeMessages = parsed.filter(
+            (message) =>
+              message &&
+              (message.role === 'user' || message.role === 'assistant') &&
+              typeof message.text === 'string'
+          );
+          setMessages(safeMessages);
+          setHasPrompt(safeMessages.length > 0);
+        }
+      } catch {
+        setMessages([]);
+        setHasPrompt(false);
+      }
+    },
+    [buildChatStorageKey]
+  );
+
+  const persistLastWorkspace = useCallback((name: string, workspacePath: string | null) => {
+    if (typeof window === 'undefined' || !name) return;
+    try {
+      window.localStorage.setItem(
+        'omega:lastWorkspace',
+        JSON.stringify({
+          name,
+          path: workspacePath,
+        })
+      );
+    } catch {
+      // Ignore storage failures.
+    }
+  }, []);
+
+  const selectWorkspaceByPath = useCallback(
+    async (payload: { name?: string | null; path?: string | null }) => {
+      if (!payload?.name && !payload?.path) return;
+      try {
+        const selectUrl = new URL(agentHttpUrl);
+        selectUrl.pathname = '/workspaces/select';
+        const response = await fetch(selectUrl.toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...agentHeaders,
+          },
+          body: JSON.stringify({
+            path: payload.path || undefined,
+            name: payload.name || undefined,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+        const data = (await response.json()) as {
+          name?: string;
+          path?: string;
+          files?: string[];
+        };
+        if (data?.name) {
+          const workspacePath = data.path || payload.path || null;
+          const nameOverride = payload.name || readWorkspaceName(workspacePath) || data.name;
+          const displayName = nameOverride || resolveWorkspaceDisplayName(workspacePath, data.name);
+          setWorkspaceLabel(displayName);
+          setWorkspaceNameDraft(displayName);
+          workspaceNameRef.current = displayName;
+          setWorkspacePath(workspacePath);
+          setHasWorkspace(true);
+          if (Array.isArray(data.files)) {
+            setFileTree(data.files);
+          }
+          loadChatForWorkspace(workspacePath);
+          saveWorkspaceName(workspacePath, displayName);
+          persistLastWorkspace(displayName || data.name, workspacePath);
+          await refreshFiles(undefined, true);
+          if (workspacePath) {
+            await saveProject(data.name, workspacePath);
+          }
+        }
+      } catch (error) {
+        setLogs((prev) => [
+          ...prev,
+          error instanceof Error
+            ? `Workspace restore failed: ${error.message}`
+            : 'Workspace restore failed.',
+        ].slice(-200));
+      }
+    },
+    [
+      agentHeaders,
+      agentHttpUrl,
+      loadChatForWorkspace,
+      readWorkspaceName,
+      saveWorkspaceName,
+      persistLastWorkspace,
+      refreshFiles,
+      resolveWorkspaceDisplayName,
+      saveProject,
+    ]
+  );
+
   const renameWorkspace = useCallback(async () => {
     if (!requireAuth()) return;
     if (!workspacePath) {
@@ -483,6 +643,7 @@ export default function AiBuilderClient() {
       const newPath = payload?.path || workspacePath;
       setWorkspaceLabel(newName);
       setWorkspacePath(newPath);
+      saveWorkspaceName(newPath, newName);
       setRenameStatus('success');
       setRenameMessage('Workspace renamed.');
       if (newPath) {
@@ -531,17 +692,18 @@ export default function AiBuilderClient() {
           throw new Error(await response.text());
         }
         const payload = await response.json();
-          if (payload?.name) {
-            const workspacePath = payload.path || project.workspacePath || null;
-            const displayName = resolveWorkspaceDisplayName(workspacePath, payload.name);
-            setWorkspaceLabel(displayName);
-            setWorkspaceNameDraft(displayName);
-            workspaceNameRef.current = displayName;
-            setHasWorkspace(true);
-            setWorkspacePath(workspacePath);
-            if (Array.isArray(payload.files)) {
-              setFileTree(payload.files);
-            }
+        if (payload?.name) {
+          const workspacePath = payload.path || project.workspacePath || null;
+          const displayName = resolveWorkspaceDisplayName(workspacePath, payload.name);
+          setWorkspaceLabel(displayName);
+          setWorkspaceNameDraft(displayName);
+          workspaceNameRef.current = displayName;
+          setHasWorkspace(true);
+          setWorkspacePath(workspacePath);
+          if (Array.isArray(payload.files)) {
+            setFileTree(payload.files);
+          }
+          persistLastWorkspace(payload.name, workspacePath);
           await refreshFiles(undefined, true);
           if (project.workspacePath) {
             await saveProject(project.name, project.workspacePath);
@@ -554,7 +716,42 @@ export default function AiBuilderClient() {
         ].slice(-200));
       }
     },
-    [agentHttpUrl, agentHeaders, refreshFiles, requireAuth, resolveWorkspaceDisplayName, saveProject]
+    [
+      agentHttpUrl,
+      agentHeaders,
+      persistLastWorkspace,
+      refreshFiles,
+      requireAuth,
+      resolveWorkspaceDisplayName,
+      saveProject,
+    ]
+  );
+
+  const deleteProject = useCallback(
+    async (project: ProjectItem) => {
+      if (!requireAuth()) return;
+      if (!user) return;
+      const confirmed = window.confirm(`Delete workspace "${project.name}"? This cannot be undone.`);
+      if (!confirmed) return;
+      try {
+        await setDoc(
+          doc(firestore, 'projects', project.id),
+          {
+            deletedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+        setProjects((prev) => prev.filter((item) => item.id !== project.id));
+      } catch (error) {
+        setLogs((prev) => [
+          ...prev,
+          error instanceof Error
+            ? `Delete failed: ${error.message}`
+            : 'Delete failed.',
+        ].slice(-200));
+      }
+    },
+    [requireAuth, user]
   );
 
   const fileTreeNodes = useMemo(() => {
@@ -753,7 +950,8 @@ export default function AiBuilderClient() {
           if (msg.type === 'workspace') {
             const name = typeof msg.name === 'string' ? msg.name : 'Workspace';
             const workspacePath = typeof msg.path === 'string' ? msg.path : null;
-            const displayName = resolveWorkspaceDisplayName(workspacePath, name);
+            const storedName = readWorkspaceName(workspacePath);
+            const displayName = storedName || resolveWorkspaceDisplayName(workspacePath, name);
             setWorkspaceLabel(displayName);
             setWorkspaceNameDraft(displayName);
             workspaceNameRef.current = displayName;
@@ -762,6 +960,9 @@ export default function AiBuilderClient() {
               setFileTree(msg.files);
             }
             setHasWorkspace(true);
+            loadChatForWorkspace(workspacePath);
+            saveWorkspaceName(workspacePath, displayName);
+            persistLastWorkspace(displayName || name, workspacePath);
             refreshFiles(undefined, true);
             if (workspacePath) {
               void saveProject(name, workspacePath);
@@ -835,9 +1036,36 @@ export default function AiBuilderClient() {
   }, [user, loadProjects]);
 
   useEffect(() => {
+    if (hasWorkspace || !user || agentStatus !== 'connected') return;
+    if (hasHydratedWorkspaceRef.current) return;
+    hasHydratedWorkspaceRef.current = true;
+    try {
+      const raw = window.localStorage.getItem('omega:lastWorkspace');
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { name?: string; path?: string | null };
+      void selectWorkspaceByPath(parsed);
+    } catch {
+      // Ignore storage errors.
+    }
+  }, [agentStatus, hasWorkspace, selectWorkspaceByPath, user]);
+
+  useEffect(() => {
     if (!user || !workspacePath || !workspaceLabel || !hasWorkspace) return;
     void saveProject(workspaceLabel, workspacePath);
   }, [user, workspaceLabel, workspacePath, hasWorkspace, saveProject]);
+
+  useEffect(() => {
+    if (!workspacePath || !hasWorkspace) return;
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(
+        buildChatStorageKey(workspacePath),
+        JSON.stringify(messages)
+      );
+    } catch {
+      // Ignore storage failures.
+    }
+  }, [buildChatStorageKey, hasWorkspace, messages, workspacePath]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1721,13 +1949,22 @@ export default function AiBuilderClient() {
                               : '—'}
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => openProject(project)}
-                          className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
-                        >
-                          Open
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => deleteProject(project)}
+                            className="rounded-full border border-rose-200 px-2 py-1 text-[10px] font-semibold text-rose-600 hover:bg-rose-50"
+                          >
+                            Delete
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openProject(project)}
+                            className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
+                          >
+                            Open
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
@@ -1962,6 +2199,16 @@ export default function AiBuilderClient() {
                         >
                           {importMessage}
                         </p>
+                      )}
+                      {importStatus === 'uploading' && (
+                        <div className="mt-3">
+                          <div className="h-2 w-40 overflow-hidden rounded-full bg-slate-200/70">
+                            <div className="h-full w-full animate-[pulse_1.6s_ease-in-out_infinite] bg-gradient-to-r from-fuchsia-400 via-indigo-400 to-sky-400" />
+                          </div>
+                          <p className="mt-2 text-[11px] font-semibold text-slate-500">
+                            Uploading large project… keep this tab open.
+                          </p>
+                        </div>
                       )}
                     </div>
                     <button
