@@ -4,7 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { firebaseAuth } from '@/lib/firebaseClient';
+import { doc, getDoc } from 'firebase/firestore';
+import { firebaseAuth, firestore } from '@/lib/firebaseClient';
 
 type NavItem = {
   label: string;
@@ -69,6 +70,25 @@ export default function OmegaTopNav({
     let cancelled = false;
     const loadCredits = async (token?: string | null) => {
       try {
+        if (firebaseAuth && firestore) {
+          const current = firebaseAuth.currentUser;
+          if (current) {
+            const snapshot = await getDoc(doc(firestore, 'profiles', current.uid));
+            if (snapshot.exists()) {
+              const data = snapshot.data() as {
+                credits?: number;
+                plan?: string;
+                subscriptionStatus?: string;
+              };
+              const isActive = data.subscriptionStatus === 'active' || data.plan === 'starter';
+              const nextPlan = isActive ? data.plan || 'starter' : 'starter';
+              if (cancelled) return;
+              setCredits(typeof data.credits === 'number' ? data.credits : null);
+              setPlanKey(nextPlan);
+              return;
+            }
+          }
+        }
         const response = await fetch('/api/credits', {
           cache: 'no-store',
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,

@@ -1,6 +1,10 @@
 'use client';
 
 import Script from 'next/script';
+import { useEffect, useState } from 'react';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { firebaseAuth, firestore } from '@/lib/firebaseClient';
 
 type Plan = {
   name: string;
@@ -22,6 +26,23 @@ type Props = {
 };
 
 export default function PricingPlansClient({ plans, planActions, calendlyUrl }: Props) {
+  const [user, setUser] = useState<User | null>(firebaseAuth?.currentUser || null);
+
+  useEffect(() => {
+    if (!firebaseAuth) return;
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (nextUser) => {
+      setUser(nextUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const planCredits: Record<string, number> = {
+    starter: 0.25,
+    core: 25,
+    teams: 40,
+    enterprise: 100,
+  };
+
   const handlePlanAction = async (plan: string) => {
     if (plan === 'starter') {
       window.location.href = '/signup';
@@ -29,6 +50,12 @@ export default function PricingPlansClient({ plans, planActions, calendlyUrl }: 
     }
     if (plan === 'enterprise') {
       window.open(calendlyUrl, '_blank', 'noopener');
+      return;
+    }
+
+    if (!firebaseAuth || !firestore || !user) {
+      alert('Please log in before subscribing.');
+      window.location.href = '/login';
       return;
     }
 
@@ -41,6 +68,7 @@ export default function PricingPlansClient({ plans, planActions, calendlyUrl }: 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         plan,
+        userId: user.uid,
         customer: {
           name: name || undefined,
           email: email || undefined,
@@ -66,6 +94,22 @@ export default function PricingPlansClient({ plans, planActions, calendlyUrl }: 
         contact: phone,
       },
       theme: { color: '#7c3aed' },
+      handler: async (response: { razorpay_subscription_id?: string }) => {
+        const credits = planCredits[plan] ?? 0;
+        await setDoc(
+          doc(firestore, 'profiles', user.uid),
+          {
+            plan,
+            credits,
+            subscriptionStatus: 'active',
+            subscriptionProvider: 'razorpay',
+            subscriptionId: response.razorpay_subscription_id || data.subscriptionId || null,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+        window.location.href = '/ai';
+      },
     };
 
     const Razorpay = (window as { Razorpay?: new (options: Record<string, unknown>) => { open: () => void } })

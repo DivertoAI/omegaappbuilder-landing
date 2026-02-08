@@ -43,11 +43,18 @@ export default function SignupPage() {
     const snapshot = await getDoc(ref);
     const existing = snapshot.exists() ? snapshot.data() : null;
     const nextUsername = overrideUsername?.trim().toLowerCase() || existing?.username || null;
+    const nextPlan = existing?.plan || 'starter';
+    const nextCredits = typeof existing?.credits === 'number' ? existing.credits : 0.25;
+    const nextStatus =
+      existing?.subscriptionStatus || (nextPlan === 'starter' ? 'active' : 'inactive');
     await setDoc(
       ref,
       {
         email: user.email || existing?.email || null,
         username: nextUsername,
+        plan: nextPlan,
+        credits: nextCredits,
+        subscriptionStatus: nextStatus,
         updatedAt: serverTimestamp(),
         createdAt: existing?.createdAt || serverTimestamp(),
       },

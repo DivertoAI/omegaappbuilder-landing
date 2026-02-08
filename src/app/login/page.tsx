@@ -55,11 +55,18 @@ export default function LoginPage() {
     const ref = doc(firestore, 'profiles', user.uid);
     const snapshot = await getDoc(ref);
     const existing = snapshot.exists() ? snapshot.data() : null;
+    const nextPlan = existing?.plan || 'starter';
+    const nextCredits = typeof existing?.credits === 'number' ? existing.credits : 0.25;
+    const nextStatus =
+      existing?.subscriptionStatus || (nextPlan === 'starter' ? 'active' : 'inactive');
     await setDoc(
       ref,
       {
         email: user.email || existing?.email || null,
         username: existing?.username || null,
+        plan: nextPlan,
+        credits: nextCredits,
+        subscriptionStatus: nextStatus,
         updatedAt: serverTimestamp(),
         createdAt: existing?.createdAt || serverTimestamp(),
       },

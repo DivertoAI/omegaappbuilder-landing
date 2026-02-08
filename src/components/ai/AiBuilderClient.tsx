@@ -9,6 +9,7 @@ import {
   query,
   where,
   orderBy,
+  getDoc,
   getDocs,
   setDoc,
   doc,
@@ -132,6 +133,7 @@ export default function AiBuilderClient() {
   const [autonomyLabel, setAutonomyLabel] = useState('Standard');
   const [creditCap, setCreditCap] = useState<number | null>(null);
   const [lastUsage, setLastUsage] = useState<CreditsUsage | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'inactive'>('inactive');
   const [user, setUser] = useState<User | null>(null);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
@@ -165,6 +167,38 @@ export default function AiBuilderClient() {
     setShowAuthPrompt(true);
     return false;
   }, [user]);
+
+  const ensureCanBuild = useCallback(
+    (context?: string) => {
+      if (!requireAuth()) return false;
+      if (isAdminUser) return true;
+      if (typeof credits === 'number' && credits <= 0) {
+        setBuildStatus('Out of credits');
+        setIsBuilding(false);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            text:
+              'Out of credits. Upgrade your plan to keep building or wait for your next credit refresh.',
+          },
+        ]);
+        return false;
+      }
+      if (subscriptionStatus !== 'active' && planKey !== 'starter') {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            text: `Your subscription is inactive. Upgrade to continue ${context || 'building'}.`,
+          },
+        ]);
+        return false;
+      }
+      return true;
+    },
+    [requireAuth, isAdminUser, credits, subscriptionStatus, planKey]
+  );
 
   const runCommand = useCallback((command: string, payload?: { name?: string }) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -704,7 +738,9 @@ export default function AiBuilderClient() {
         const payload = await response.json();
         if (payload?.name) {
           const workspacePath = payload.path || project.workspacePath || null;
-          const displayName = resolveWorkspaceDisplayName(workspacePath, payload.name);
+          const storedName = readWorkspaceName(workspacePath);
+          const displayName =
+            storedName || project.name || resolveWorkspaceDisplayName(workspacePath, payload.name);
           setWorkspaceLabel(displayName);
           setWorkspaceNameDraft(displayName);
           workspaceNameRef.current = displayName;
@@ -713,10 +749,12 @@ export default function AiBuilderClient() {
           if (Array.isArray(payload.files)) {
             setFileTree(payload.files);
           }
+          loadChatForWorkspace(workspacePath, messagesRef.current);
+          saveWorkspaceName(workspacePath, displayName);
           persistLastWorkspace(payload.name, workspacePath);
           await refreshFiles(undefined, true);
           if (project.workspacePath) {
-            await saveProject(project.name, project.workspacePath);
+            await saveProject(displayName, project.workspacePath);
           }
         }
       } catch (error) {
@@ -729,11 +767,14 @@ export default function AiBuilderClient() {
     [
       agentHttpUrl,
       agentHeaders,
+      loadChatForWorkspace,
       persistLastWorkspace,
+      readWorkspaceName,
       refreshFiles,
       requireAuth,
       resolveWorkspaceDisplayName,
       saveProject,
+      saveWorkspaceName,
     ]
   );
 
@@ -1004,7 +1045,32 @@ export default function AiBuilderClient() {
         setAgentLabel('Omega 3');
         setAutonomyLabel('Elite');
         setCreditCap(null);
+        setSubscriptionStatus('active');
         return;
+      }
+      if (user && firestore) {
+        try {
+          const snapshot = await getDoc(doc(firestore, 'profiles', user.uid));
+          if (!snapshot.exists()) {
+            setSubscriptionStatus('inactive');
+          } else {
+            const data = snapshot.data() as { plan?: string; credits?: number; subscriptionStatus?: string };
+            const rawPlan = data.plan || 'starter';
+            const isActive = data.subscriptionStatus === 'active' || rawPlan === 'starter';
+            const nextPlan = isActive ? rawPlan : 'starter';
+            const meta = PLAN_META[nextPlan] || PLAN_META.starter;
+            setPlanKey(nextPlan);
+            setCredits(typeof data.credits === 'number' ? data.credits : null);
+            setAgentLabel(meta.agent);
+            setAutonomyLabel(meta.autonomy);
+            setCreditCap(meta.creditCap ?? null);
+            setSubscriptionStatus(isActive ? 'active' : 'inactive');
+            if (cancelled) return;
+            return;
+          }
+        } catch {
+          // ignore Firestore errors and fall back
+        }
       }
       try {
         const response = await fetch('/api/credits', {
@@ -1023,6 +1089,7 @@ export default function AiBuilderClient() {
         setAgentLabel(meta.agent);
         setAutonomyLabel(meta.autonomy);
         setCreditCap(meta.creditCap ?? null);
+        setSubscriptionStatus(nextPlan === 'starter' ? 'inactive' : 'active');
       } catch {
         // Ignore credit fetch errors.
       }
@@ -1031,7 +1098,7 @@ export default function AiBuilderClient() {
     return () => {
       cancelled = true;
     };
-  }, [isAdminUser]);
+  }, [isAdminUser, user]);
 
   useEffect(() => {
     if (!firebaseAuth) {
@@ -1208,7 +1275,7 @@ export default function AiBuilderClient() {
     });
 
   const handleStartBuild = () => {
-    if (!requireAuth()) return;
+    if (!ensureCanBuild('starting a new build')) return;
     setWorkspaceLabel('New workspace');
     setMessages([]);
     setLogs([]);
@@ -1241,6 +1308,7 @@ export default function AiBuilderClient() {
 
   const handleQuickAction = (action: string) => {
     if (!requireAuth()) return;
+    if (!['files', 'stop'].includes(action) && !ensureCanBuild(action)) return;
     if (action === 'new' && !hasPrompt) {
       setLogs((prev) => [
         ...prev,
@@ -1276,7 +1344,7 @@ export default function AiBuilderClient() {
   };
 
   const handleSend = () => {
-    if (!requireAuth()) return;
+    if (!ensureCanBuild('sending a new instruction')) return;
     const text = draft.trim();
     if (!text) return;
     setMessages((prev) => [...prev, { role: 'user', text }]);
