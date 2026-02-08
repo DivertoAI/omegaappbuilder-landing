@@ -16,6 +16,7 @@
     "next": "15.5.7",
     "nodemailer": "^7.0.6",
     "openai": "^6.2.0",
+    "razorpay": "^2.9.3",
     "react": "19.1.2",
     "react-calendly": "^4.4.0",
     "react-dom": "19.1.2",

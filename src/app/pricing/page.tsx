@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import OmegaTopNav from '@/components/layout/OmegaTopNav';
+import PricingPlansClient from '@/components/pricing/PricingPlansClient';
 
 export const metadata: Metadata = {
   title: 'Omega AI Builder Pricing',
@@ -82,6 +83,14 @@ export default function PricingPage() {
       ],
     },
   ];
+
+  const planActions = [
+    { plan: 'starter', label: 'Get started' },
+    { plan: 'core', label: 'Subscribe to Core' },
+    { plan: 'teams', label: 'Subscribe to Teams' },
+    { plan: 'enterprise', label: 'Talk to sales' },
+  ];
+
 
   const compareSections = [
     {
@@ -283,27 +292,7 @@ export default function PricingPage() {
               </p>
             </div>
           </div>
-          <div className="mt-8 grid gap-6 lg:grid-cols-4">
-            {plans.map((plan) => (
-              <div key={plan.name} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <p className="text-sm font-semibold text-slate-500">{plan.name}</p>
-                <p className="mt-3 text-3xl font-bold text-slate-900">{plan.price}</p>
-                <p className="mt-1 text-xs text-slate-500 uppercase tracking-wide">{plan.cadence}</p>
-                <p className="mt-4 text-sm font-semibold text-slate-900">{plan.summary}</p>
-                <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                  {plan.bullets.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <span className="mt-1 h-2 w-2 rounded-full bg-indigo-400" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button className="mt-6 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                  Choose {plan.name}
-                </button>
-              </div>
-            ))}
-          </div>
+          <PricingPlansClient plans={plans} planActions={planActions} calendlyUrl={calendlyUrl} />
         </div>
       </section>
 
