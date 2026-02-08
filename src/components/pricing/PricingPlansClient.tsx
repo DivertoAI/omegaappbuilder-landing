@@ -58,6 +58,7 @@ export default function PricingPlansClient({ plans, planActions, calendlyUrl }: 
       window.location.href = '/login';
       return;
     }
+    const db = firestore;
 
     const name = window.prompt('Your full name?') || '';
     const email = window.prompt('Billing email?') || '';
@@ -97,7 +98,7 @@ export default function PricingPlansClient({ plans, planActions, calendlyUrl }: 
       handler: async (response: { razorpay_subscription_id?: string }) => {
         const credits = planCredits[plan] ?? 0;
         await setDoc(
-          doc(firestore, 'profiles', user.uid),
+          doc(db, 'profiles', user.uid),
           {
             plan,
             credits,
