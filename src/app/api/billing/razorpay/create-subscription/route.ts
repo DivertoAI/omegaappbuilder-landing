@@ -61,10 +61,10 @@ export async function POST(request: Request) {
     plan_id: planId,
     total_count: 12,
     customer_notify: 1,
-    customer_id: customerId,
     notes: {
       plan,
       ...(userId ? { userId } : {}),
+      ...(customerId ? { customerId } : {}),
     },
   });
 
