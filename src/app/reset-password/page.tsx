@@ -22,6 +22,9 @@ export default function ResetPasswordPage() {
     const verify = async () => {
       if (!oobCode) return;
       try {
+        if (!firebaseAuth) {
+          throw new Error('Auth is not configured yet.');
+        }
         await verifyPasswordResetCode(firebaseAuth, oobCode);
         setVerified(true);
       } catch (error) {
@@ -34,6 +37,11 @@ export default function ResetPasswordPage() {
 
   const handleReset = async () => {
     if (!oobCode) return;
+    if (!firebaseAuth) {
+      setStatus('error');
+      setMessage('Auth is not configured yet.');
+      return;
+    }
     if (!password || password !== confirm) {
       setStatus('error');
       setMessage('Passwords do not match.');

@@ -24,6 +24,11 @@ export default function SignupPage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
+    if (!firebaseAuth) {
+      setMessage('Auth is not configured yet.');
+      setStatus('error');
+      return;
+    }
     const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
       if (user) {
         router.push('/ai');
@@ -33,6 +38,7 @@ export default function SignupPage() {
   }, [router]);
 
   const ensureProfile = async (user: User, overrideUsername?: string) => {
+    if (!firestore) return;
     const ref = doc(firestore, 'profiles', user.uid);
     const snapshot = await getDoc(ref);
     const existing = snapshot.exists() ? snapshot.data() : null;
@@ -50,6 +56,11 @@ export default function SignupPage() {
   };
 
   const handleSignup = async () => {
+    if (!firebaseAuth) {
+      setStatus('error');
+      setMessage('Auth is not configured yet.');
+      return;
+    }
     setStatus('loading');
     setMessage('');
     try {
@@ -65,10 +76,18 @@ export default function SignupPage() {
   };
 
   const handleProviderSignup = async (provider: 'google' | 'github') => {
+    if (!firebaseAuth) {
+      setStatus('error');
+      setMessage('Auth is not configured yet.');
+      return;
+    }
     setStatus('loading');
     setMessage('');
     try {
       const selected = provider === 'google' ? googleProvider : githubProvider;
+      if (!selected) {
+        throw new Error('Auth provider is not configured.');
+      }
       const credential = await signInWithPopup(firebaseAuth, selected);
       await ensureProfile(credential.user, username);
       router.push('/ai');

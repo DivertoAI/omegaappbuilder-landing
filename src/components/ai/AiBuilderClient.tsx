@@ -246,7 +246,7 @@ export default function AiBuilderClient() {
   );
 
   const loadProjects = useCallback(async () => {
-    if (!user) return;
+    if (!user || !firestore) return;
     setProjectsLoading(true);
     try {
       const q = query(
@@ -284,8 +284,8 @@ export default function AiBuilderClient() {
 
   const saveProject = useCallback(
     async (name: string, workspacePath: string) => {
-      if (!user) return;
-      try {
+    if (!user || !firestore) return;
+    try {
         const activeLimit = planKey === 'starter' ? 2 : Number.POSITIVE_INFINITY;
         if (!isAdminUser && projects.length >= activeLimit) {
           setLogs((prev) =>
@@ -740,7 +740,7 @@ export default function AiBuilderClient() {
   const deleteProject = useCallback(
     async (project: ProjectItem) => {
       if (!requireAuth()) return;
-      if (!user) return;
+      if (!user || !firestore) return;
       const confirmed = window.confirm(`Delete workspace "${project.name}"? This cannot be undone.`);
       if (!confirmed) return;
       try {
@@ -1034,6 +1034,10 @@ export default function AiBuilderClient() {
   }, [isAdminUser]);
 
   useEffect(() => {
+    if (!firebaseAuth) {
+      setUser(null);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(firebaseAuth, (nextUser) => {
       setUser(nextUser);
     });
@@ -1060,7 +1064,7 @@ export default function AiBuilderClient() {
   }, [agentStatus, hasWorkspace, selectWorkspaceByPath, user]);
 
   useEffect(() => {
-    if (!user || !workspacePath || !workspaceLabel || !hasWorkspace) return;
+    if (!user || !firestore || !workspacePath || !workspaceLabel || !hasWorkspace) return;
     void saveProject(workspaceLabel, workspacePath);
   }, [user, workspaceLabel, workspacePath, hasWorkspace, saveProject]);
 

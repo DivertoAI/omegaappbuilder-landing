@@ -14,6 +14,10 @@ export default function AuthGate({ children }: Props) {
   const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
+    if (!firebaseAuth) {
+      setChecking(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
       setHasSession(Boolean(user));
       setChecking(false);

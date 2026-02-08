@@ -3,8 +3,9 @@ import {
   getAuth,
   GoogleAuthProvider,
   GithubAuthProvider,
+  type Auth,
 } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
@@ -22,15 +23,8 @@ const hasConfig = Boolean(
 const shouldInit = typeof window !== 'undefined' && hasConfig;
 const app = getApps().length ? getApps()[0] : shouldInit ? initializeApp(firebaseConfig) : null;
 
-export const firebaseAuth = app
-  ? getAuth(app)
-  : (null as unknown as ReturnType<typeof getAuth>);
-export const firestore = app
-  ? getFirestore(app)
-  : (null as unknown as ReturnType<typeof getFirestore>);
-export const googleProvider = app
-  ? new GoogleAuthProvider()
-  : (null as unknown as GoogleAuthProvider);
-export const githubProvider = app
-  ? new GithubAuthProvider()
-  : (null as unknown as GithubAuthProvider);
+export const firebaseReady = Boolean(app);
+export const firebaseAuth: Auth | null = app ? getAuth(app) : null;
+export const firestore: Firestore | null = app ? getFirestore(app) : null;
+export const googleProvider: GoogleAuthProvider | null = app ? new GoogleAuthProvider() : null;
+export const githubProvider: GithubAuthProvider | null = app ? new GithubAuthProvider() : null;

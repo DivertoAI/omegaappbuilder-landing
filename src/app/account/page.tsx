@@ -101,6 +101,10 @@ export default function AccountPage() {
   };
 
   useEffect(() => {
+    if (!firebaseAuth) {
+      setUser(null);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(firebaseAuth, (nextUser) => {
       setUser(nextUser);
     });
@@ -110,6 +114,7 @@ export default function AccountPage() {
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
+      if (!firestore) return;
       const ref = doc(firestore, 'profiles', user.uid);
       const snapshot = await getDoc(ref);
       if (!snapshot.exists()) {
@@ -138,7 +143,8 @@ export default function AccountPage() {
     const loadProjects = async () => {
       if (!user) return;
       try {
-        const q = query(
+      if (!firestore) return;
+      const q = query(
           collection(firestore, 'projects'),
           where('userId', '==', user.uid),
           orderBy('updatedAt', 'desc')
@@ -165,6 +171,7 @@ export default function AccountPage() {
         }).filter(Boolean) as Project[];
         setProjects(rows);
       } catch {
+        if (!firestore) return;
         const q = query(
           collection(firestore, 'projects'),
           where('userId', '==', user.uid)
@@ -197,11 +204,13 @@ export default function AccountPage() {
   }, [user]);
 
   const handleSignOut = async () => {
+    if (!firebaseAuth) return;
     await signOut(firebaseAuth);
     window.location.href = '/login';
   };
 
   const handleRenameProject = async (project: Project) => {
+    if (!firestore) return;
     if (!project.workspacePath) return;
     const nextName = window.prompt('Rename workspace', project.name || '');
     if (!nextName) return;
@@ -257,6 +266,7 @@ export default function AccountPage() {
   };
 
   const handleDeleteProject = async (project: Project) => {
+    if (!firestore) return;
     if (!user) return;
     const confirmed = window.confirm(`Delete workspace "${project.name}"? This cannot be undone.`);
     if (!confirmed) return;
@@ -271,7 +281,7 @@ export default function AccountPage() {
   };
 
   const handleProfileSave = async () => {
-    if (!user) return;
+    if (!user || !firestore) return;
     setSaveStatus('saving');
     setSaveMessage('');
     const nextName = editName.trim();

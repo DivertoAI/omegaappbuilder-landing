@@ -11,6 +11,11 @@ export default function ForgotPasswordPage() {
   const [message, setMessage] = useState('');
 
   const handleReset = async () => {
+    if (!firebaseAuth) {
+      setStatus('error');
+      setMessage('Auth is not configured yet.');
+      return;
+    }
     setStatus('loading');
     setMessage('');
     try {

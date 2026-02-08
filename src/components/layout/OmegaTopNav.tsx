@@ -95,6 +95,10 @@ export default function OmegaTopNav({
 
   useEffect(() => {
     let mounted = true;
+    if (!firebaseAuth) {
+      setUserEmail(null);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
       if (!mounted) return;
       setUserEmail(user?.email || null);
