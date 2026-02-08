@@ -100,7 +100,8 @@ export async function POST(request: Request) {
   if (event === 'payment.captured' || event === 'order.paid') {
     const payment = payload?.payload?.payment?.entity;
     const notes = payment?.notes || {};
-    const userId = notes.userId || defaultUserId;
+    const userIdValue = notes.userId ?? defaultUserId;
+    const userId = typeof userIdValue === 'string' ? userIdValue : String(userIdValue || '');
     const creditsRaw = notes.credits ? Number(notes.credits) : null;
     if (userId && creditsRaw) {
       await updateCredits(userId, creditsRaw, null);
