@@ -16,9 +16,21 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || '',
 };
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const hasConfig = Boolean(
+  firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId
+);
+const shouldInit = typeof window !== 'undefined' && hasConfig;
+const app = getApps().length ? getApps()[0] : shouldInit ? initializeApp(firebaseConfig) : null;
 
-export const firebaseAuth = getAuth(app);
-export const firestore = getFirestore(app);
-export const googleProvider = new GoogleAuthProvider();
-export const githubProvider = new GithubAuthProvider();
+export const firebaseAuth = app
+  ? getAuth(app)
+  : (null as unknown as ReturnType<typeof getAuth>);
+export const firestore = app
+  ? getFirestore(app)
+  : (null as unknown as ReturnType<typeof getFirestore>);
+export const googleProvider = app
+  ? new GoogleAuthProvider()
+  : (null as unknown as GoogleAuthProvider);
+export const githubProvider = app
+  ? new GithubAuthProvider()
+  : (null as unknown as GithubAuthProvider);
