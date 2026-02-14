@@ -118,7 +118,8 @@ export default function DentalAiPage() {
               </h1>
               <p className="mt-5 text-slate-600 max-w-2xl">
                 Turn missed calls into booked appointments. Our AI receptionist answers every call,
-                collects patient details, and schedules visits while your team focuses on care.
+                DM, SMS, or social inquiry, collects patient details, and schedules visits while your
+                team focuses on care.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
@@ -264,52 +265,64 @@ export default function DentalAiPage() {
       </section>
 
       <section id="pricing" className="py-16 scroll-mt-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
-            <h2 className="text-3xl font-bold text-slate-900">Pricing</h2>
+            <h2 className="text-3xl font-bold text-slate-900">Iris retainer tiers (US/UK)</h2>
             <p className="mt-3 text-slate-600">
-              Plans built for growing dental practices. Month-to-month. Upgrade as call volume grows.
+              Most clinics land in the $599–$1,199/mo range depending on volume and providers.
+              Start with calls, SMS, WhatsApp, and socials in one plan and scale from there.
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mt-10 grid gap-6 lg:grid-cols-3">
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
               <p className="text-sm font-semibold text-slate-500">Starter</p>
-              <p className="mt-1 text-sm text-slate-600">Best for solo practices</p>
-              <p className="mt-6 text-4xl font-bold text-slate-900">$599</p>
+              <p className="mt-1 text-sm text-slate-600">1 location, 1 line</p>
+              <p className="mt-4 text-3xl font-bold text-slate-900">$599</p>
               <p className="text-sm text-slate-500">/month</p>
-              <ul className="mt-6 space-y-2 text-sm text-slate-600">
-                <li>• Up to 400 AI receptionist minutes</li>
-                <li>• Appointment capture + reminders</li>
-                <li>• Call summaries sent to email</li>
-                <li>• Clinic hours + FAQ handling</li>
+              <ul className="mt-5 space-y-2 text-sm text-slate-600">
+                <li>• Calls + SMS/WhatsApp (when available) handled together</li>
+                <li>• Core flows: appointment booking, FAQs, pricing/insurance basics, lead capture</li>
+                <li>• Monthly light updates + tweaks</li>
               </ul>
-              <a
-                href="#contact"
-                className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
-              >
-                Book a 15-Min Demo
-              </a>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
               <p className="text-sm font-semibold text-slate-500">Growth</p>
-              <p className="mt-1 text-sm text-slate-600">Best for multi-chair clinics</p>
-              <p className="mt-6 text-4xl font-bold text-slate-900">$1,199</p>
+              <p className="mt-1 text-sm text-slate-600">1–3 locations</p>
+              <p className="mt-4 text-3xl font-bold text-slate-900">$1,199</p>
               <p className="text-sm text-slate-500">/month</p>
-              <ul className="mt-6 space-y-2 text-sm text-slate-600">
-                <li>• Up to 1,200 AI receptionist minutes</li>
-                <li>• Priority routing + after-hours overflow</li>
-                <li>• Daily missed-call recovery lists</li>
-                <li>• Multilingual greeting support</li>
+              <ul className="mt-5 space-y-2 text-sm text-slate-600">
+                <li>• Multi-provider routing, after-hours, missed-call automation</li>
+                <li>• CRM/Sheets integrations + reporting dashboards</li>
+                <li>• Priority support + more monthly iterations</li>
               </ul>
-              <a
-                href="#contact"
-                className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
-              >
-                Book a 15-Min Demo
-              </a>
             </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
+              <p className="text-sm font-semibold text-slate-500">Premium</p>
+              <p className="mt-1 text-sm text-slate-600">Multi-location / group practice</p>
+              <p className="mt-4 text-3xl font-bold text-slate-900">$2,499–$4,999</p>
+              <p className="text-sm text-slate-500">/month</p>
+              <ul className="mt-5 space-y-2 text-sm text-slate-600">
+                <li>• Advanced integrations + custom workflows</li>
+                <li>• Dedicated onboarding + faster turnaround</li>
+                <li>• Ongoing optimization and review</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-slate-900">Overage / fair-use</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Every plan includes a reasonable-use bucket. Heavy volume or extra workflows are billed
+              additively so we can protect your predictability.
+            </p>
+            <ul className="mt-4 space-y-2 text-sm text-slate-600">
+              <li>• Extra locations: +$300–$600/location/mo</li>
+              <li>• Heavy call volume or bespoke workflows: custom quote</li>
+              <li>• After-hours answering add-on: +$200–$500/mo</li>
+            </ul>
           </div>
         </div>
       </section>
