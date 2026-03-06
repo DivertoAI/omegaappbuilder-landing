@@ -115,7 +115,7 @@ export default function Home() {
                     <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" />
                   </svg>
                 </button>
-                <div className="absolute left-0 top-full mt-3 w-80 rounded-2xl border border-slate-200 bg-white shadow-xl opacity-0 translate-y-2 pointer-events-none transition group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto">
+                <div className="absolute left-0 top-full mt-3 w-96 whitespace-normal rounded-2xl border border-slate-200 bg-white shadow-xl opacity-0 translate-y-2 pointer-events-none transition group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto">
                   <div className="p-3 grid gap-2">
                     <Link
                       href="/dental-ai"
@@ -124,11 +124,11 @@ export default function Home() {
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-50">
                         <Image src="/icons/tooth.svg" alt="" width={20} height={20} />
                       </span>
-                      <span>
+                      <span className="min-w-0 flex-1">
                         <span className="block text-sm font-semibold text-slate-900">
                           AI Dental Receptionist
                         </span>
-                        <span className="block text-xs text-slate-500">
+                        <span className="block text-xs text-slate-500 leading-5">
                           Answer calls 24/7 and book patients automatically.
                         </span>
                       </span>
@@ -140,11 +140,11 @@ export default function Home() {
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50">
                         <Image src="/icons/spark.svg" alt="" width={20} height={20} />
                       </span>
-                      <span className="flex-1">
+                      <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
                           AI App Builder
                         </span>
-                        <span className="block text-xs text-slate-500">
+                        <span className="block text-xs text-slate-500 leading-5">
                           Generate full products from a single brief.
                         </span>
                       </span>
@@ -156,11 +156,11 @@ export default function Home() {
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50">
                         <Image src="/icons/spark.svg" alt="" width={20} height={20} />
                       </span>
-                      <span className="flex-1">
+                      <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
                           Omega Chat API
                         </span>
-                        <span className="block text-xs text-slate-500">
+                        <span className="block text-xs text-slate-500 leading-5">
                           Sign up, pay with Razorpay, get your auth token, and call chat completions.
                         </span>
                       </span>
@@ -172,11 +172,11 @@ export default function Home() {
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
                         <Image src="/icons/spark.svg" alt="" width={20} height={20} />
                       </span>
-                      <span className="flex-1">
-                        <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900 leading-5">
                           Omega Reach - Whatsapp assistant
                         </span>
-                        <span className="block text-xs text-slate-500">
+                        <span className="block text-xs text-slate-500 leading-5">
                           WhatsApp-first assistant for auto-replies, lead capture, and follow-up workflows.
                         </span>
                       </span>
