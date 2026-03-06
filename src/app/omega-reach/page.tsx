@@ -52,6 +52,127 @@ const steps = [
   'Agent line becomes active with isolated context and policy guardrails.',
 ];
 
+const corePlans = [
+  {
+    name: 'Starter',
+    monthly: 'INR 14,999/mo',
+    setup: 'INR 19,999 one-time setup',
+    bestFor: 'Small clinics and local businesses',
+    features: [
+      '1 WhatsApp number',
+      '1 brand/workspace',
+      'Up to 3,000 conversations/month',
+      'Basic automations + lead capture',
+      'Email support',
+    ],
+  },
+  {
+    name: 'Growth',
+    monthly: 'INR 34,999/mo',
+    setup: 'INR 39,999 one-time setup',
+    bestFor: 'Growing teams and agencies',
+    features: [
+      'Up to 3 WhatsApp numbers',
+      'Multi-workspace support',
+      'Up to 10,000 conversations/month',
+      'Advanced follow-up journeys',
+      'Priority support + onboarding help',
+    ],
+  },
+  {
+    name: 'Scale',
+    monthly: 'INR 69,999/mo',
+    setup: 'INR 79,999 one-time setup',
+    bestFor: 'Agencies and multi-location businesses',
+    features: [
+      'Up to 10 WhatsApp numbers',
+      'Full tenant isolation + admin controls',
+      'Up to 30,000 conversations/month',
+      'Custom workflows + API/webhooks',
+      'Dedicated success support',
+    ],
+  },
+];
+
+const enterpriseWabaPlans = [
+  {
+    name: 'Enterprise Launch',
+    monthly: 'INR 1,99,000/mo',
+    setup: 'INR 3,00,000 one-time setup',
+    volume: 'Up to 1,000 conversations/day (~30,000/month)',
+    features: [
+      '1 WABA, up to 5 sender numbers',
+      'Template management + approval ops',
+      'Campaign scheduler + audience segmentation',
+      'Delivery/read/reply analytics dashboard',
+      'Webhook + CRM integration',
+      'Priority support (business hours)',
+    ],
+  },
+  {
+    name: 'Enterprise Growth',
+    monthly: 'INR 3,99,000/mo',
+    setup: 'INR 6,00,000 one-time setup',
+    volume: 'Up to 10,000 conversations/day (~300,000/month)',
+    features: [
+      'Up to 3 WABA, up to 20 sender numbers',
+      'Multi-tenant routing + throttling controls',
+      'Advanced retry/failover logic',
+      'Dedicated onboarding + solution engineer',
+      '24x7 priority support (P1)',
+    ],
+  },
+  {
+    name: 'Enterprise Scale',
+    monthly: 'INR 7,99,000/mo',
+    setup: 'INR 12,00,000 one-time setup',
+    volume: 'Up to 50,000 conversations/day (~1.5M/month)',
+    features: [
+      'Up to 10 WABA, up to 75 sender numbers',
+      'Queue orchestration + burst traffic controls',
+      'Compliance guardrails + audit logs',
+      'Custom SLA + dedicated account manager',
+      'Custom integrations (ERP/CDP/data warehouse)',
+    ],
+  },
+  {
+    name: 'Enterprise HyperScale',
+    monthly: 'INR 12,99,000+/mo',
+    setup: 'INR 18,00,000+ one-time setup',
+    volume: 'Up to 100,000 conversations/day (~3M/month)',
+    features: [
+      'Custom infra + regional routing',
+      'Dedicated throughput lane + failover architecture',
+      'Security package (SSO, IP allowlist, compliance controls)',
+      '99.9%+ SLA options',
+      'Joint success + quarterly architecture reviews',
+    ],
+  },
+];
+
+const overageBands = [
+  'Starter: INR 2.5 per extra conversation',
+  'Growth: INR 2.0 per extra conversation',
+  'Scale: INR 1.5 per extra conversation',
+  'Soft limit alert at 85%, hard alert at 100%',
+];
+
+const addons = [
+  'Extra WhatsApp number: INR 4,999/mo',
+  'Additional automation pack: INR 7,999/mo',
+  'Human handoff dashboard seats: INR 999/user/mo',
+  'Managed campaign/follow-up ops: INR 15,000 to INR 50,000/mo',
+];
+
+const enterpriseProfitRules = [
+  'Client bill is always platform fee + pass-through usage + overage + add-ons.',
+  'Target gross margin: >=75% for Launch/Growth and >=65% for Scale/HyperScale.',
+  'Setup fee floor: max(2x monthly platform fee, 1.25x implementation cost).',
+  'Enterprise minimum monthly commit is mandatory.',
+  'SLA and reserved throughput commitments are billed as premium add-ons.',
+  'Quarterly repricing applies for Meta/Twilio rate updates and traffic mix changes.',
+];
+
 export default function OmegaReachPage() {
   const calendlyUrl = 'https://calendly.com/hello-omegaappbuilder/30min';
 
@@ -81,6 +202,12 @@ export default function OmegaReachPage() {
                 className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600"
               >
                 How it works
+              </a>
+              <a
+                href="#pricing"
+                className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600"
+              >
+                Pricing
               </a>
               <a
                 href="#contact"
@@ -184,6 +311,97 @@ export default function OmegaReachPage() {
               </li>
             ))}
           </ol>
+        </div>
+      </section>
+
+      <section id="pricing" className="py-16 border-t border-slate-200 scroll-mt-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            <h2 className="text-3xl font-bold">Omega Reach pricing</h2>
+            <p className="mt-3 text-slate-600">
+              Three-layer pricing helps buyers self-select quickly while preserving delivery margins.
+              Annual billing option: get 2 months free.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {corePlans.map((plan) => (
+              <article key={plan.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <p className="text-xs uppercase tracking-wide text-slate-500">{plan.name}</p>
+                <h3 className="mt-2 text-2xl font-bold text-slate-900">{plan.monthly}</h3>
+                <p className="mt-1 text-sm font-medium text-fuchsia-700">{plan.setup}</p>
+                <p className="mt-2 text-xs text-slate-500">Best for: {plan.bestFor}</p>
+                <ul className="mt-4 space-y-2 text-sm text-slate-700">
+                  {plan.features.map((feature) => (
+                    <li key={feature}>- {feature}</li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+            <h3 className="text-xl font-semibold text-slate-900">Overage model</h3>
+            <ul className="mt-3 space-y-2 text-sm text-slate-700">
+              {overageBands.map((item) => (
+                <li key={item}>- {item}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+            <h3 className="text-xl font-semibold text-slate-900">Add-ons</h3>
+            <ul className="mt-3 space-y-2 text-sm text-slate-700">
+              {addons.map((item) => (
+                <li key={item}>- {item}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-indigo-200 bg-indigo-50 p-6">
+            <h3 className="text-xl font-semibold text-indigo-900">Enterprise profitability rule</h3>
+            <ul className="mt-3 space-y-2 text-sm text-indigo-900">
+              {enterpriseProfitRules.map((item) => (
+                <li key={item}>- {item}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 bg-slate-50/70 border-t border-slate-200">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            <h2 className="text-3xl font-bold">Enterprise plan family (WABA high volume)</h2>
+            <p className="mt-3 text-slate-600">
+              For outbound + inbound operations at 1,000 to 100,000 conversations per day with
+              higher throughput, orchestration, and dedicated support.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-2">
+            {enterpriseWabaPlans.map((plan) => (
+              <article key={plan.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <p className="text-xs uppercase tracking-wide text-slate-500">{plan.name}</p>
+                <h3 className="mt-2 text-2xl font-bold text-slate-900">{plan.monthly}</h3>
+                <p className="mt-1 text-sm font-medium text-fuchsia-700">{plan.setup}</p>
+                <p className="mt-2 text-sm text-slate-600">{plan.volume}</p>
+                <ul className="mt-4 space-y-2 text-sm text-slate-700">
+                  {plan.features.map((feature) => (
+                    <li key={feature}>- {feature}</li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-10 rounded-2xl border border-amber-200 bg-amber-50 p-6">
+            <h3 className="text-lg font-semibold text-amber-900">Important billing note</h3>
+            <p className="mt-2 text-sm text-amber-900">
+              Meta/WhatsApp usage charges and BSP pass-through charges are billed separately from Omega Reach
+              platform fees. Enterprise overage is billed per additional conversation/day slab.
+            </p>
+          </div>
         </div>
       </section>
 
