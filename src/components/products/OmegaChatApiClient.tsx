@@ -16,6 +16,7 @@ type Plan = {
   name: string;
   price: string;
   tagline: string;
+  monthlyTokens: string;
 };
 
 type UsageSnapshot = {
@@ -34,18 +35,21 @@ const PLANS: Plan[] = [
     name: 'Limited 9,999',
     price: 'INR 9,999/mo',
     tagline: 'Best to launch and test production workloads',
+    monthlyTokens: '388,000,000 tokens/month',
   },
   {
     id: 'omega_limited_29999',
     name: 'Limited 29,999',
     price: 'INR 29,999/mo',
     tagline: 'High-volume API usage with larger monthly capacity',
+    monthlyTokens: '1,165,000,000 tokens/month',
   },
   {
     id: 'omega_unlimited_49999',
     name: 'Unlimited 49,999',
     price: 'INR 49,999/mo',
     tagline: 'No monthly token cap for continuous operations',
+    monthlyTokens: 'Truly unlimited',
   },
 ];
 
@@ -642,6 +646,10 @@ export default function OmegaChatApiClient() {
             <p className="mt-4 text-base text-slate-600">
               Go live in minutes: create account, pay securely with Razorpay, copy your auth token, and call the API.
             </p>
+            <p className="mt-2 text-xs text-slate-500">
+              Value basis: token delivery at 0.7 INR for 1 INR GPT-equivalent benchmark value (about 42.9% higher
+              token value).
+            </p>
 
             <div className="mt-8 space-y-4">
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
@@ -660,6 +668,7 @@ export default function OmegaChatApiClient() {
                     >
                       <p className="text-xs uppercase tracking-wide text-slate-500">{plan.name}</p>
                       <p className="mt-1 text-sm font-semibold text-slate-900">{plan.price}</p>
+                      <p className="mt-1 text-xs font-semibold text-indigo-700">{plan.monthlyTokens}</p>
                       <p className="mt-1 text-xs text-slate-500">{plan.tagline}</p>
                     </button>
                   ))}
@@ -915,6 +924,18 @@ export default function OmegaChatApiClient() {
                 <li>`API key`: inference/model endpoints (`x-api-key: &lt;api_key&gt;`).</li>
                 <li>Only active paid subscriptions can call chat completions.</li>
               </ul>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
+              <p className="text-sm font-semibold text-slate-900">Plan token commitments</p>
+              <ul className="mt-3 space-y-1 text-sm text-slate-600">
+                <li>INR 9,999: 388,000,000 tokens/month (limited)</li>
+                <li>INR 29,999: 1,165,000,000 tokens/month (limited)</li>
+                <li>INR 49,999: truly unlimited (no monthly cap)</li>
+              </ul>
+              <p className="mt-2 text-xs text-slate-500">
+                Pricing model retained as configured: 0.7 INR delivery for 1 INR GPT-equivalent benchmark value.
+              </p>
             </div>
           </div>
 

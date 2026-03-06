@@ -16,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/account",
     "/dental-ai",
     "/omega-chat-api",
+    "/omega-reach",
     "/pay",
     "/legal/privacy",
     "/legal/terms",

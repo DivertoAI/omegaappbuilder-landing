@@ -165,6 +165,22 @@ export default function Home() {
                         </span>
                       </span>
                     </Link>
+                    <Link
+                      href="/omega-reach"
+                      className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-50"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
+                        <Image src="/icons/spark.svg" alt="" width={20} height={20} />
+                      </span>
+                      <span className="flex-1">
+                        <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
+                          Omega Reach - Whatsapp assistant
+                        </span>
+                        <span className="block text-xs text-slate-500">
+                          WhatsApp-first assistant for auto-replies, lead capture, and follow-up workflows.
+                        </span>
+                      </span>
+                    </Link>
                   </div>
                 </div>
               </div>
