@@ -122,11 +122,11 @@ export default function Home() {
                       className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-50"
                     >
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-50">
-                        <Image src="/icons/tooth.svg" alt="" width={20} height={20} />
+                        <Image src="/icons/voice.svg" alt="" width={20} height={20} />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-semibold text-slate-900">
-                          AI Dental Receptionist
+                          Integrated Voice Assistant
                         </span>
                         <span className="block text-xs text-slate-500 leading-5">
                           Answer calls 24/7 and book patients automatically.
@@ -138,7 +138,7 @@ export default function Home() {
                       className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-50"
                     >
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50">
-                        <Image src="/icons/spark.svg" alt="" width={20} height={20} />
+                        <Image src="/icons/app-builder.svg" alt="" width={20} height={20} />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
@@ -154,7 +154,7 @@ export default function Home() {
                       className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-50"
                     >
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50">
-                        <Image src="/icons/spark.svg" alt="" width={20} height={20} />
+                        <Image src="/icons/chat-api.svg" alt="" width={20} height={20} />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
@@ -170,7 +170,7 @@ export default function Home() {
                       className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-50"
                     >
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
-                        <Image src="/icons/spark.svg" alt="" width={20} height={20} />
+                        <Image src="/icons/whatsapp-reach.svg" alt="" width={20} height={20} />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900 leading-5">
@@ -184,9 +184,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <Link href="/pricing" className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap">
-                Builder Pricing
-              </Link>
               <a
                 href="#pricing"
                 onClick={(e) => {
@@ -195,7 +192,7 @@ export default function Home() {
                 }}
                 className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap"
               >
-                Studio Pricing
+                Pricing
               </a>
               <a
                 href="#faq"
