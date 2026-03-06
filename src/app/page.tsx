@@ -149,6 +149,22 @@ export default function Home() {
                         </span>
                       </span>
                     </Link>
+                    <Link
+                      href="/omega-chat-api"
+                      className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-50"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50">
+                        <Image src="/icons/spark.svg" alt="" width={20} height={20} />
+                      </span>
+                      <span className="flex-1">
+                        <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
+                          Omega Chat API
+                        </span>
+                        <span className="block text-xs text-slate-500">
+                          Sign up, pay with Razorpay, get your auth token, and call chat completions.
+                        </span>
+                      </span>
+                    </Link>
                   </div>
                 </div>
               </div>
