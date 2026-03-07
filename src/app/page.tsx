@@ -263,10 +263,15 @@ export default function Home() {
               <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
                 <a href="#agents" onClick={(e) => { e.preventDefault(); goTo('agents'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">AI Agents</a>
                 <a href="#web3d" onClick={(e) => { e.preventDefault(); goTo('web3d'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">3D Websites</a>
-                <Link href="/dental-ai" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Integrated Voice Assistant</Link>
-                <Link href="/ai" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">AI App Builder</Link>
-                <Link href="/omega-chat-api" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Omega Chat API</Link>
-                <Link href="/omega-reach" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Omega Reach</Link>
+                <div className="rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2">
+                  <p className="text-sm font-semibold text-slate-800">Products</p>
+                  <div className="mt-1 grid gap-1">
+                    <Link href="/dental-ai" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-2 py-1.5 text-sm font-medium text-slate-700 hover:bg-white">Integrated Voice Assistant</Link>
+                    <Link href="/ai" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-2 py-1.5 text-sm font-medium text-slate-700 hover:bg-white">AI App Builder</Link>
+                    <Link href="/omega-chat-api" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-2 py-1.5 text-sm font-medium text-slate-700 hover:bg-white">Omega Chat API</Link>
+                    <Link href="/omega-reach" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-2 py-1.5 text-sm font-medium text-slate-700 hover:bg-white">Omega Reach</Link>
+                  </div>
+                </div>
                 <a href="#pricing" onClick={(e) => { e.preventDefault(); goTo('pricing'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Pricing</a>
                 <a href="#faq" onClick={(e) => { e.preventDefault(); goTo('faq'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">FAQ</a>
                 <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Contact</a>
