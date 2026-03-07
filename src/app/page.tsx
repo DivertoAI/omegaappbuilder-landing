@@ -24,6 +24,7 @@ export default function Home() {
   
   // Banner dismissal state
   const [showBanner, setShowBanner] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Utility: smooth scroll with graceful fallback
   const goTo = useCallback((id: string) => {
@@ -65,7 +66,7 @@ export default function Home() {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-[72px] items-center justify-between gap-3">
+          <div className="flex h-[72px] items-center justify-between gap-2">
             <a href="#home" className="flex items-center gap-3">
               <Image
                 src="/logo.png"
@@ -75,10 +76,10 @@ export default function Home() {
                 priority
               />
               <div className="leading-tight">
-                <p className="text-sm font-semibold tracking-tight">
+                <p className="text-xs font-semibold tracking-tight sm:text-sm">
                   Omega — AI Agents • 3D Web • Apps
                 </p>
-                <p className="text-[11px] text-slate-500">Studio</p>
+                <p className="hidden text-[11px] text-slate-500 sm:block">Studio</p>
               </div>
             </a>
 
@@ -174,7 +175,7 @@ export default function Home() {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900 leading-5">
-                          Omega Reach - Whatsapp assistant
+                          Omega Reach - WhatsApp assistant
                         </span>
                         <span className="block text-xs text-slate-500 leading-5">
                           WhatsApp-first assistant for auto-replies, lead capture, and follow-up workflows.
@@ -216,12 +217,29 @@ export default function Home() {
               </a>
             </nav>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-main-menu"
+                aria-label="Toggle navigation menu"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  {mobileMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 5l10 10M15 5L5 15" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h14M3 10h14M3 15h14" />
+                  )}
+                </svg>
+              </button>
               <a
                 href="#contact"
                 onClick={(e) => {
                   e.preventDefault();
                   goTo('contact');
+                  setMobileMenuOpen(false);
                 }}
                 className="hidden sm:inline-flex rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500 whitespace-nowrap"
               >
@@ -231,7 +249,7 @@ export default function Home() {
                 href={calendlyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex rounded-full px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-xs font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500 whitespace-nowrap"
+                className="inline-flex rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-3 py-2 text-xs font-semibold text-white transition hover:from-fuchsia-400 hover:to-indigo-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500 sm:px-4 whitespace-nowrap"
                 aria-label="Book a call on Calendly (opens in a new tab)"
               >
                 Book a Call
@@ -239,6 +257,23 @@ export default function Home() {
             </div>
           </div>
         </div>
+        {mobileMenuOpen && (
+          <div id="mobile-main-menu" className="border-t border-slate-200 bg-white/95 backdrop-blur lg:hidden">
+            <div className="mx-auto max-w-7xl px-4 py-3">
+              <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+                <a href="#agents" onClick={(e) => { e.preventDefault(); goTo('agents'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">AI Agents</a>
+                <a href="#web3d" onClick={(e) => { e.preventDefault(); goTo('web3d'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">3D Websites</a>
+                <Link href="/dental-ai" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Integrated Voice Assistant</Link>
+                <Link href="/ai" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">AI App Builder</Link>
+                <Link href="/omega-chat-api" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Omega Chat API</Link>
+                <Link href="/omega-reach" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Omega Reach</Link>
+                <a href="#pricing" onClick={(e) => { e.preventDefault(); goTo('pricing'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Pricing</a>
+                <a href="#faq" onClick={(e) => { e.preventDefault(); goTo('faq'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">FAQ</a>
+                <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Contact</a>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero */}
