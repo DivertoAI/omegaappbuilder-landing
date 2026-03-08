@@ -150,6 +150,81 @@ const enterpriseWabaPlans = [
   },
 ];
 
+const voiceAddonPlans = [
+  {
+    name: 'Growth Plus',
+    monthly: 'INR 89,999/mo',
+    setup: 'INR 1,29,999 one-time setup',
+    scope: 'Growth plan + voice receptionist integration',
+    features: [
+      'ElevenLabs voice agent binding (single tenant)',
+      'Call summary + recording sync to WhatsApp owner',
+      'Basic call routing, fallback, and escalation',
+      'Voice usage billed as pass-through',
+    ],
+  },
+  {
+    name: 'Scale Plus',
+    monthly: 'INR 1,79,999/mo',
+    setup: 'INR 2,49,999 one-time setup',
+    scope: 'Scale plan + multi-flow voice operations',
+    features: [
+      'Advanced voice workflows and intake logic',
+      'Call transcript/summary persistence with guardrails',
+      'Priority voice incident handling',
+      'Voice + telephony usage billed as pass-through',
+    ],
+  },
+  {
+    name: 'Enterprise Launch Plus',
+    monthly: 'INR 3,99,000/mo',
+    setup: 'INR 6,00,000 one-time setup',
+    scope: 'Enterprise Launch + dedicated voice orchestration',
+    features: [
+      'Dedicated voice onboarding and QA',
+      'Tenant-level voice controls in ops workflow',
+      'Call lifecycle observability and escalation hooks',
+      'Usage and telephony charges billed separately',
+    ],
+  },
+  {
+    name: 'Enterprise Growth Plus',
+    monthly: 'INR 7,99,000/mo',
+    setup: 'INR 12,00,000 one-time setup',
+    scope: 'Enterprise Growth + high-volume voice support',
+    features: [
+      'Multi-agent voice routing and failover policies',
+      'Higher concurrency voice handling',
+      '24x7 P1 voice escalation path',
+      'Voice usage pass-through + minimum commit',
+    ],
+  },
+  {
+    name: 'Enterprise Scale Plus',
+    monthly: 'INR 14,99,000/mo',
+    setup: 'INR 24,00,000 one-time setup',
+    scope: 'Enterprise Scale + heavy-duty voice operations',
+    features: [
+      'Burst-ready voice orchestration and controls',
+      'Advanced compliance and audit support for calls',
+      'Dedicated reliability engineering lane',
+      'Pass-through usage with quarterly repricing guardrail',
+    ],
+  },
+  {
+    name: 'Enterprise HyperScale Plus',
+    monthly: 'INR 24,99,000+/mo',
+    setup: 'INR 40,00,000+ one-time setup',
+    scope: 'Enterprise HyperScale + custom voice infrastructure',
+    features: [
+      'Custom voice infra and regional routing strategy',
+      'High-throughput voice continuity architecture',
+      'Premium SLA and dedicated success governance',
+      'Usage billed separately with reserved capacity model',
+    ],
+  },
+];
+
 const overageBands = [
   'Starter: INR 2.5 per extra conversation',
   'Growth: INR 2.0 per extra conversation',
@@ -347,6 +422,30 @@ export default function OmegaReachPage() {
                 <li key={item}>- {item}</li>
               ))}
             </ul>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-violet-200 bg-violet-50 p-6">
+            <h3 className="text-xl font-semibold text-violet-900">
+              Voice add-on plans (from Growth onward)
+            </h3>
+            <p className="mt-2 text-sm text-violet-900">
+              Dedicated pricing for voice agent integration on top of Omega Reach plans.
+            </p>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {voiceAddonPlans.map((plan) => (
+                <article key={plan.name} className="rounded-xl border border-violet-200 bg-white p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">{plan.name}</p>
+                  <h4 className="mt-1 text-xl font-bold text-slate-900">{plan.monthly}</h4>
+                  <p className="mt-1 text-sm font-medium text-violet-700">{plan.setup}</p>
+                  <p className="mt-1 text-xs text-slate-500">{plan.scope}</p>
+                  <ul className="mt-3 space-y-1 text-sm text-slate-700">
+                    {plan.features.map((feature) => (
+                      <li key={feature}>- {feature}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
           </div>
 
           <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6">
