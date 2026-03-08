@@ -3,12 +3,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Omega Reach - Whatsapp assistant | OmegaAppBuilder',
+  title: 'Omega Reach - WhatsApp assistant | OmegaAppBuilder',
   description:
     'Omega Reach is a WhatsApp-first assistant for auto-replies, lead capture, onboarding flows, and follow-up automation.',
   alternates: { canonical: '/omega-reach' },
   openGraph: {
-    title: 'Omega Reach - Whatsapp assistant',
+    title: 'Omega Reach - WhatsApp assistant',
     description:
       'Run your full WhatsApp sales and support motion with isolated assistants, lead memory, and managed automations.',
     url: '/omega-reach',
@@ -55,8 +55,8 @@ const steps = [
 const corePlans = [
   {
     name: 'Starter',
-    monthly: 'INR 14,999/mo',
-    setup: 'INR 19,999 one-time setup',
+    monthly: 'INR 19,999/mo',
+    setup: 'INR 29,999 one-time setup',
     bestFor: 'Small clinics and local businesses',
     features: [
       '1 WhatsApp number',
@@ -68,8 +68,8 @@ const corePlans = [
   },
   {
     name: 'Growth',
-    monthly: 'INR 34,999/mo',
-    setup: 'INR 39,999 one-time setup',
+    monthly: 'INR 59,999/mo',
+    setup: 'INR 89,999 one-time setup',
     bestFor: 'Growing teams and agencies',
     features: [
       'Up to 3 WhatsApp numbers',
@@ -81,8 +81,8 @@ const corePlans = [
   },
   {
     name: 'Scale',
-    monthly: 'INR 69,999/mo',
-    setup: 'INR 79,999 one-time setup',
+    monthly: 'INR 1,19,999/mo',
+    setup: 'INR 1,79,999 one-time setup',
     bestFor: 'Agencies and multi-location businesses',
     features: [
       'Up to 10 WhatsApp numbers',
@@ -97,8 +97,8 @@ const corePlans = [
 const enterpriseWabaPlans = [
   {
     name: 'Enterprise Launch',
-    monthly: 'INR 1,99,000/mo',
-    setup: 'INR 3,00,000 one-time setup',
+    monthly: 'INR 2,99,000/mo',
+    setup: 'INR 4,50,000 one-time setup',
     volume: 'Up to 1,000 conversations/day (~30,000/month)',
     features: [
       '1 WABA, up to 5 sender numbers',
@@ -111,8 +111,8 @@ const enterpriseWabaPlans = [
   },
   {
     name: 'Enterprise Growth',
-    monthly: 'INR 3,99,000/mo',
-    setup: 'INR 6,00,000 one-time setup',
+    monthly: 'INR 5,99,000/mo',
+    setup: 'INR 9,00,000 one-time setup',
     volume: 'Up to 10,000 conversations/day (~300,000/month)',
     features: [
       'Up to 3 WABA, up to 20 sender numbers',
@@ -124,8 +124,8 @@ const enterpriseWabaPlans = [
   },
   {
     name: 'Enterprise Scale',
-    monthly: 'INR 7,99,000/mo',
-    setup: 'INR 12,00,000 one-time setup',
+    monthly: 'INR 11,99,000/mo',
+    setup: 'INR 18,00,000 one-time setup',
     volume: 'Up to 50,000 conversations/day (~1.5M/month)',
     features: [
       'Up to 10 WABA, up to 75 sender numbers',
@@ -137,8 +137,8 @@ const enterpriseWabaPlans = [
   },
   {
     name: 'Enterprise HyperScale',
-    monthly: 'INR 12,99,000+/mo',
-    setup: 'INR 18,00,000+ one-time setup',
+    monthly: 'INR 19,99,000+/mo',
+    setup: 'INR 30,00,000+ one-time setup',
     volume: 'Up to 100,000 conversations/day (~3M/month)',
     features: [
       'Custom infra + regional routing',
@@ -240,7 +240,7 @@ export default function OmegaReachPage() {
                 WhatsApp-First Product
               </p>
               <h1 className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight">
-                Omega Reach - Whatsapp assistant
+                Omega Reach - WhatsApp assistant
               </h1>
               <p className="mt-5 text-slate-600 max-w-2xl">
                 Build your full WhatsApp business flow with Magda: inbound handling, onboarding,
