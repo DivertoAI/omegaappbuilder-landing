@@ -424,30 +424,6 @@ export default function OmegaReachPage() {
             </ul>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-violet-200 bg-violet-50 p-6">
-            <h3 className="text-xl font-semibold text-violet-900">
-              Voice add-on plans (from Growth onward)
-            </h3>
-            <p className="mt-2 text-sm text-violet-900">
-              Dedicated pricing for voice agent integration on top of Omega Reach plans.
-            </p>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              {voiceAddonPlans.map((plan) => (
-                <article key={plan.name} className="rounded-xl border border-violet-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">{plan.name}</p>
-                  <h4 className="mt-1 text-xl font-bold text-slate-900">{plan.monthly}</h4>
-                  <p className="mt-1 text-sm font-medium text-violet-700">{plan.setup}</p>
-                  <p className="mt-1 text-xs text-slate-500">{plan.scope}</p>
-                  <ul className="mt-3 space-y-1 text-sm text-slate-700">
-                    {plan.features.map((feature) => (
-                      <li key={feature}>- {feature}</li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
-            </div>
-          </div>
-
           <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6">
             <h3 className="text-xl font-semibold text-slate-900">Add-ons</h3>
             <ul className="mt-3 space-y-2 text-sm text-slate-700">
@@ -500,6 +476,30 @@ export default function OmegaReachPage() {
               Meta/WhatsApp usage charges and BSP pass-through charges are billed separately from Omega Reach
               platform fees. Enterprise overage is billed per additional conversation/day slab.
             </p>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-violet-200 bg-violet-50 p-6">
+            <h3 className="text-xl font-semibold text-violet-900">
+              Voice add-on plans (from Growth onward)
+            </h3>
+            <p className="mt-2 text-sm text-violet-900">
+              Dedicated pricing for voice agent integration on top of Omega Reach plans.
+            </p>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {voiceAddonPlans.map((plan) => (
+                <article key={plan.name} className="rounded-xl border border-violet-200 bg-white p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">{plan.name}</p>
+                  <h4 className="mt-1 text-xl font-bold text-slate-900">{plan.monthly}</h4>
+                  <p className="mt-1 text-sm font-medium text-violet-700">{plan.setup}</p>
+                  <p className="mt-1 text-xs text-slate-500">{plan.scope}</p>
+                  <ul className="mt-3 space-y-1 text-sm text-slate-700">
+                    {plan.features.map((feature) => (
+                      <li key={feature}>- {feature}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
