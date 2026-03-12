@@ -322,6 +322,12 @@ export default function OmegaReachPage() {
                 lead memory, follow-ups, and tenant-isolated operations from one managed stack.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="/omega-reach/whatsapp"
+                  className="px-5 py-3 rounded-xl border border-slate-900 bg-slate-900 text-white hover:bg-slate-800 transition font-medium"
+                >
+                  Open WhatsApp Console
+                </Link>
                 <a
                   href="#contact"
                   className="px-5 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400 transition font-medium"
