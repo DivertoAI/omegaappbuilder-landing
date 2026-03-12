@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import * as storeModule from '@/lib/omega-reach/store.js';
 import * as wabaModule from '@/lib/omega-reach/waba.js';
 import * as irisModule from '@/lib/omega-reach/iris.js';
@@ -21,6 +22,13 @@ const SERVICE_WINDOW_HOURS = Number(process.env.WABA_SERVICE_WINDOW_HOURS || 24)
 const MAX_TEXT_CHARS = Number(process.env.WABA_MAX_TEXT_CHARS || 1500);
 const MAX_ATTACHMENTS = Number(process.env.WABA_MAX_ATTACHMENTS || 5);
 const MAX_ATTACHMENT_BYTES = Number(process.env.WABA_MAX_ATTACHMENT_BYTES || (10 * 1024 * 1024));
+const META_GRAPH_VERSION = process.env.OMEGA_META_GRAPH_VERSION || 'v23.0';
+const META_APP_ID = String(process.env.OMEGA_META_APP_ID || '').trim();
+const META_APP_SECRET = String(process.env.OMEGA_META_APP_SECRET || '').trim();
+const META_CONFIG_ID = String(process.env.OMEGA_META_EMBEDDED_SIGNUP_CONFIG_ID || '').trim();
+const META_REDIRECT_PATH = String(process.env.OMEGA_META_REDIRECT_PATH || '/omega-reach/whatsapp/meta-callback.html').trim();
+const META_STATE_SECRET = String(process.env.OMEGA_META_STATE_SECRET || META_APP_SECRET || 'omega-meta-state').trim();
+const META_STATE_TTL_MS = Math.max(60_000, Number(process.env.OMEGA_META_STATE_TTL_MS || 15 * 60 * 1000));
 
 function envFlag(name: string, fallback = false) {
   const raw = process.env[name];
@@ -81,6 +89,166 @@ function buildBaseUrl(req: NextRequest) {
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
   const proto = req.headers.get('x-forwarded-proto') || 'https';
   return host ? `${proto}://${host}` : new URL(req.url).origin;
+}
+
+function isMetaEmbeddedConfigured() {
+  return Boolean(META_APP_ID && META_APP_SECRET);
+}
+
+function buildMetaRedirectUri(req: NextRequest) {
+  const base = buildBaseUrl(req).replace(/\/+$/, '');
+  const path = META_REDIRECT_PATH.startsWith('/') ? META_REDIRECT_PATH : `/${META_REDIRECT_PATH}`;
+  return `${base}${path}`;
+}
+
+function toBase64Url(input: string) {
+  return Buffer.from(input, 'utf8').toString('base64url');
+}
+
+function fromBase64Url(input: string) {
+  return Buffer.from(input, 'base64url').toString('utf8');
+}
+
+function createMetaStateToken(tenantId: string) {
+  const payload = {
+    tenantId,
+    ts: Date.now(),
+    nonce: randomBytes(8).toString('hex')
+  };
+  const encodedPayload = toBase64Url(JSON.stringify(payload));
+  const signature = createHmac('sha256', META_STATE_SECRET).update(encodedPayload).digest('base64url');
+  return `${encodedPayload}.${signature}`;
+}
+
+function verifyMetaStateToken(stateToken: string, expectedTenantId: string) {
+  const parts = String(stateToken || '').split('.');
+  if (parts.length !== 2) {
+    return { ok: false, reason: 'invalid_state' };
+  }
+
+  const [encodedPayload, providedSig] = parts;
+  const expectedSig = createHmac('sha256', META_STATE_SECRET).update(encodedPayload).digest('base64url');
+  try {
+    if (!timingSafeEqual(Buffer.from(providedSig), Buffer.from(expectedSig))) {
+      return { ok: false, reason: 'invalid_signature' };
+    }
+  } catch {
+    return { ok: false, reason: 'invalid_signature' };
+  }
+
+  try {
+    const payload = JSON.parse(fromBase64Url(encodedPayload));
+    const tokenTenantId = String(payload?.tenantId || '');
+    const tokenTs = Number(payload?.ts || 0);
+    if (!tokenTenantId || tokenTenantId !== expectedTenantId) {
+      return { ok: false, reason: 'tenant_mismatch' };
+    }
+    if (!tokenTs || Date.now() - tokenTs > META_STATE_TTL_MS) {
+      return { ok: false, reason: 'state_expired' };
+    }
+    return { ok: true, payload };
+  } catch {
+    return { ok: false, reason: 'invalid_payload' };
+  }
+}
+
+async function graphRequest(pathname: string, accessToken: string, method = 'GET', body?: unknown) {
+  const cleanPath = pathname.startsWith('/') ? pathname.slice(1) : pathname;
+  const url = new URL(`https://graph.facebook.com/${META_GRAPH_VERSION}/${cleanPath}`);
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${accessToken}`,
+    Accept: 'application/json'
+  };
+  if (method !== 'GET') {
+    headers['Content-Type'] = 'application/json';
+  }
+  const response = await fetch(url.toString(), {
+    method,
+    headers,
+    body: body == null ? undefined : JSON.stringify(body),
+    cache: 'no-store'
+  });
+  const parsed = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = parsed?.error?.message || `Graph API request failed (${response.status})`;
+    throw new Error(message);
+  }
+  return parsed;
+}
+
+async function exchangeMetaCodeForAccessToken(code: string, redirectUri: string) {
+  const url = new URL(`https://graph.facebook.com/${META_GRAPH_VERSION}/oauth/access_token`);
+  url.searchParams.set('client_id', META_APP_ID);
+  url.searchParams.set('client_secret', META_APP_SECRET);
+  url.searchParams.set('redirect_uri', redirectUri);
+  url.searchParams.set('code', code);
+
+  const response = await fetch(url.toString(), { method: 'GET', cache: 'no-store' });
+  const parsed = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = parsed?.error?.message || 'Failed to exchange Meta authorization code.';
+    throw new Error(message);
+  }
+  return parsed;
+}
+
+function extractFromWabaRecord(waba: any) {
+  const phoneNode = Array.isArray(waba?.phone_numbers?.data)
+    ? waba.phone_numbers.data[0]
+    : Array.isArray(waba?.phone_numbers)
+      ? waba.phone_numbers[0]
+      : null;
+  return {
+    wabaId: waba?.id ? String(waba.id) : '',
+    phoneNumberId: phoneNode?.id ? String(phoneNode.id) : '',
+    businessPhone: phoneNode?.display_phone_number ? String(phoneNode.display_phone_number) : ''
+  };
+}
+
+async function discoverMetaWhatsAppAssets(accessToken: string) {
+  const output: Record<string, string | null> = {
+    userId: null,
+    businessId: null,
+    businessName: null,
+    wabaId: '',
+    phoneNumberId: '',
+    businessPhone: ''
+  };
+
+  const me = await graphRequest('me?fields=id,name', accessToken);
+  output.userId = me?.id ? String(me.id) : null;
+
+  const businesses = await graphRequest('me/businesses?fields=id,name', accessToken);
+  const list = Array.isArray(businesses?.data) ? businesses.data : [];
+  for (const business of list) {
+    const businessId = String(business?.id || '');
+    if (!businessId) continue;
+    output.businessId = businessId;
+    output.businessName = business?.name ? String(business.name) : null;
+
+    const candidates = [
+      `${businessId}/owned_whatsapp_business_accounts?fields=id,name,phone_numbers{id,display_phone_number,verified_name}`,
+      `${businessId}/client_whatsapp_business_accounts?fields=id,name,phone_numbers{id,display_phone_number,verified_name}`
+    ];
+
+    for (const candidate of candidates) {
+      try {
+        const result = await graphRequest(candidate, accessToken);
+        const waba = Array.isArray(result?.data) ? result.data[0] : null;
+        if (waba?.id) {
+          const extracted = extractFromWabaRecord(waba);
+          output.wabaId = extracted.wabaId;
+          output.phoneNumberId = extracted.phoneNumberId;
+          output.businessPhone = extracted.businessPhone;
+          return output;
+        }
+      } catch {
+        // Try next candidate path.
+      }
+    }
+  }
+
+  return output;
 }
 
 function resolveTenantById(tenantId: string | null | undefined) {
@@ -351,6 +519,12 @@ async function handleGet(req: NextRequest, segments: string[]) {
       webhookUrl: `${baseUrl}/api/omega-reach/webhooks/whatsapp`,
       verifyToken: process.env.WABA_VERIFY_TOKEN || '',
       serviceWindowHours: SERVICE_WINDOW_HOURS,
+      metaEmbeddedSignup: {
+        enabled: isMetaEmbeddedConfigured(),
+        hasConfigId: Boolean(META_CONFIG_ID),
+        graphVersion: META_GRAPH_VERSION,
+        redirectUri: buildMetaRedirectUri(req)
+      },
       strictMode: STRICT_MODE,
       strictGuardrails: {
         blockUSMarketing: STRICT_BLOCK_US_MARKETING,
@@ -431,6 +605,98 @@ async function handlePost(req: NextRequest, segments: string[]) {
     const tenantId = segments[1];
     const tenant = resolveTenantById(tenantId);
     if (!tenant) return json({ error: 'Tenant not found' }, 404);
+
+    if (segments.length === 5 && segments[2] === 'meta' && segments[3] === 'embedded-signup' && segments[4] === 'start') {
+      if (!isMetaEmbeddedConfigured()) {
+        return json({
+          error: 'Meta Embedded Signup is not configured. Set OMEGA_META_APP_ID and OMEGA_META_APP_SECRET.'
+        }, 400);
+      }
+
+      const redirectUri = buildMetaRedirectUri(req);
+      const stateToken = createMetaStateToken(tenant.id);
+      const authUrl = new URL(`https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`);
+      authUrl.searchParams.set('client_id', META_APP_ID);
+      authUrl.searchParams.set('redirect_uri', redirectUri);
+      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('state', stateToken);
+      authUrl.searchParams.set('scope', 'business_management,whatsapp_business_management,whatsapp_business_messaging');
+      if (META_CONFIG_ID) {
+        authUrl.searchParams.set('config_id', META_CONFIG_ID);
+        authUrl.searchParams.set('override_default_response_type', 'true');
+      }
+
+      return json({
+        ok: true,
+        authUrl: authUrl.toString(),
+        redirectUri
+      });
+    }
+
+    if (segments.length === 5 && segments[2] === 'meta' && segments[3] === 'embedded-signup' && segments[4] === 'complete') {
+      if (!isMetaEmbeddedConfigured()) {
+        return json({
+          error: 'Meta Embedded Signup is not configured. Set OMEGA_META_APP_ID and OMEGA_META_APP_SECRET.'
+        }, 400);
+      }
+
+      const payload = await req.json().catch(() => ({}));
+      const code = String(payload?.code || '').trim();
+      const stateToken = String(payload?.state || '').trim();
+      const fallbackWabaId = String(payload?.wabaId || '').trim();
+      const fallbackPhoneNumberId = String(payload?.phoneNumberId || '').trim();
+      const fallbackBusinessPhone = String(payload?.businessPhone || '').trim();
+
+      if (!code || !stateToken) {
+        return json({ error: 'Missing Meta authorization code/state.' }, 400);
+      }
+
+      const verify = verifyMetaStateToken(stateToken, tenant.id);
+      if (!verify.ok) {
+        return json({ error: `Invalid Meta state token (${verify.reason}). Please restart onboarding.` }, 400);
+      }
+
+      try {
+        const redirectUri = buildMetaRedirectUri(req);
+        const tokenResult = await exchangeMetaCodeForAccessToken(code, redirectUri);
+        const accessToken = String(tokenResult?.access_token || '').trim();
+        if (!accessToken) {
+          return json({ error: 'Meta did not return an access token.' }, 400);
+        }
+
+        const discovered = await discoverMetaWhatsAppAssets(accessToken);
+        const wabaId = discovered.wabaId || fallbackWabaId;
+        const phoneNumberId = discovered.phoneNumberId || fallbackPhoneNumberId;
+        const businessPhone = discovered.businessPhone || fallbackBusinessPhone;
+
+        const updated = store.upsertTenant({
+          ...tenant,
+          id: tenant.id,
+          waba: {
+            ...tenant.waba,
+            accessToken,
+            ...(wabaId ? { wabaId } : {}),
+            ...(phoneNumberId ? { phoneNumberId } : {}),
+            ...(businessPhone ? { businessPhone } : {})
+          }
+        });
+
+        return json({
+          ok: true,
+          tenant: updated,
+          launch: store.evaluateLaunchReadiness(updated),
+          meta: {
+            graphVersion: META_GRAPH_VERSION,
+            discovered
+          }
+        });
+      } catch (error: any) {
+        return json({
+          error: 'Failed to complete Meta embedded signup.',
+          detail: error?.message || 'unknown_error'
+        }, 500);
+      }
+    }
 
     if (segments.length === 4 && segments[2] === 'messages' && segments[3] === 'send') {
       const requestBody = await req.json().catch(() => ({}));

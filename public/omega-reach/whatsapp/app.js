@@ -5,6 +5,7 @@ const state = {
   conversations: [],
   launch: null,
   config: null,
+  metaPendingTenantId: null,
   pendingAttachments: [],
   isSending: false
 };
@@ -21,6 +22,8 @@ const el = {
   accessToken: document.getElementById('accessToken'),
   createTenantBtn: document.getElementById('createTenantBtn'),
   saveWabaBtn: document.getElementById('saveWabaBtn'),
+  connectMetaBtn: document.getElementById('connectMetaBtn'),
+  metaStatus: document.getElementById('metaStatus'),
 
   gateOtp: document.getElementById('gateOtp'),
   gateBm2fa: document.getElementById('gateBm2fa'),
@@ -74,6 +77,14 @@ async function api(path, options = {}) {
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json.error || json.detail || `Request failed: ${res.status}`);
   return json;
+}
+
+function setMetaStatus(text, tone = 'info') {
+  if (!el.metaStatus) return;
+  el.metaStatus.textContent = text || '';
+  el.metaStatus.classList.remove('danger', 'success');
+  if (tone === 'danger') el.metaStatus.classList.add('danger');
+  if (tone === 'success') el.metaStatus.classList.add('success');
 }
 
 function initials(input) {
@@ -470,6 +481,78 @@ async function saveWabaConfig() {
   }
 }
 
+async function completeMetaSignup({ code, stateToken, tenantId, wabaId = '', phoneNumberId = '', businessPhone = '' }) {
+  const targetTenantId = tenantId || state.metaPendingTenantId || state.tenantId;
+  if (!targetTenantId) {
+    setMetaStatus('Meta callback received but no tenant is selected.', 'danger');
+    return;
+  }
+
+  if (!code || !stateToken) {
+    setMetaStatus('Meta callback is missing authorization code/state. Please retry onboarding.', 'danger');
+    return;
+  }
+
+  try {
+    setMetaStatus('Completing Meta onboarding and syncing WhatsApp credentials...');
+    const data = await api(`/api/tenants/${targetTenantId}/meta/embedded-signup/complete`, {
+      method: 'POST',
+      body: JSON.stringify({
+        code,
+        state: stateToken,
+        wabaId,
+        phoneNumberId,
+        businessPhone
+      })
+    });
+
+    state.metaPendingTenantId = null;
+    state.tenantId = data?.tenant?.id || targetTenantId;
+
+    await refreshTenants();
+    el.tenantSelect.value = state.tenantId;
+    await onTenantChanged();
+
+    const discovered = data?.meta?.discovered || {};
+    const resolvedWaba = discovered.wabaId || data?.tenant?.waba?.wabaId || '(pending)';
+    const resolvedPhone = discovered.phoneNumberId || data?.tenant?.waba?.phoneNumberId || '(pending)';
+    setMetaStatus(`Meta connected. WABA: ${resolvedWaba} | Phone Number ID: ${resolvedPhone}`, 'success');
+  } catch (e) {
+    setMetaStatus(`Meta onboarding failed: ${e.message}`, 'danger');
+  }
+}
+
+async function startMetaSignup() {
+  if (!state.tenantId) {
+    alert('Create or select a tenant first.');
+    return;
+  }
+
+  try {
+    setMetaStatus('Opening Meta onboarding window...');
+    const data = await api(`/api/tenants/${state.tenantId}/meta/embedded-signup/start`, {
+      method: 'POST'
+    });
+    state.metaPendingTenantId = state.tenantId;
+
+    const popup = window.open(
+      data.authUrl,
+      'omega_meta_embedded_signup',
+      'popup=yes,width=720,height=780,resizable=yes,scrollbars=yes'
+    );
+
+    if (!popup) {
+      setMetaStatus('Popup was blocked. Redirecting this tab to Meta onboarding...');
+      window.location.href = data.authUrl;
+      return;
+    }
+
+    setMetaStatus('Meta window opened. Finish setup there and we will sync automatically.');
+  } catch (e) {
+    setMetaStatus(`Unable to start Meta onboarding: ${e.message}`, 'danger');
+  }
+}
+
 async function saveLaunchSafety() {
   if (!state.tenantId) return;
 
@@ -544,6 +627,15 @@ async function loadConfig() {
     const strict = cfg.strictMode ? 'ON' : 'OFF';
     el.configInfo.textContent = `Webhook: ${cfg.webhookUrl} | Strict Guardrails: ${strict}`;
     el.webhookHint.textContent = `Meta webhook verify token: ${cfg.verifyToken || '(set WABA_VERIFY_TOKEN)'} | URL: ${cfg.webhookUrl} | Service window: ${cfg.serviceWindowHours}h`;
+    const metaEnabled = Boolean(cfg?.metaEmbeddedSignup?.enabled);
+    if (el.connectMetaBtn) {
+      el.connectMetaBtn.disabled = !metaEnabled;
+      if (!metaEnabled) {
+        setMetaStatus('Meta embedded signup is not configured on server. Set OMEGA_META_APP_ID and OMEGA_META_APP_SECRET.', 'danger');
+      } else {
+        setMetaStatus('Ready. Click Continue with Meta to connect your WhatsApp Business setup.');
+      }
+    }
   } catch {
     // ignore config errors in UI
   }
@@ -562,6 +654,56 @@ async function onTenantChanged() {
   ]);
 }
 
+function consumeMetaCallbackQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('meta_code') || '';
+  const stateToken = params.get('meta_state') || '';
+  const error = params.get('meta_error') || '';
+  const errorDescription = params.get('meta_error_description') || '';
+
+  if (code || stateToken || error) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
+  return { code, stateToken, error, errorDescription };
+}
+
+function parseFacebookEventData(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  if (typeof raw === 'object') return raw;
+  return null;
+}
+
+function wireMetaCallbackListener() {
+  window.addEventListener('message', async (event) => {
+    if (event.origin !== window.location.origin) return;
+    const payload = parseFacebookEventData(event.data);
+    if (!payload || payload.source !== 'omega-meta-callback') return;
+
+    if (payload.error) {
+      const message = payload.errorDescription || payload.error || 'Meta onboarding was cancelled.';
+      setMetaStatus(`Meta onboarding stopped: ${message}`, 'danger');
+      return;
+    }
+
+    await completeMetaSignup({
+      code: payload.code || '',
+      stateToken: payload.state || '',
+      tenantId: state.metaPendingTenantId || state.tenantId,
+      wabaId: payload.waba_id || payload.wabaId || '',
+      phoneNumberId: payload.phone_number_id || payload.phoneNumberId || '',
+      businessPhone: payload.display_phone_number || payload.businessPhone || ''
+    });
+  });
+}
+
 function attachEvents() {
   el.tenantSelect.onchange = async () => {
     state.tenantId = el.tenantSelect.value;
@@ -574,6 +716,7 @@ function attachEvents() {
 
   el.createTenantBtn.onclick = createTenant;
   el.saveWabaBtn.onclick = saveWabaConfig;
+  if (el.connectMetaBtn) el.connectMetaBtn.onclick = startMetaSignup;
   el.saveLaunchBtn.onclick = saveLaunchSafety;
   el.refreshLaunchBtn.onclick = async () => {
     await refreshLaunchSafety();
@@ -625,12 +768,24 @@ function attachEvents() {
 
 async function init() {
   attachEvents();
+  wireMetaCallbackListener();
   renderAttachmentTray();
   autoResizeTextarea(el.sendText);
 
   await loadConfig();
   await refreshTenants();
   await onTenantChanged();
+
+  const callbackData = consumeMetaCallbackQuery();
+  if (callbackData.error) {
+    setMetaStatus(`Meta onboarding stopped: ${callbackData.errorDescription || callbackData.error}`, 'danger');
+  } else if (callbackData.code && callbackData.stateToken) {
+    await completeMetaSignup({
+      code: callbackData.code,
+      stateToken: callbackData.stateToken,
+      tenantId: state.metaPendingTenantId || state.tenantId
+    });
+  }
 
   setInterval(async () => {
     await refreshConversations();
