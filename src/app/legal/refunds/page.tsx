@@ -27,7 +27,7 @@ export default function RefundsPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-slate-900">Monthly Retainers</h2>
-          <p className="mt-2">Retainer agreements (AI Ops, ongoing support) can be cancelled at any time with 30 days' written notice to <a className="underline" href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>. Future billing periods beyond the notice period will not be charged. The current billing period is non-refundable once work for that period has commenced.</p>
+          <p className="mt-2">Retainer agreements (AI Ops, ongoing support) can be cancelled at any time with 30 days&apos; written notice to <a className="underline" href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>. Future billing periods beyond the notice period will not be charged. The current billing period is non-refundable once work for that period has commenced.</p>
         </section>
 
         <section>
