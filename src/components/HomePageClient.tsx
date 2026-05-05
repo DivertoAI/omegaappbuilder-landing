@@ -19,7 +19,6 @@ const Planet3D = dynamic(() => import('./Planet3D'), {
 export default function HomePageClient() {
   const calendlyUrl = 'https://calendly.com/hello-omegaappbuilder/30min';
 
-  const [showBanner, setShowBanner] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const goTo = useCallback((id: string) => {
@@ -29,34 +28,6 @@ export default function HomePageClient() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      {/* Founding Plan Banner */}
-      {showBanner && (
-        <div className="relative bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 text-sm sm:text-base">
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
-                  🚀 FOUNDING PLAN
-                </span>
-                <p className="font-medium">
-                  <span className="hidden sm:inline">Setup fee waived + preferred rates (first 3 months) • </span>
-                  <span className="font-bold">6 onboarding slots this quarter</span>
-                  <span className="hidden sm:inline"> • Book a 20‑min scoping call</span>
-                </p>
-              </div>
-              <button
-                onClick={() => setShowBanner(false)}
-                className="text-white/80 hover:text-white transition-colors"
-                aria-label="Close banner"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur">
@@ -155,7 +126,7 @@ export default function HomePageClient() {
                   </div>
                 </div>
               </div>
-              <a href="#pricing" onClick={(e) => { e.preventDefault(); goTo('pricing'); }} className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap">Pricing</a>
+              <Link href="/pricing" className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap">Pricing</Link>
               <a href="#faq" onClick={(e) => { e.preventDefault(); goTo('faq'); }} className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap">FAQ</a>
               <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); }} className="rounded-full px-3 py-1.5 font-medium text-slate-700 hover:bg-white hover:text-fuchsia-600 whitespace-nowrap">Contact</a>
             </nav>
@@ -212,7 +183,7 @@ export default function HomePageClient() {
                     <Link href="/omegareceptionist" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-2 py-1.5 text-sm font-medium text-slate-700 hover:bg-white">Omega Receptionist</Link>
                   </div>
                 </div>
-                <a href="#pricing" onClick={(e) => { e.preventDefault(); goTo('pricing'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Pricing</a>
+                <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Pricing</Link>
                 <a href="#faq" onClick={(e) => { e.preventDefault(); goTo('faq'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">FAQ</a>
                 <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); setMobileMenuOpen(false); }} className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Contact</a>
               </div>
@@ -598,109 +569,30 @@ export default function HomePageClient() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Pricing CTA */}
       <section id="pricing" className="py-20 border-t border-slate-200 scroll-mt-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold">Simple, transparent pricing</h2>
-            <p className="mt-4 text-slate-600">Scoped to outcomes. Below are the packages most clients choose.</p>
-            <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-100 to-indigo-100 px-5 py-2 text-sm font-medium text-fuchsia-700">
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-fuchsia-600 text-white text-xs">🚀</span>
-              Founding plan active • Setup fee waived + preferred rates (first 3 months) • 6 slots this quarter
-            </div>
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold">Simple engagements, scoped to outcomes</h2>
+          <p className="mt-4 text-slate-600 max-w-2xl mx-auto">
+            Two clear paths — Essentials for your first agent or 3D hero, Growth for teams scaling AI ops and interactive web together. No upfront commitment.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/pricing"
+              className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-6 py-3 font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+            >
+              See Plans
+            </Link>
+            <a
+              href={calendlyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50 transition"
+            >
+              Book a 20-min Call
+            </a>
           </div>
-
-          {/* AI Ops Retainer */}
-          <div className="mt-12">
-            <h3 className="text-2xl font-bold text-center">AI Ops Retainer (agents & automations)</h3>
-            <p className="mt-2 text-center text-sm text-slate-600">Usage (LLM/API) billed at cost. Fair‑use caps listed below.</p>
-            <div className="mt-8 grid gap-6 md:grid-cols-3">
-              {[
-                { name: 'Starter', regularPrice: '$1,999', foundingPrice: '$1,499', setup: 'Setup $2,500 (waived for founding clients)', period: '/ mo', features: ['1 agent/mo • ≤2 workflows', '≤20k actions/mo', 'Dashboards & alerts', 'SLA: next-business-day'], popular: false },
-                { name: 'Growth', regularPrice: '$3,999', foundingPrice: '$3,499', setup: 'Setup $4,500 (–50% for founding)', period: '/ mo', features: ['2–3 agents/mo • ≤3 integrations', '≤60k actions/mo', 'A/B prompts & weekly report', 'SLA: 24h priority'], popular: true },
-                { name: 'Scale', regularPrice: '$7,999', foundingPrice: '$6,999', setup: 'Setup $7,500 (–30% for founding)', period: '/ mo', features: ['4+ agents/mo • ≤6 integrations', '≤200k actions/mo', 'Analytics & cost controls', 'SLA: same‑day (priority)'], popular: false },
-              ].map((p) => (
-                <div key={p.name} className={`relative rounded-2xl border p-6 shadow-sm ${p.popular ? 'border-fuchsia-500 ring-2 ring-fuchsia-500 shadow-lg' : 'border-slate-200 bg-white'}`}>
-                  {p.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="inline-flex items-center rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-3 py-1 text-xs font-semibold text-white">MOST POPULAR</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-xl font-semibold">{p.name}</h4>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">FOUNDING RATE</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-slate-900">{p.foundingPrice}</span>
-                    <span className="text-slate-500">{p.period}</span>
-                  </div>
-                  <p className="mt-1 text-sm text-slate-500"><span className="line-through">{p.regularPrice}</span> regular price</p>
-                  <p className="mt-1 text-xs text-slate-600">{p.setup}</p>
-                  <ul className="mt-6 space-y-3 text-sm text-slate-600">
-                    {p.features.map((f) => <li key={f}>• {f}</li>)}
-                  </ul>
-                  <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); }} className={`mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-2 font-medium transition ${p.popular ? 'bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white hover:from-fuchsia-400 hover:to-indigo-400' : 'border border-slate-300 bg-white hover:bg-slate-50'}`}>
-                    Book 20‑min Scoping Call
-                  </a>
-                  <p className="mt-3 text-xs text-center text-slate-500">48‑hour fixed quote after call</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 3D Websites & Interactive */}
-          <div className="mt-16">
-            <h3 className="text-2xl font-bold text-center">3D Websites & Interactive</h3>
-            <div className="mt-8 grid gap-6 md:grid-cols-3">
-              {[
-                { name: '3D Hero', packages: [{ label: 'Essential', price: '$6,000 – $8,000' }, { label: 'Pro', price: '$10,000 – $14,000' }], features: ['Guided discovery', 'Optimized assets', '2–4 weeks'] },
-                { name: 'Configurator', packages: [{ label: 'Lite', price: '$15,000 – $25,000' }, { label: 'Pro', price: '$30,000 – $50,000' }], features: ['Variants & materials', 'Cart/lead capture', '4–8+ weeks'] },
-                { name: 'Scrollytelling Site', packages: [{ label: 'Story Lite', price: '$9,000 – $15,000' }, { label: 'Story Pro', price: '$18,000 – $30,000' }], features: ['Narrative sections', 'Perf budget & QA', '3–6 weeks'] },
-              ].map((p) => (
-                <div key={p.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <h4 className="text-xl font-semibold">{p.name}</h4>
-                  <div className="mt-4 space-y-2">
-                    {p.packages.map((pkg) => (
-                      <div key={pkg.label} className="flex items-baseline justify-between">
-                        <div className="text-sm font-medium text-slate-700">{pkg.label}</div>
-                        <div className="text-lg font-bold text-slate-900">{pkg.price}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <ul className="mt-6 space-y-3 text-sm text-slate-600">
-                    {p.features.map((f) => <li key={f}>• {f}</li>)}
-                  </ul>
-                  <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); }} className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition">
-                    Request a Quote
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Classic Services */}
-          <div className="mt-16">
-            <h3 className="text-2xl font-bold text-center">Classic Services</h3>
-            <p className="mt-2 text-center text-sm text-slate-600">Standard pricing (no founding discount)</p>
-            <div className="mt-8 grid gap-6 md:grid-cols-3">
-              {[
-                { name: 'Web Design & Dev', price: 'From $15,000', features: ['~10 pages', 'Custom UX/CMS', '2–8 weeks'] },
-                { name: 'App Dev (Flutter/MVP)', price: 'From $40,000', features: ['Auth & payments', 'Admin & analytics', '8–24 weeks'] },
-                { name: 'Branding & Identity', price: 'From $5,000', features: ['Logo + mini system', 'Guidelines & launch', '2–6 weeks'] },
-              ].map((p) => (
-                <div key={p.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <h4 className="text-xl font-semibold">{p.name}</h4>
-                  <div className="mt-4 text-2xl font-bold text-slate-900">{p.price}</div>
-                  <ul className="mt-6 space-y-3 text-sm text-slate-600">
-                    {p.features.map((f) => <li key={f}>• {f}</li>)}
-                  </ul>
-                  <a href="#contact" onClick={(e) => { e.preventDefault(); goTo('contact'); }} className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 font-medium text-white hover:from-fuchsia-400 hover:to-indigo-400 transition">
-                    Request a Quote
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
+          <p className="mt-4 text-xs text-slate-500">Fixed quote within 48h after call · Risk-reversal: no lift = no service fee</p>
         </div>
       </section>
 
@@ -735,14 +627,6 @@ export default function HomePageClient() {
               <p className="mt-2 text-slate-600 max-w-xl">
                 Send your URL and goals. We&apos;ll find the 3 biggest conversion leaks, show the 3D/AI fixes, and send a 60–90 sec Loom-style teardown within 24 hours.
               </p>
-              <div className="mt-6 rounded-xl bg-gradient-to-r from-fuchsia-50 to-indigo-50 border border-fuchsia-200 p-4">
-                <p className="text-sm font-medium text-fuchsia-900">
-                  🚀 <strong>6 founding slots this quarter</strong>
-                </p>
-                <p className="mt-1 text-xs text-fuchsia-700">
-                  Setup fee waived + preferred rates for your first 3 months. Book a call to secure a slot.
-                </p>
-              </div>
               <ul className="mt-6 space-y-3 text-slate-600 text-sm">
                 <li>• Email: <a className="underline hover:text-slate-900" href="mailto:hello@omegaappbuilder.com">hello@omegaappbuilder.com</a></li>
                 <li>• Call/Meet: <a href={calendlyUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-900">Book a 15-min slot</a></li>
