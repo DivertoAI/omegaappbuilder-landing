@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions — Omega",
+  title: "Terms & Conditions — Omega App Builder",
+  description: "Service terms for Omega App Builder: scope, payments, IP ownership, warranties, and governing law for AI agent and 3D web development projects.",
+  alternates: { canonical: "/legal/terms" },
   robots: { index: true, follow: true },
 };
 

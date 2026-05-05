@@ -1,37 +1,34 @@
 import type { MetadataRoute } from "next";
 
+const base = process.env.NEXT_PUBLIC_SITE_URL || "https://omegaappbuilder.com";
+
+const now = new Date();
+
+const routes: Array<{ path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] }> = [
+  { path: "/", priority: 1.0, changeFrequency: "weekly" },
+  { path: "/ai", priority: 0.9, changeFrequency: "weekly" },
+  { path: "/pricing", priority: 0.9, changeFrequency: "monthly" },
+  { path: "/workflow", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/voice-ai", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/omegareceptionist", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/omega-reach", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/omega-chat-api", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/about", priority: 0.6, changeFrequency: "monthly" },
+  { path: "/contact", priority: 0.6, changeFrequency: "monthly" },
+  { path: "/omega-reach/whatsapp", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/pay", priority: 0.4, changeFrequency: "monthly" },
+  { path: "/legal/privacy", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/legal/terms", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/legal/refunds", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/legal/shipping", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/legal/contact", priority: 0.3, changeFrequency: "yearly" },
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://omegaappbuilder.com";
-  const routes = [
-    "/",
-    "/about",
-    "/ai",
-    "/workflow",
-    "/pricing",
-    "/contact",
-    "/login",
-    "/signup",
-    "/forgot-password",
-    "/reset-password",
-    "/account",
-    "/voice-ai",
-    "/omega-chat-api",
-    "/omega-reach",
-    "/omega-reach/whatsapp",
-    "/pay",
-    "/legal/privacy",
-    "/legal/terms",
-    "/legal/refunds",
-    "/legal/shipping",
-    "/legal/contact",
-  ];
-
-  const now = new Date().toISOString();
-
-  return routes.map((path) => ({
+  return routes.map(({ path, priority, changeFrequency }) => ({
     url: `${base}${path}`,
     lastModified: now,
-    changeFrequency: "monthly",
-    priority: path === "/" ? 1 : 0.5,
+    changeFrequency,
+    priority,
   }));
 }

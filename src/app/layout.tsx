@@ -18,11 +18,21 @@ const cfBeaconToken =
   process.env.NEXT_PUBLIC_CF_BEACON_TOKEN || "0465113f0c0c4b04b3232553a0c6ba9b";
 
 export const metadata: Metadata = {
-  title: "Omega App Builder",
-  description: "High-converting landing pages, websites & app UI. Clear messaging, fast load times, fixed pricing. Turnarounds 48–72h. Get a free 3-point audit.",
-   icons: {
-    icon: "/logo.png",         
+  title: {
+    default: "Omega — AI Agents, 3D Websites & Apps",
+    template: "%s | Omega App Builder",
+  },
+  description: "We build AI SDRs and 3D funnels that increase demo bookings and conversion rates — or we don't charge. Book a free 20-min scoping call.",
+  icons: {
+    icon: "/logo.png",
     shortcut: "/logo.png",
+  },
+  alternates: {
+    canonical: "https://omegaappbuilder.com",
+  },
+  openGraph: {
+    siteName: "Omega App Builder",
+    type: "website",
   },
 };
 

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = {
-  title: "Contact Us — Omega",
+  title: "Contact & Support — Omega App Builder",
+  description: "Reach Omega App Builder for project enquiries, support, or billing questions. Email hello@omegaappbuilder.com or book a 15-min scoping call via Calendly. We respond within one business day.",
+  alternates: { canonical: "/legal/contact" },
   robots: { index: true, follow: true },
 };
 
@@ -36,7 +38,7 @@ export default function ContactPage() {
         <form
           className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 grid gap-3 shadow-sm"
           method="POST"
-          action="/api/lead?redirect=/thank-you"
+          action="/site-api/lead?redirect=/thank-you"
         >
           <input type="text" name="hp" tabIndex={-1} autoComplete="off" className="hidden" />
           <input type="hidden" name="service" value="free_audit_request" />
