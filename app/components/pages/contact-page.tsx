@@ -114,7 +114,7 @@ export function ContactPage() {
                 <div>hello@omegaappbuilder.com</div>
               </div>
               <div className="mt-5 flex flex-wrap gap-2">
-                <Badge variant="outline">Austin, TX</Badge>
+                <Badge variant="outline">Bangalore, India</Badge>
                 <Badge variant="outline">24/7 agent coverage</Badge>
               </div>
             </Card>

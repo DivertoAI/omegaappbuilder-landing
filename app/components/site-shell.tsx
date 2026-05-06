@@ -166,7 +166,7 @@ function Footer() {
               The operating system for real estate developers. 3D properties, sites, apps, CRM, and autonomous agents for US builders.
             </p>
             <div className="mt-6 grid gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--fg-3)]">
-              <div>Austin, TX</div>
+              <div>Bangalore, India</div>
               <div>SOC 2 Type II · ISO 27001</div>
             </div>
           </div>
