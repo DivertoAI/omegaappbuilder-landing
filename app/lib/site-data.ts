@@ -406,7 +406,11 @@ export const machineBlocks: Record<string, string[]> = {
   ],
   contact: [
     "# OmegaAppBuilder / Contact",
-    "sales@omegaappbuilder.com",
-    "+1 (512) 555-OMEGA",
+    "hello@omegaappbuilder.com",
+  ],
+  thankYou: [
+    "# OmegaAppBuilder / Thank You",
+    "Submission received.",
+    "hello@omegaappbuilder.com",
   ],
 };
