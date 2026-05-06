@@ -45,9 +45,12 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="stylesheet" href="/device-frames/devices.min.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} bg-white text-slate-900 antialiased`}>
-        <div className="flex min-h-screen flex-col">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <div id="omega-app" className="flex min-h-screen flex-col">
           <div className="flex-1">
             {children}
           </div>

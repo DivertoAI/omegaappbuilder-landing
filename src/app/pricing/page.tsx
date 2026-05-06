@@ -35,21 +35,25 @@ const testimonials = [
 
 export default function PricingPage() {
   return (
-    <main className="min-h-screen bg-white text-slate-900">
+    <main style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--fg)' }}>
 
       {/* Header nav */}
-      <header className="border-b border-slate-200/80 bg-white/85 backdrop-blur sticky top-0 z-50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
+      <header
+        className="sticky top-0 z-50 backdrop-blur-md"
+        style={{ borderBottom: '1px solid var(--line)', background: 'rgba(10,10,12,0.92)' }}
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-[64px] items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Omega" width={28} height={28} />
-            <span className="text-sm font-semibold">Omega</span>
+            <img src="/logo.png" alt="Omega" width={26} height={26} />
+            <span className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>Omega</span>
           </Link>
           <a
             href={calendlyUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 text-sm font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-85"
+            style={{ background: 'var(--accent)' }}
           >
             Book a Meeting
           </a>
@@ -59,15 +63,19 @@ export default function PricingPage() {
       {/* Hero */}
       <section className="relative overflow-hidden py-20 lg:py-28">
         <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-          <div className="absolute -top-32 -left-24 h-[36rem] w-[36rem] rounded-full bg-gradient-to-br from-fuchsia-100 to-indigo-100 blur-3xl" />
-          <div className="absolute -bottom-32 -right-24 h-[32rem] w-[32rem] rounded-full bg-gradient-to-tr from-indigo-100 to-sky-100 blur-3xl" />
+          <div className="absolute -top-32 -left-24 h-[36rem] w-[36rem] rounded-full blur-3xl"
+            style={{ background: 'oklch(0.55 0.22 290 / 0.10)' }} />
+          <div className="absolute -bottom-32 -right-24 h-[32rem] w-[32rem] rounded-full blur-3xl"
+            style={{ background: 'oklch(0.5 0.2 250 / 0.08)' }} />
         </div>
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-fuchsia-600">Pricing</p>
-          <h1 className="mt-4 text-4xl sm:text-5xl font-bold tracking-tight">
+          <p style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.2em', color: 'var(--fg-3)', textTransform: 'uppercase' }}>
+            Pricing
+          </p>
+          <h1 className="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight" style={{ color: 'var(--fg)' }}>
             Find the right engagement<br className="hidden sm:block" /> for your stage
           </h1>
-          <p className="mt-5 text-lg text-slate-600">
+          <p className="mt-5 text-base" style={{ color: 'var(--fg-2)' }}>
             No upfront commitment. No fluff. Start with a free Demo Funnel Audit to see exactly what we&apos;d build — in under 20 minutes.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -75,13 +83,15 @@ export default function PricingPage() {
               href={calendlyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-6 py-3 font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+              className="rounded-lg px-6 py-3 font-semibold text-white transition-opacity hover:opacity-85"
+              style={{ background: 'var(--accent)' }}
             >
               Book a Meeting
             </a>
             <Link
               href="/#contact"
-              className="rounded-xl border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50 transition"
+              className="rounded-lg border px-6 py-3 font-semibold transition-colors"
+              style={{ borderColor: 'var(--line-2)', color: 'var(--fg-2)' }}
             >
               Get the Free Audit
             </Link>
@@ -90,20 +100,19 @@ export default function PricingPage() {
       </section>
 
       {/* Plans */}
-      <section className="py-16 border-t border-slate-200">
+      <section className="py-16" style={{ borderTop: '1px solid var(--line)' }}>
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2">
 
             {/* Essentials */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm flex flex-col">
+            <div className="rounded-2xl border p-8 flex flex-col" style={{ background: 'var(--bg-2)', borderColor: 'var(--line)' }}>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Essentials</p>
-                <h2 className="mt-2 text-2xl font-bold">For early-stage SaaS, DevTools &amp; AI startups</h2>
-                <p className="mt-3 text-slate-600 text-sm leading-relaxed">
+                <p style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.15em', color: 'var(--fg-3)', textTransform: 'uppercase' }}>Essentials</p>
+                <h2 className="mt-2 text-xl font-semibold" style={{ color: 'var(--fg)' }}>For early-stage SaaS, DevTools &amp; AI startups</h2>
+                <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--fg-2)' }}>
                   Designed for founders who need their first AI agent or 3D hero — shipped fast, scoped clearly, with a risk-reversal guarantee.
                 </p>
               </div>
-
               <ul className="mt-8 space-y-3 flex-1">
                 {[
                   '1 AI agent (SDR, support, or receptionist)',
@@ -115,41 +124,42 @@ export default function PricingPage() {
                   'Risk-reversal: no lift = no service fee',
                   'Optional: 3D hero or interactive brand moment',
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-slate-700">
-                    <span className="mt-1 flex-shrink-0 h-4 w-4 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-xs">✓</span>
+                  <li key={item} className="flex items-start gap-3 text-sm" style={{ color: 'var(--fg-2)' }}>
+                    <span
+                      className="mt-0.5 flex-shrink-0 h-4 w-4 rounded flex items-center justify-center text-[10px] font-bold"
+                      style={{ background: 'oklch(0.72 0.18 155 / 0.15)', color: 'var(--good)', border: '1px solid oklch(0.72 0.18 155 / 0.3)' }}
+                    >✓</span>
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
-
               <a
                 href={calendlyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-8 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 hover:bg-slate-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                className="mt-8 inline-flex w-full items-center justify-center rounded-lg border px-5 py-3 font-semibold text-sm transition-colors"
+                style={{ borderColor: 'var(--line-2)', color: 'var(--fg)', background: 'transparent' }}
               >
                 Book a scoping call
               </a>
             </div>
 
             {/* Growth */}
-            <div className="relative rounded-3xl border-2 border-fuchsia-500 bg-white p-8 shadow-lg flex flex-col">
+            <div className="relative rounded-2xl border-2 p-8 flex flex-col" style={{ background: 'var(--bg-2)', borderColor: 'var(--accent)' }}>
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                <span className="inline-flex items-center rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-1 text-xs font-bold text-white tracking-wide">
+                <span className="inline-flex items-center rounded-full px-4 py-1 text-xs font-bold text-white" style={{ background: 'var(--accent)' }}>
                   POPULAR
                 </span>
               </div>
-
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-fuchsia-600">Growth</p>
-                <h2 className="mt-2 text-2xl font-bold">For funded teams scaling AI ops &amp; 3D web together</h2>
-                <p className="mt-3 text-slate-600 text-sm leading-relaxed">
+                <p style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.15em', color: 'var(--accent)', textTransform: 'uppercase' }}>Growth</p>
+                <h2 className="mt-2 text-xl font-semibold" style={{ color: 'var(--fg)' }}>For funded teams scaling AI ops &amp; 3D web together</h2>
+                <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--fg-2)' }}>
                   When you&apos;re ready to run multiple agents, ship richer 3D experiences, and track performance rigorously.
                 </p>
               </div>
-
               <div className="mt-6">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">What you get</p>
+                <p style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em', color: 'var(--fg-3)', textTransform: 'uppercase' }}>What you get</p>
                 <ul className="mt-4 space-y-3">
                   {[
                     '2–3 AI agents per month',
@@ -161,31 +171,32 @@ export default function PricingPage() {
                     'Playbook for SDR agent to capture new demand',
                     'Ongoing toxic-link monitoring & disavowal (SEO)',
                   ].map((item) => (
-                    <li key={item} className="flex items-start gap-3 text-sm text-slate-700">
-                      <span className="mt-1 flex-shrink-0 h-4 w-4 rounded-full bg-fuchsia-100 flex items-center justify-center text-fuchsia-600 text-xs">✓</span>
+                    <li key={item} className="flex items-start gap-3 text-sm" style={{ color: 'var(--fg-2)' }}>
+                      <span
+                        className="mt-0.5 flex-shrink-0 h-4 w-4 rounded flex items-center justify-center text-[10px] font-bold"
+                        style={{ background: 'oklch(0.68 0.22 290 / 0.15)', color: 'var(--accent)', border: '1px solid oklch(0.68 0.22 290 / 0.3)' }}
+                      >✓</span>
                       <span>{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-
               <a
                 href={calendlyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-8 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-3 font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+                className="mt-8 inline-flex w-full items-center justify-center rounded-lg px-5 py-3 font-semibold text-sm text-white transition-opacity hover:opacity-85"
+                style={{ background: 'var(--accent)' }}
               >
                 Talk to sales
               </a>
             </div>
-
           </div>
 
-          {/* Enterprise nudge */}
-          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-5 text-center">
-            <p className="text-sm text-slate-600">
+          <div className="mt-6 rounded-xl border border-dashed px-6 py-4 text-center" style={{ borderColor: 'var(--line-2)' }}>
+            <p className="text-sm" style={{ color: 'var(--fg-2)' }}>
               Need a custom scope, white-label delivery, or agency pricing?{' '}
-              <a href={calendlyUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-fuchsia-600 hover:underline">
+              <a href={calendlyUrl} target="_blank" rel="noopener noreferrer" className="font-semibold transition-opacity hover:opacity-70" style={{ color: 'var(--accent)' }}>
                 Let&apos;s talk →
               </a>
             </p>
@@ -194,22 +205,21 @@ export default function PricingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 border-t border-slate-200 bg-slate-50/60">
+      <section className="py-16" style={{ borderTop: '1px solid var(--line)', background: 'var(--bg-2)' }}>
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-xs font-semibold uppercase tracking-widest text-slate-500">
+          <p style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.2em', color: 'var(--fg-3)', textTransform: 'uppercase', textAlign: 'center' }}>
             Trusted by fastest-growing B2B SaaS startups
           </p>
-          <h2 className="mt-3 text-center text-2xl font-bold">
-            Here&apos;s how we help teams ship agents and 3D sites fast — and with depth.
+          <h2 className="mt-3 text-center text-xl font-semibold" style={{ color: 'var(--fg)' }}>
+            Here&apos;s how we help teams ship agents and 3D sites fast.
           </h2>
-
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
             {testimonials.map((t) => (
-              <div key={t.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col gap-4">
-                <p className="text-sm text-slate-700 leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
-                <div className="mt-auto">
-                  <p className="text-sm font-semibold text-slate-900">{t.name}</p>
-                  <p className="text-xs text-slate-500">{t.title}</p>
+              <div key={t.name} className="rounded-xl border p-5 flex flex-col gap-4" style={{ background: 'var(--bg-3)', borderColor: 'var(--line)' }}>
+                <p className="text-sm leading-relaxed flex-1" style={{ color: 'var(--fg-2)' }}>&ldquo;{t.quote}&rdquo;</p>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>{t.name}</p>
+                  <p className="text-xs" style={{ color: 'var(--fg-3)' }}>{t.title}</p>
                 </div>
               </div>
             ))}
@@ -218,10 +228,10 @@ export default function PricingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 border-t border-slate-200">
+      <section className="py-20" style={{ borderTop: '1px solid var(--line)' }}>
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold">Not sure which plan fits?</h2>
-          <p className="mt-4 text-slate-600">
+          <h2 className="text-3xl font-semibold" style={{ color: 'var(--fg)' }}>Not sure which plan fits?</h2>
+          <p className="mt-4 text-sm" style={{ color: 'var(--fg-2)' }}>
             Book a free 20-min scoping call. We&apos;ll map your goals, identify the biggest conversion leaks, and send a fixed quote within 48 hours — no obligation.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -229,18 +239,20 @@ export default function PricingPage() {
               href={calendlyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-6 py-3 font-semibold text-white hover:from-fuchsia-400 hover:to-indigo-400 transition"
+              className="rounded-lg px-6 py-3 font-semibold text-white transition-opacity hover:opacity-85"
+              style={{ background: 'var(--accent)' }}
             >
               Book a Meeting
             </a>
             <Link
               href="/#contact"
-              className="rounded-xl border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50 transition"
+              className="rounded-lg border px-6 py-3 font-semibold transition-colors"
+              style={{ borderColor: 'var(--line-2)', color: 'var(--fg-2)' }}
             >
               Get the Free Audit
             </Link>
           </div>
-          <p className="mt-4 text-xs text-slate-500">2 audit slots per week · We respond in &lt;24h</p>
+          <p className="mt-4 text-xs" style={{ color: 'var(--fg-3)' }}>2 audit slots per week · We respond in &lt;24h</p>
         </div>
       </section>
 

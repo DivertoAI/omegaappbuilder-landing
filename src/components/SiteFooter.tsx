@@ -2,19 +2,30 @@ import Link from "next/link";
 
 export default function SiteFooter() {
   return (
-    <footer className="py-10 border-t border-slate-200">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-600">
-        <p>© {new Date().getFullYear()} Omega. All rights reserved.</p>
-        <div className="flex items-center gap-4">
-          <a href="https://omegaappbuilder.com/#home" className="hover:text-slate-900">
-            Home
-          </a>
-          <Link href="/about" className="hover:text-slate-900">About</Link>
-          <Link href="/legal/privacy" className="hover:text-slate-900">Privacy</Link>
-          <Link href="/legal/terms" className="hover:text-slate-900">Terms</Link>
-          <Link href="/legal/refunds" className="hover:text-slate-900">Refunds</Link>
-          <Link href="/legal/shipping" className="hover:text-slate-900">Shipping</Link>
-          <Link href="/legal/contact" className="hover:text-slate-900">Contact</Link>
+    <footer style={{ borderTop: '1px solid var(--line)', background: 'var(--bg)' }}>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p style={{ fontSize: 13, color: 'var(--fg-3)' }}>
+          © {new Date().getFullYear()} Omega. All rights reserved.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+          {[
+            { label: 'Home', href: '/' },
+            { label: 'About', href: '/about' },
+            { label: 'Pricing', href: '/pricing' },
+            { label: 'Privacy', href: '/legal/privacy' },
+            { label: 'Terms', href: '/legal/terms' },
+            { label: 'Refunds', href: '/legal/refunds' },
+            { label: 'Contact', href: '/legal/contact' },
+          ].map(({ label, href }) => (
+            <Link
+              key={href}
+              href={href}
+              style={{ fontSize: 13, color: 'var(--fg-3)' }}
+              className="transition-colors hover:text-[var(--fg)]"
+            >
+              {label}
+            </Link>
+          ))}
         </div>
       </div>
     </footer>
