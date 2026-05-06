@@ -191,7 +191,7 @@ export function PricingPage() {
                 </CardContent>
                 <CardFooter className="flex flex-col items-stretch gap-4 border-t border-[var(--line)] px-7 py-6">
                   <Button asChild variant={highlighted ? "accent" : "secondary"} className="w-full rounded-full">
-                    <Link href="/contact">{plan.cta}</Link>
+                    <Link href={`/contact?plan=${plan.name.toLowerCase()}`}>{plan.cta}</Link>
                   </Button>
                   <p className="text-sm text-[var(--fg-3)]">{plan.note}</p>
                 </CardFooter>

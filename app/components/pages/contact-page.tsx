@@ -13,14 +13,35 @@ import { useOmegaMode } from "@/app/components/mode-provider";
 import { MachineView } from "@/app/components/machine-view";
 import { contactRelay } from "@/app/lib/contact-relay";
 
+const planLabels = {
+  starter: "Starter Plan",
+  scale: "Scale Plan",
+  enterprise: "Enterprise",
+} as const;
+
+type PlanKey = keyof typeof planLabels;
+
+function normalizePlan(value: string | null): PlanKey | null {
+  if (!value) return null;
+  const normalized = value.toLowerCase();
+  if (normalized === "starter" || normalized === "scale" || normalized === "enterprise") {
+    return normalized;
+  }
+  return null;
+}
+
 export function ContactPage() {
   const { mode } = useOmegaMode();
   const [submitting, setSubmitting] = useState(false);
   const [nextUrl, setNextUrl] = useState("");
   const [error, setError] = useState("");
+  const [selectedPlanKey, setSelectedPlanKey] = useState<PlanKey | null>(null);
+  const selectedPlanLabel = selectedPlanKey ? planLabels[selectedPlanKey] : "";
+  const subjectLine = selectedPlanLabel ? `${contactRelay.subject} - ${selectedPlanLabel}` : contactRelay.subject;
 
   useEffect(() => {
     setNextUrl(`${window.location.origin}${contactRelay.thankYouPath}`);
+    setSelectedPlanKey(normalizePlan(new URLSearchParams(window.location.search).get("plan")));
   }, []);
 
   if (mode === "machine") return <MachineView route="contact" />;
@@ -62,17 +83,23 @@ export function ContactPage() {
       <Section>
         <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <Card className="p-6 md:p-8">
+            {selectedPlanLabel ? (
+              <div className="mb-5">
+                <Badge variant="outline">Selected plan: {selectedPlanLabel}</Badge>
+              </div>
+            ) : null}
             <form
               className="grid gap-5"
               method="POST"
               action={contactRelay.endpoint}
               onSubmit={handleSubmit}
             >
-              <input type="hidden" name="_subject" value={contactRelay.subject} />
+              <input type="hidden" name="_subject" value={subjectLine} />
               <input type="hidden" name="_captcha" value="false" />
               <input type="hidden" name="_template" value={contactRelay.template} />
               <input type="hidden" name="_next" value={nextUrl} />
               <input type="hidden" name="_replyto" value="" />
+              <input type="hidden" name="selectedPlan" value={selectedPlanLabel} />
               <input type="text" name="_honey" tabIndex={-1} autoComplete="off" className="sr-only" aria-hidden="true" />
 
               <div className="grid gap-5 md:grid-cols-2">
