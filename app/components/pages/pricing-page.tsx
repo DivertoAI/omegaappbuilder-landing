@@ -8,8 +8,68 @@ import { Card, CardContent, CardFooter, CardTitle } from "@/app/components/ui/ca
 import { Section } from "@/app/components/site-shell";
 import { MachineView } from "@/app/components/machine-view";
 import { useOmegaMode } from "@/app/components/mode-provider";
-import { pricingTiers } from "@/app/lib/site-data";
 import { cn } from "@/app/lib/cn";
+
+const pricingPlans = [
+  {
+    name: "Starter",
+    label: "Starter Plan",
+    audience: "For boutique brokerages and small developers with 1-3 active projects",
+    summary:
+      "Designed for teams that need a polished launch surface, a lightweight CRM, and a clear path from visit to tour.",
+    features: [
+      "One marketing site for a project or portfolio",
+      "Up to 3 properties in 3D",
+      "AI CRM with 5 seats",
+      "One AI agent for chat coverage",
+      "Standard implementation support",
+      "Weekly async updates during rollout",
+      "Content and layout tuned for conversion",
+      "Launch handoff with core team training",
+    ],
+    cta: "Start with Studio",
+    note: "Fastest path to a live launch for a single project or smaller portfolio.",
+  },
+  {
+    name: "Scale",
+    label: "Scale Plan",
+    audience: "For active builders shipping 5-25 projects per year",
+    summary:
+      "Best for teams that need multiple live properties, a tighter sales handoff, and a platform that keeps up with inventory changes.",
+    features: [
+      "Unlimited marketing sites",
+      "Unlimited 3D properties",
+      "AI CRM with 25 seats",
+      "Voice + chat agents",
+      "Ops platform for internal workflows",
+      "Branded mobile apps for buyer engagement",
+      "Priority support with Slack access",
+      "Monthly performance reviews and roadmap updates",
+    ],
+    cta: "Talk to sales",
+    note: "Best fit for active pipelines, multiple projects, and a tighter sales handoff.",
+    highlight: true,
+  },
+  {
+    name: "Enterprise",
+    label: "Enterprise",
+    audience: "For multi-region developers, REITs, and master-planned communities",
+    summary:
+      "Built for larger rollout scopes where custom integrations, stronger controls, and multi-brand operations matter most.",
+    features: [
+      "Everything in Builder",
+      "Multi-region and multi-brand support",
+      "On-prem option when needed",
+      "Custom integrations with internal systems",
+      "Dedicated solutions architect",
+      "99.99% SLA target",
+      "Launch planning across multiple teams",
+      "Executive reporting and governance check-ins",
+    ],
+    cta: "Book a meeting",
+    note: "For larger rollout scopes, custom integrations, and multi-region teams.",
+  },
+] as const;
 
 const pricingProof = [
   {
@@ -40,7 +100,7 @@ const pricingProof = [
     quote:
       "The stack feels smaller without losing capability. Marketing pages, 3D tours, and CRM routing all work together instead of fighting each other.",
   },
-];
+] as const;
 
 const trustSignals = [
   { value: "412", label: "properties live in 3D" },
@@ -62,7 +122,7 @@ const closingBlocks = [
     title: "Compliance",
     items: ["Bangalore, India", "SOC 2 Type II", "ISO 27001", "RESPA-aware flows", "TCPA-aware agents"],
   },
-];
+] as const;
 
 export function PricingPage() {
   const { mode } = useOmegaMode();
@@ -78,7 +138,7 @@ export function PricingPage() {
               Find a plan that fits your growth stage
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--fg-2)]">
-              Pick a package aligned to your inventory, launch speed, and sales motion. Start with the smallest plan that covers the job, then scale when the next project lands.
+              Choose the setup that matches your rollout pace. Each plan is scoped around projects, inventory, and team coordination rather than a generic SaaS seat count.
             </p>
           </div>
           <div className="lg:justify-self-end">
@@ -93,51 +153,49 @@ export function PricingPage() {
 
       <Section className="pt-0">
         <div className="grid gap-6 lg:grid-cols-3">
-          {pricingTiers.map((tier) => {
-            const highlighted = tier.name === "Builder";
+          {pricingPlans.map((plan) => {
+            const highlighted = plan.name === "Scale";
 
             return (
-            <Card
-              key={tier.name}
-              className={cn(
-                "relative overflow-hidden p-0",
-                highlighted
-                  ? "border-[oklch(0.45_0.2_290/_0.55)] bg-[linear-gradient(180deg,oklch(0.22_0.1_290/_0.35),var(--bg-2))] shadow-[0_0_60px_oklch(0.55_0.2_290/_0.12)]"
-                  : "border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))]"
-              )}
-            >
-              {highlighted ? (
-                <div className="absolute left-7 top-6">
-                  <Badge className="rounded-full bg-[var(--accent)] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white">Popular</Badge>
+              <Card
+                key={plan.name}
+                className={cn(
+                  "relative overflow-hidden p-0",
+                  highlighted
+                    ? "border-[oklch(0.45_0.2_290/_0.55)] bg-[linear-gradient(180deg,oklch(0.22_0.1_290/_0.35),var(--bg-2))] shadow-[0_0_60px_oklch(0.55_0.2_290/_0.12)]"
+                    : "border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))]"
+                )}
+              >
+                {highlighted ? (
+                  <div className="absolute left-7 top-6">
+                    <Badge className="rounded-full bg-[var(--accent)] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white">Popular</Badge>
+                  </div>
+                ) : null}
+                <div className={cn("border-b border-[var(--line)] px-7 py-6", highlighted && "pt-14")}>
+                  <div className="text-sm font-medium text-[var(--fg-2)]">{plan.label}</div>
+                  <div className="mt-1 text-sm text-[var(--fg-3)]">{plan.audience}</div>
+                  <p className="mt-5 text-sm leading-7 text-[var(--fg-2)]">{plan.summary}</p>
                 </div>
-              ) : null}
-              <div className={cn("border-b border-[var(--line)] px-7 py-6", highlighted && "pt-14")}>
-                <div className="text-sm font-medium text-[var(--fg-2)]">{tier.name}</div>
-                <div className="mt-1 text-sm text-[var(--fg-3)]">{tier.desc}</div>
-                <div className="mt-5 flex items-end gap-2">
-                  <div className="text-4xl tracking-[-0.05em] text-[var(--fg)]">{tier.price}</div>
-                  {tier.per ? <div className="pb-1 text-sm text-[var(--fg-3)]">{tier.per}</div> : null}
-                </div>
-              </div>
-              <CardContent className="px-7 py-7">
-                <div className="grid gap-3">
-                  {tier.features.map((feature) => (
-                    <div key={feature} className="flex items-start gap-3 text-[15px] leading-7 text-[var(--fg-2)]">
-                      <Check className="mt-1 size-4 shrink-0 text-[var(--accent-2)]" />
-                      <span>{feature}</span>
+                <CardContent className="px-7 py-7">
+                  <div className="grid gap-3">
+                    <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--fg-3)]">
+                    {highlighted ? "What you get:" : "Included:"}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col items-stretch gap-4 border-t border-[var(--line)] px-7 py-6">
-                <Button asChild variant={highlighted ? "accent" : "secondary"} className="w-full rounded-full">
-                  <Link href="/contact">{tier.cta}</Link>
-                </Button>
-                {tier.name === "Studio" ? <p className="text-sm text-[var(--fg-3)]">Fastest path to a live launch for a single project or smaller portfolio.</p> : null}
-                {tier.name === "Builder" ? <p className="text-sm text-[var(--fg-3)]">Best fit for active pipelines, multiple projects, and a tighter sales handoff.</p> : null}
-                {tier.name === "Enterprise" ? <p className="text-sm text-[var(--fg-3)]">For larger rollout scopes, custom integrations, and multi-region teams.</p> : null}
-              </CardFooter>
-            </Card>
+                    {plan.features.map((feature) => (
+                      <div key={feature} className="flex items-start gap-3 text-[15px] leading-7 text-[var(--fg-2)]">
+                        <Check className="mt-1 size-4 shrink-0 text-[var(--accent-2)]" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+                <CardFooter className="flex flex-col items-stretch gap-4 border-t border-[var(--line)] px-7 py-6">
+                  <Button asChild variant={highlighted ? "accent" : "secondary"} className="w-full rounded-full">
+                    <Link href="/contact">{plan.cta}</Link>
+                  </Button>
+                  <p className="text-sm text-[var(--fg-3)]">{plan.note}</p>
+                </CardFooter>
+              </Card>
             );
           })}
         </div>
@@ -184,7 +242,7 @@ export function PricingPage() {
             <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--fg-3)]">Location and compliance</div>
             <h3 className="mt-4 text-3xl tracking-[-0.04em]">Bangalore, India</h3>
             <p className="mt-4 text-sm leading-7 text-[var(--fg-2)]">
-              OmegaAppBuilder is run from Bangalore with a product stack built for US real estate operators. The visible compliance line stays simple and stable.
+              OmegaAppBuilder runs from Bangalore with a product stack built for US real estate operators. The compliance line stays simple and visible.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Badge variant="outline">Bangalore, India</Badge>
