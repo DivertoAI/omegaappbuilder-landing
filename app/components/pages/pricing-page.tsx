@@ -142,7 +142,7 @@ export function PricingPage() {
             </p>
           </div>
           <div className="lg:justify-self-end">
-            <Button asChild size="lg" className="w-full rounded-full px-7 text-base md:w-auto">
+            <Button asChild variant="accent" size="lg" className="w-full rounded-full px-7 text-base md:w-auto">
               <Link href="/contact">
                 Book a Meeting <ArrowRight className="size-4" />
               </Link>
