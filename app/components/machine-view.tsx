@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { machineBlocks } from "@/app/lib/site-data";
+import { formatMachineDocument, machineDocuments, type MachineRoute } from "@/app/lib/site-data";
 import { cn } from "@/app/lib/cn";
 
-export function MachineView({ route }: { route: keyof typeof machineBlocks }) {
+export function MachineView({ route }: { route: MachineRoute }) {
   const [typed, setTyped] = useState("");
   const [done, setDone] = useState(false);
-  const blocks = machineBlocks[route];
+  const document = machineDocuments[route];
 
   useEffect(() => {
     setDone(false);
     setTyped("");
     let cancelled = false;
-    const full = blocks.join("\n");
+    const full = formatMachineDocument(document).join("\n");
     let index = 0;
     let last = 0;
 
@@ -36,7 +36,7 @@ export function MachineView({ route }: { route: keyof typeof machineBlocks }) {
     return () => {
       cancelled = true;
     };
-  }, [blocks]);
+  }, [document]);
 
   return (
     <section className="min-h-[calc(100vh-80px)] bg-black px-4 py-12 text-emerald-200 md:px-8">
