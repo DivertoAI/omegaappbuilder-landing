@@ -313,12 +313,6 @@ export function formatMachineDocument(document: MachineDocument): string[] {
   ];
 }
 
-const pricingMachinePlans = [
-  "Starter Plan — boutique brokerages and small developers with 1-3 active projects.",
-  "Scale Plan — active builders shipping 5-25 projects per year.",
-  "Enterprise — multi-region developers, REITs, and master-planned communities.",
-];
-
 export const machineDocuments: Record<MachineRoute, MachineDocument> = {
   home: {
     title: "OmegaAppBuilder",
@@ -381,7 +375,11 @@ export const machineDocuments: Record<MachineRoute, MachineDocument> = {
       {
         heading: "Pricing",
         kind: "pairs",
-        items: pricingMachinePlans.map((plan) => pair(plan.split(" — ")[0], plan.split(" — ")[1] ?? "")),
+        items: [
+          pair("Starter Plan", "$4,800/mo"),
+          pair("Scale Plan", "$12,500/mo"),
+          pair("Enterprise", "custom"),
+        ],
       },
       {
         heading: "Compliance",
@@ -587,51 +585,171 @@ export const machineDocuments: Record<MachineRoute, MachineDocument> = {
   },
   pricing: {
     title: "OmegaAppBuilder / Pricing",
-    summary: "Plan selection for teams scaling projects, inventory, and operational complexity.",
+    summary: "Find a plan that fits your growth stage.",
     sections: [
       {
-        heading: "Plans",
+        heading: "PRICING",
+        kind: "paragraphs",
+        items: [
+          "Find a plan that fits your growth stage.",
+          "Choose the setup that matches your rollout pace. Each plan is scoped around projects, inventory, and team coordination rather than a generic SaaS seat count.",
+          "Book a Meeting -> /contact",
+        ],
+      },
+      {
+        heading: "Starter Plan",
+        kind: "paragraphs",
+        items: [
+          "For boutique brokerages and small developers with 1-3 active projects.",
+          "Designed for teams that need a polished launch surface, a lightweight CRM, and a clear path from visit to tour.",
+        ],
+      },
+      {
+        heading: "Included",
+        kind: "bullets",
+        items: [
+          "One marketing site for a project or portfolio",
+          "Up to 3 properties in 3D",
+          "AI CRM with 5 seats",
+          "One AI agent for chat coverage",
+          "Standard implementation support",
+          "Weekly async updates during rollout",
+          "Content and layout tuned for conversion",
+          "Launch handoff with core team training",
+        ],
+      },
+      {
+        heading: "CTA",
+        kind: "paragraphs",
+        items: ["Start with Studio", "Fastest path to a live launch for a single project or smaller portfolio."],
+      },
+      {
+        heading: "Popular / Scale Plan",
+        kind: "paragraphs",
+        items: [
+          "For active builders shipping 5-25 projects per year.",
+          "Best for teams that need multiple live properties, a tighter sales handoff, and a platform that keeps up with inventory changes.",
+        ],
+      },
+      {
+        heading: "What you get",
+        kind: "bullets",
+        items: [
+          "Unlimited marketing sites",
+          "Unlimited 3D properties",
+          "AI CRM with 25 seats",
+          "Voice + chat agents",
+          "Ops platform for internal workflows",
+          "Branded mobile apps for buyer engagement",
+          "Priority support with Slack access",
+          "Monthly performance reviews and roadmap updates",
+        ],
+      },
+      {
+        heading: "CTA",
+        kind: "paragraphs",
+        items: ["Talk to sales", "Best fit for active pipelines, multiple projects, and a tighter sales handoff."],
+      },
+      {
+        heading: "Enterprise",
+        kind: "paragraphs",
+        items: [
+          "For multi-region developers, REITs, and master-planned communities.",
+          "Built for larger rollout scopes where custom integrations, stronger controls, and multi-brand operations matter most.",
+        ],
+      },
+      {
+        heading: "Included",
+        kind: "bullets",
+        items: [
+          "Everything in Builder",
+          "Multi-region and multi-brand support",
+          "On-prem option when needed",
+          "Custom integrations with internal systems",
+          "Dedicated solutions architect",
+          "99.99% SLA target",
+          "Launch planning across multiple teams",
+          "Executive reporting and governance check-ins",
+        ],
+      },
+      {
+        heading: "CTA",
+        kind: "paragraphs",
+        items: ["Book a meeting", "For larger rollout scopes, custom integrations, and multi-region teams."],
+      },
+      {
+        heading: "Built to reduce tool sprawl",
+        kind: "paragraphs",
+        items: ["One stack for listing pages, tours, leads, and follow-up."],
+      },
+      {
+        heading: "Proof",
+        kind: "transcript",
+        items: [
+          {
+            who: "SB / Sales lead",
+            text: "Bangalore-based developer group. We replaced scattered inquiry forms and spreadsheets with one flow. Tour requests are cleaner, follow-up is faster, and the team spends less time reconciling data.",
+          },
+          {
+            who: "FB / Founder",
+            text: "Boutique brokerage network. The site, CRM, and tour handoff now tell one story. Buyers get a cleaner experience, and our team stops losing context between tools.",
+          },
+          {
+            who: "CO / COO",
+            text: "Multi-project builder. We can see inventory, tours, and follow-up in one place. That made launch coordination and sales visibility much easier to manage.",
+          },
+          {
+            who: "DO / Director of operations",
+            text: "Mixed-use developer. The stack feels smaller without losing capability. Marketing pages, 3D tours, and CRM routing all work together instead of fighting each other.",
+          },
+        ],
+      },
+      {
+        heading: "Trust signals",
         kind: "pairs",
         items: [
-          pair("Starter Plan", "$4,800/mo"),
-          pair("Scale Plan", "$12,500/mo"),
-          pair("Enterprise", "custom"),
+          pair("Properties live in 3D", "412"),
+          pair("Inventory powered", "$4.2B"),
+          pair("More qualified leads", "8.4x"),
+          pair("Average time-to-tour", "11 min"),
         ],
       },
       {
-        heading: "Plan fit",
-        kind: "bullets",
+        heading: "Location and compliance",
+        kind: "paragraphs",
         items: [
-          "Starter Plan fits boutique brokerages and small developers with 1-3 active projects.",
-          "Scale Plan fits active builders shipping 5-25 projects per year.",
-          "Enterprise fits multi-region developers, REITs, and master-planned communities.",
-        ],
-      },
-      {
-        heading: "Included capabilities",
-        kind: "bullets",
-        items: [
-          "marketing sites scoped to projects and portfolios",
-          "3D property coverage",
-          "AI CRM seat bundles",
-          "voice and chat agents where the plan requires them",
-          "ops platform and mobile app support on higher tiers",
-          "standard, priority, or custom implementation support",
+          "OmegaAppBuilder runs from Bangalore with a product stack built for US real estate operators.",
+          "The compliance line stays simple and visible.",
         ],
       },
       {
         heading: "Trust",
         kind: "pairs",
-        items: [pair("Location", "Bangalore, India"), pair("Compliance", "SOC 2 Type II · ISO 27001"), pair("Contact", "hello@omegaappbuilder.com")],
+        items: [pair("Location", "Bangalore, India"), pair("Compliance", "SOC 2 Type II · ISO 27001")],
       },
       {
-        heading: "Calls to action",
+        heading: "Modules",
+        kind: "bullets",
+        items: ["3D Properties", "Marketing Websites", "AI CRM", "AI Agents", "Ops Platform", "Mobile Apps"],
+      },
+      {
+        heading: "Use cases",
+        kind: "bullets",
+        items: ["Pre-sales launch", "New development campaigns", "Brokerage lead handling", "Inventory tours", "Owner reporting"],
+      },
+      {
+        heading: "Compliance",
+        kind: "bullets",
+        items: ["Bangalore, India", "SOC 2 Type II", "ISO 27001", "RESPA-aware flows", "TCPA-aware agents"],
+      },
+      {
+        heading: "Footer",
         kind: "bullets",
         items: [
-          "Starter Plan -> /contact?plan=starter",
-          "Scale Plan -> /contact?plan=scale",
-          "Enterprise -> /contact?plan=enterprise",
-          "Generic booking -> /contact",
+          "OmegaAppBuilder",
+          "The operating system for real estate developers. 3D properties, sites, apps, CRM, and autonomous agents for US builders.",
+          "OmegaAppBuilder · Built for pricing",
+          "hello@omegaappbuilder.com",
         ],
       },
     ],
